@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use App\Models\Produk;
 use App\Models\Layanan;
+use App\Models\Provider;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Gonon\Digiflazz\Digiflazz;
@@ -14,7 +15,8 @@ class DigiflazzController extends Controller
 {
     public function __construct()
     {
-        Digiflazz::initDigiflazz(env('DIGIFLAZZ_USERNAME'), env('DIGIFLAZZ_APIKEY'));
+        $digiflazz = Provider::where('provider_name' , 'digiflazz')->first();
+        Digiflazz::initDigiflazz($digiflazz->api_username, $digiflazz->api_key);
     }
 
     public function getDigiflazzService()
@@ -104,14 +106,23 @@ class DigiflazzController extends Controller
         foreach (array_unique($arrGame) as $game) {
 
             try {
-                $tes = Produk::create([
-                    "nama" => $game,
-                    "brand" => $game,
-                    "kelompok" => "1",
-                    "tipe" => "game",
-                    "slug" => Str::slug($game, '-'),
-                    "thumbnail" => "null"
-                ]);
+                $isExist = Produk::where('brand', $game)->first();
+
+                if(!$isExist){
+                    Produk::create([
+                        "nama" => $game,
+                        "brand" => $game,
+                        "kelompok" => "1",
+                        "tipe" => "game",
+                        "slug" => Str::slug($game, '-'),
+                        "thumbnail" => "null"
+                    ]);
+                } else{
+                    $isExist->update([
+                        "nama" => $game,
+                        "brand" => $game,
+                    ]);
+                }
             } catch (Exception $e) {
                 throw new Exception("Gagal menambahkan produk GAME digiflazz! Pesan: " . $e->getMessage());
             }
@@ -119,14 +130,22 @@ class DigiflazzController extends Controller
 
         foreach (array_unique($arrPulsa) as $pulsa) {
             try {
-                Produk::create([
-                    "nama" => $pulsa,
-                    "brand" => $pulsa,
-                    "kelompok" => "voucher",
-                    "tipe" => "pulsa",
-                    "slug" => Str::slug($pulsa, '-'),
-                    "thumbnail" => "null",
-                ]);
+                $isExist = Produk::where('brand', $pulsa)->first();
+                if(!$isExist){
+                    Produk::create([
+                        "nama" => $pulsa,
+                        "brand" => $pulsa,
+                        "kelompok" => "1",
+                        "tipe" => "pulsa",
+                        "slug" => Str::slug($pulsa, '-'),
+                        "thumbnail" => "null",
+                    ]);
+                } else{
+                    $isExist->update([
+                        "nama" => $pulsa,
+                        "brand" => $pulsa,
+                    ]);
+                }
             } catch (\Exception $e) {
                 throw new Exception("Gagal menambahkan produk PULSA digiflazz! Pesan: " . $e->getMessage());
             }

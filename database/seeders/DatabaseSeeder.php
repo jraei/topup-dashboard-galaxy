@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Kategori;
+use App\Models\Provider;
 use App\Models\SubKategori;
 use Illuminate\Support\Str;
 use App\Models\PaymentProvider;
@@ -62,6 +63,11 @@ class DatabaseSeeder extends Seeder
             "kategori_id" => 2
         ]);
 
+        Provider::create([
+            "provider_name" => "digiflazz",
+            "api_key" => "eeeufytr2c-jassstinnnn-justin7765eerf",
+            "api_username" => "figojugqYaVg"
+        ]);
 
 
         // \App\Models\User::factory()->create([

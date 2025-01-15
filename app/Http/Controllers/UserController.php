@@ -15,9 +15,10 @@ class UserController extends Controller
         $users = User::oldest();
         if (request('keyword')) {
             $users->where('username', 'like', '%' . request('keyword') . '%')
-                ->orWhere('email', 'like', '%'  . request('keyword') . '%');
+                ->orWhere('email', 'like', '%'  . request('keyword') . '%')
+                ->orWhere('phone', 'like', '%' . request('keyword') . '%');
         }
-        return view('admin.user', ['users' => $users->paginate(5)->withQueryString()]);
+        return view('admin.user.index', ['users' => $users->paginate(5)->withQueryString()]);
     }
 
     /**
@@ -41,7 +42,16 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        $data = [
+            "id" => $user->id,
+            "username" => $user->username,
+            "phone" => $user->phone,
+            "email" => $user->email,
+            "saldo" => $user->saldo,
+            "level" => $user->level,
+            "status" => $user->status
+        ];
+        return view('admin.user.index', ['user_detail' => $data])->with('success', 'Sukses show data');
     }
 
     /**

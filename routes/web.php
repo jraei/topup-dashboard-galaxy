@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('layanan/getLayanan', [LayananController::class, 'getService'])->name('layanan.getService');
     Route::resource('layanan', LayananController::class);
 
+    // Route::get('user/{id}', [UserController::class, 'show']);
     Route::resource('user', UserController::class);
 
     Route::get('pay-method/getMethod', [PayMethodController::class, 'getMethod'])->name('pay-method.getMethod');
