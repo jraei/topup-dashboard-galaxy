@@ -46,6 +46,11 @@
                         {{ __('Payment Method') }}
                     </x-nav-link>
                 </div>
+                <div class="hidden space-x-2 sm:-my-px sm:ms-10 sm:flex">  
+                    <x-nav-link href="/deposit" :active="request()->routeIs('deposit*')">
+                        {{ __('Deposit') }}
+                    </x-nav-link>
+                </div>
                 
             </div>
 

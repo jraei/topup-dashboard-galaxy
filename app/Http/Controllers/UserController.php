@@ -42,16 +42,10 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $data = [
-            "id" => $user->id,
-            "username" => $user->username,
-            "phone" => $user->phone,
-            "email" => $user->email,
-            "saldo" => $user->saldo,
-            "level" => $user->level,
-            "status" => $user->status
-        ];
-        return view('admin.user.index', ['user_detail' => $data])->with('success', 'Sukses show data');
+        return response()->json([
+            "message" => "Berhasil Show Data!",
+            "data" => $user
+        ]);
     }
 
     /**

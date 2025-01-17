@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DepositController;
 use GuzzleHttp\Client;
 use App\Models\SubKategori;
 use GuzzleHttp\Psr7\Request;
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Route::get('user/{id}', [UserController::class, 'show']);
     Route::resource('user', UserController::class);
+
+    Route::get('deposit', [DepositController::class, 'index'])->name('deposit');
 
     Route::get('pay-method/getMethod', [PayMethodController::class, 'getMethod'])->name('pay-method.getMethod');
     Route::resource('pay-method', PayMethodController::class);

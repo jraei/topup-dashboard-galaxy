@@ -1,10 +1,10 @@
 <x-app-layout>
     
-<div class="container mx-auto ">
+<div class="container mx-auto px-20 py-6">
     @if (session()->has('success'))
         {{ session('success') }}
     @endif
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+    <div class="relative overflow-x-auto shadow-md dark:shadow-none- sm:rounded-lg">
         <div class="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 py-4 bg-white dark:bg-gray-900">
             <div>
                 <button id="dropdownActionButton" data-dropdown-toggle="dropdownAction" class="inline-flex items-center text-gray-500 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" type="button">
@@ -106,7 +106,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <!-- Modal toggle -->
-                        <a href="" type="button" id="tes" data-modal-target="detailUserModal" data-modal-show="detailUserModal" class="text-base text-slate-400"><i class="fa-solid fa-circle-info mx-2"></i></a>
+                        <a href="" id="detailUserButton" type="button" data-modal-target="detailUserModal" data-id="{{ $user->id }}" class="detailUser text-base text-slate-400"><i class="fa-solid fa-circle-info mx-2"></i></a>
                         <a href="#" type="button" data-modal-target="editUserModal" data-modal-show="editUserModal" class="text-base text-blue-400"><i class="fa-regular fa-pen-to-square"></i></a>
                         <form action="/user/{{ $user->id }}" method="post" class="inline mx-2">
                             @csrf 
@@ -152,37 +152,37 @@
                     <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ID</label>
-                                <input type="number" name="id" id="id" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="1">
+                                <input type="number" name="id" id="detail_id" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="1">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
-                                <input disabled type="text" name="username" id="username" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400  dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Bonnie" required="" value="tes">
+                                <input disabled type="text" name="detail" id="detail_username" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400  dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Bonnie" required="" value="tes">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
-                                <input disabled type="number" name="phone" id="phone" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" required="" value="08193288">
+                                <input disabled type="text" name="detail_phone" id="detail_phone" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" required="" value="08193288">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
-                                <input type="email" name="email" id="email" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" required="" disabled value="tes@gmail.com">
+                                <input type="email" name="email" id="detail_email" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" required="" disabled value="tes@gmail.com">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="saldo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Saldo</label>
-                                <input type="number" name="saldo" id="saldo" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="100000">
+                                <input type="number" name="saldo" id="detail_saldo" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="100000">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="level" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Level</label>
-                                <input type="text" name="level" id="level" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="Admin">
+                                <input type="text" name="level" id="detail_level" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 capitalize"  required="" disabled value="Admin">
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                <input type="text" name="status" id="status" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"  required="" disabled value="active">
+                                <input type="text" name="status" id="detail_status" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 capitalize"  required="" disabled value="active">
                             </div>
                         </div>
                     </div>
                     <!-- Modal footer -->
                     <div class="flex items-center p-6 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b dark:border-gray-600">
-                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save all</button>
+                        <button id="closeDetailButton" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Close</button>
                     </div>
                 </form>
             </div>
@@ -252,4 +252,5 @@
     </div>
 </div>
 
+@include('admin.user.script')
 </x-app-layout>
