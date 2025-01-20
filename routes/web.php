@@ -33,7 +33,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('layanan/getLayanan', [LayananController::class, 'getService'])->name('layanan.getService');
     Route::resource('layanan', LayananController::class);
 
-    // Route::get('user/{id}', [UserController::class, 'show']);
+    Route::post('user', [UserController::class, 'store']);
+    Route::put('user', [UserController::class, 'update']);
     Route::resource('user', UserController::class);
 
     Route::get('deposit', [DepositController::class, 'index'])->name('deposit');
