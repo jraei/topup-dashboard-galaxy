@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Middleware;
@@ -14,7 +13,7 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): mixed
     {
-        if (auth()->check() && auth()->user()->level === 'admin') {
+        if (auth()->check() && auth()->user()->role->role_name === 'admin') {
             return $next($request);
         }
 

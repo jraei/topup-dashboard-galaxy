@@ -1,9 +1,9 @@
-
 <?php
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,22 +44,36 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::get('/categories', [AdminController::class, 'categories'])->name('admin.categories');
     Route::get('/banners', [AdminController::class, 'banners'])->name('admin.banners');
-    
+
     // User Management
     Route::resource('users', UserController::class)->names([
         'index' => 'userManage',
     ]);
-    
+
     // Placeholder routes for all other admin pages
-    Route::get('/products', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.products');
-    Route::get('/services', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.services');
-    Route::get('/profit', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.profit');
-    Route::get('/payment-providers', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.payment-providers');
-    Route::get('/payment-methods', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.payment-methods');
-    Route::get('/transactions', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.transactions');
-    Route::get('/vouchers', function() { return Inertia::render('Admin/Dashboard'); })->name('admin.vouchers');
-    
+    Route::get('/products', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.products');
+    Route::get('/services', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.services');
+    Route::get('/profit', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.profit');
+    Route::get('/payment-providers', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.payment-providers');
+    Route::get('/payment-methods', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.payment-methods');
+    Route::get('/transactions', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.transactions');
+    Route::get('/vouchers', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.vouchers');
+
     // Add more admin routes as needed
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

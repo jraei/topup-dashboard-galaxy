@@ -26,14 +26,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'justin@gmail.com',
             'password' => bcrypt('123justin'),
             'phone' => '081932888380',
-            'level' => 'admin',
+            'user_role_id' => 1,
             'status' => 'active'
         ]);
 
-        User::factory()->count(50)->create()->each(function ($user) {
-            $user->update(['level' => 'basic']);
-        });
-
+        User::factory()->count(50)->create();
 
         PaymentProvider::create([
             'provider_name' => 'Tripay',
@@ -43,20 +40,12 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Kategori::create([
-            "kategori_name" => "Game Mobile"
+            "nama_kategori" => "Top up"
         ]);
         Kategori::create([
-            "kategori_name" => "Game PC"
+            "nama_kategori" => "Mobile legends specialist"
         ]);
 
-        SubKategori::create([
-            "sub_kategori" => "Via Id",
-            "kategori_id" => 1
-        ]);
-        SubKategori::create([
-            "sub_kategori" => "Via Login",
-            "kategori_id" => 2
-        ]);
 
         Provider::create([
             "provider_name" => "digiflazz",

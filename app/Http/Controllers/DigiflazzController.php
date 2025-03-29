@@ -15,7 +15,7 @@ class DigiflazzController extends Controller
 {
     public function __construct()
     {
-        $digiflazz = Provider::where('provider_name' , 'digiflazz')->first();
+        $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
         Digiflazz::initDigiflazz($digiflazz->api_username, $digiflazz->api_key);
     }
 
@@ -108,7 +108,7 @@ class DigiflazzController extends Controller
             try {
                 $isExist = Produk::where('brand', $game)->first();
 
-                if(!$isExist){
+                if (!$isExist) {
                     Produk::create([
                         "nama" => $game,
                         "brand" => $game,
@@ -117,7 +117,7 @@ class DigiflazzController extends Controller
                         "slug" => Str::slug($game, '-'),
                         "thumbnail" => "null"
                     ]);
-                } else{
+                } else {
                     $isExist->update([
                         "nama" => $game,
                         "brand" => $game,
@@ -131,7 +131,7 @@ class DigiflazzController extends Controller
         foreach (array_unique($arrPulsa) as $pulsa) {
             try {
                 $isExist = Produk::where('brand', $pulsa)->first();
-                if(!$isExist){
+                if (!$isExist) {
                     Produk::create([
                         "nama" => $pulsa,
                         "brand" => $pulsa,
@@ -140,7 +140,7 @@ class DigiflazzController extends Controller
                         "slug" => Str::slug($pulsa, '-'),
                         "thumbnail" => "null",
                     ]);
-                } else{
+                } else {
                     $isExist->update([
                         "nama" => $pulsa,
                         "brand" => $pulsa,

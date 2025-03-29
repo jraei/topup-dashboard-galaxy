@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         return view('admin.deposit.index');
     }
 }

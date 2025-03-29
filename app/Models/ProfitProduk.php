@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -20,13 +19,13 @@ class ProfitProduk extends Model
 
     public static function calculatePrice($basePrice, $userLevel = 'guest')
     {
-        $profit = match($userLevel) {
+        $profit = match ($userLevel) {
             'basic' => $this->profit_basic,
             'premium' => $this->profit_premium,
             'h2h' => $this->profit_h2h,
             default => $this->profit_guest, // guest or any unknown level
         };
-        
+
         return $basePrice + ($basePrice * $profit / 100);
     }
 }

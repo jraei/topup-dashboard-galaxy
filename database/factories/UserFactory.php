@@ -24,7 +24,8 @@ class UserFactory extends Factory
             'password' => bcrypt('password'), // password
             'remember_token' => Str::random(10),
             'phone' => fake()->phoneNumber(),
-            'status' => 'active'
+            'status' => 'active',
+            'user_role_id' => 2,
         ];
     }
 

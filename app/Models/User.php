@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -46,7 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function role(): BelongsTo
     {
-        return $this->belongsTo(UserRole::class, 'level', 'role_name');
+        return $this->belongsTo(UserRole::class, 'user_role_id');
     }
 
     public function deposits(): HasMany

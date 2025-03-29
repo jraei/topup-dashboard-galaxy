@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -17,7 +16,7 @@ class Banner extends Model
         if (filter_var($this->image_path, FILTER_VALIDATE_URL)) {
             return $this->image_path;
         }
-        
+
         // Handle relative paths, storage paths, etc.
         return asset('storage/' . $this->image_path);
     }
