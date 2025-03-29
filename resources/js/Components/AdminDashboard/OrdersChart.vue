@@ -42,7 +42,7 @@ const chartData = {
 onMounted(() => {
   if (typeof window !== 'undefined') {
     import('chart.js').then((ChartModule) => {
-      const { Chart, registerables } = ChartModule.default;
+      const { Chart, registerables } = ChartModule;
       Chart.register(...registerables);
 
       // Destroy existing chart if it exists
