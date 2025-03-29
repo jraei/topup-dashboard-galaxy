@@ -1,326 +1,307 @@
+
 <script setup>
-import { ref } from "vue";
-import { Head } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import DataTable from "@/Components/DataTable.vue";
+import { Head } from "@inertiajs/vue3";
+import { ref, onMounted } from "vue";
 
-// Mock data for categories
-// In a real application, this would come from the backend
-const categories = ref([
-    {
-        id: 1,
-        name: "Mobile Legends",
-        slug: "mobile-legends",
-        icon: "🎮",
-        product_count: 15,
-        status: "active",
-        created_at: "2023-08-15",
-    },
-    {
-        id: 2,
-        name: "Free Fire",
-        slug: "free-fire",
-        icon: "🔫",
-        product_count: 12,
-        status: "active",
-        created_at: "2023-08-16",
-    },
-    {
-        id: 3,
-        name: "PUBG Mobile",
-        slug: "pubg-mobile",
-        icon: "🧩",
-        product_count: 8,
-        status: "active",
-        created_at: "2023-08-17",
-    },
-    {
-        id: 4,
-        name: "Genshin Impact",
-        slug: "genshin-impact",
-        icon: "⚔️",
-        product_count: 10,
-        status: "active",
-        created_at: "2023-08-18",
-    },
-    {
-        id: 5,
-        name: "Valorant",
-        slug: "valorant",
-        icon: "🏆",
-        product_count: 6,
-        status: "active",
-        created_at: "2023-08-19",
-    },
-]);
+// Category data
+const categories = ref([]);
+const isLoading = ref(true);
+const modalOpen = ref(false);
+const editMode = ref(false);
+const currentCategory = ref({
+  id: null,
+  name: '',
+  slug: '',
+  description: '',
+  icon: '',
+  status: true
+});
 
-// Column definitions for the table
+// Pagination
+const pagination = ref({
+  current_page: 1,
+  per_page: 10,
+  total: 0
+});
+
+// Column definitions for DataTable
 const columns = [
-    { key: "id", label: "ID" },
-    { key: "icon", label: "Icon" },
-    { key: "name", label: "Name" },
-    { key: "slug", label: "Slug" },
-    { key: "product_count", label: "Products" },
-    {
-        key: "status",
-        label: "Status",
-        format: (value) => {
-            const statusClasses =
-                value === "active"
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-red-500/20 text-red-400";
-
-            return `<span class="${statusClasses} px-2 py-1 rounded-full text-xs">${value}</span>`;
-        },
-    },
-    { key: "created_at", label: "Created At" },
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'slug', label: 'Slug' },
+  { key: 'description', label: 'Description' },
+  { 
+    key: 'status', 
+    label: 'Status',
+    format: (value) => {
+      return value ? 
+        '<span class="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Active</span>' : 
+        '<span class="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs">Inactive</span>';
+    }
+  }
 ];
 
-// Handle actions
-const handleView = (item) => {
-    console.log("View", item);
-    // In a real app, you would redirect to the view page or show a modal
-};
-
-const handleEdit = (item) => {
-    console.log("Edit", item);
-    // In a real app, you would redirect to the edit page or show a modal
-};
-
-const handleDelete = (item) => {
-    console.log("Delete", item);
-    // In a real app, you would show a confirmation dialog before deleting
-};
-
-// Form modal states
-const showForm = ref(false);
-const formMode = ref("add"); // 'add' or 'edit'
-const currentCategory = ref(null);
-
-const openAddForm = () => {
-    formMode.value = "add";
-    currentCategory.value = {
-        name: "",
-        slug: "",
-        icon: "",
-        status: "active",
+// Sample data - in a real app this would come from the backend API
+onMounted(() => {
+  // Simulate API fetch
+  setTimeout(() => {
+    categories.value = [
+      { id: 1, name: 'Mobile Games', slug: 'mobile-games', description: 'Top up for mobile games', icon: 'game-icons', status: true },
+      { id: 2, name: 'PC Games', slug: 'pc-games', description: 'Top up for PC games', icon: 'desktop', status: true },
+      { id: 3, name: 'Console Games', slug: 'console-games', description: 'Top up for console games', icon: 'controller', status: false },
+      { id: 4, name: 'Digital Vouchers', slug: 'digital-vouchers', description: 'Various digital vouchers', icon: 'ticket', status: true },
+      { id: 5, name: 'E-Money', slug: 'e-money', description: 'Electronic money top up', icon: 'wallet', status: true }
+    ];
+    
+    pagination.value = {
+      current_page: 1,
+      per_page: 10,
+      total: categories.value.length
     };
-    showForm.value = true;
+    
+    isLoading.value = false;
+  }, 1000);
+});
+
+// Action handlers
+const handleView = (category) => {
+  console.log('View category:', category);
+  // Implement view logic
 };
 
-const openEditForm = (category) => {
-    formMode.value = "edit";
-    currentCategory.value = { ...category };
-    showForm.value = true;
+const handleEdit = (category) => {
+  currentCategory.value = {...category};
+  editMode.value = true;
+  modalOpen.value = true;
 };
 
-const closeForm = () => {
-    showForm.value = false;
+const handleDelete = (category) => {
+  if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+    console.log('Delete category:', category);
+    // Implement delete logic
+  }
 };
 
-const saveCategory = () => {
-    // In a real app, you would send a request to the backend
-    console.log("Save category", currentCategory.value);
+const handleAddNew = () => {
+  currentCategory.value = {
+    id: null,
+    name: '',
+    slug: '',
+    description: '',
+    icon: '',
+    status: true
+  };
+  editMode.value = false;
+  modalOpen.value = true;
+};
 
-    if (formMode.value === "add") {
-        // Simulate adding a new category
-        const newCategory = {
-            ...currentCategory.value,
-            id: categories.value.length + 1,
-            product_count: 0,
-            created_at: new Date().toISOString().split("T")[0],
-        };
-        categories.value.push(newCategory);
-    } else {
-        // Simulate updating an existing category
-        const index = categories.value.findIndex(
-            (c) => c.id === currentCategory.value.id
-        );
-        if (index !== -1) {
-            categories.value[index] = { ...currentCategory.value };
-        }
-    }
+const handleSave = () => {
+  console.log('Save category:', currentCategory.value);
+  // Implement save logic
+  
+  modalOpen.value = false;
+};
 
-    closeForm();
+const handlePageChange = (page) => {
+  pagination.value.current_page = page;
+  // Implement page change logic
+};
+
+const handleSearch = (query) => {
+  console.log('Search query:', query);
+  // Implement search logic
+};
+
+// Generate slug from name
+const generateSlug = (name) => {
+  return name.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 };
 </script>
 
 <template>
-    <Head title="Categories" />
+  <Head title="Categories" />
 
-    <AdminLayout title="Categories">
-        <div class="container">
-            <DataTable
-                :data="categories"
-                :columns="columns"
-                class="min-w-full"
-                @view="handleView"
-                @edit="openEditForm"
-                @delete="handleDelete"
+  <AdminLayout title="Categories">
+    <div>
+      <!-- DataTable Component -->
+      <DataTable 
+        :data="categories"
+        :columns="columns"
+        :pagination="pagination"
+        @view="handleView"
+        @edit="handleEdit"
+        @delete="handleDelete"
+        @page-change="handlePageChange"
+        @search="handleSearch"
+      >
+        <template #title>Game Categories</template>
+        
+        <template #actions>
+          <button 
+            @click="handleAddNew"
+            class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg hover:shadow-glow-primary transition-all duration-200 flex items-center space-x-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Add Category</span>
+          </button>
+        </template>
+        
+        <!-- Custom Cell Templates -->
+        <template #cell(name)="{ item }">
+          <div class="flex items-center">
+            <span class="font-medium text-white">{{ item.name }}</span>
+          </div>
+        </template>
+        
+        <template #cell(description)="{ item }">
+          <div class="max-w-xs truncate text-gray-300">{{ item.description }}</div>
+        </template>
+        
+        <!-- Custom Actions Template -->
+        <template #actions="{ item }">
+          <div class="flex space-x-3 justify-end">
+            <button 
+              @click="handleView(item)" 
+              class="text-secondary hover:text-secondary-hover transition-colors"
+              title="View Details"
             >
-                <template #title> Game Categories </template>
-
-                <template #actions>
-                    <button
-                        @click="openAddForm"
-                        class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg hover:shadow-glow-primary transition-all duration-200 flex items-center space-x-2"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                        </svg>
-                        <span>Add Category</span>
-                    </button>
-                </template>
-
-                <template #cell(icon)="{ item }">
-                    <div
-                        class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-white"
-                    >
-                        {{ item.icon }}
-                    </div>
-                </template>
-            </DataTable>
-
-            <!-- Add/Edit Category Modal -->
-            <div
-                v-if="showForm"
-                class="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 flex items-center justify-center"
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+            <button 
+              @click="handleEdit(item)" 
+              class="text-primary hover:text-primary-hover transition-colors"
+              title="Edit"
             >
-                <div
-                    class="relative bg-dark-card border border-gray-700 rounded-lg shadow-lg max-w-md w-full mx-auto p-6 m-4"
-                >
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white">
-                            {{
-                                formMode === "add"
-                                    ? "Add New Category"
-                                    : "Edit Category"
-                            }}
-                        </h3>
-                        <button
-                            @click="closeForm"
-                            class="text-gray-400 hover:text-white"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-6 w-6"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
-                    </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button 
+              @click="handleDelete(item)" 
+              class="text-red-400 hover:text-red-500 transition-colors"
+              title="Delete"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </template>
+      </DataTable>
 
-                    <form @submit.prevent="saveCategory">
-                        <div class="space-y-4">
-                            <!-- Name Field -->
-                            <div>
-                                <label
-                                    for="name"
-                                    class="block text-sm font-medium text-gray-300 mb-1"
-                                    >Name</label
-                                >
-                                <input
-                                    id="name"
-                                    v-model="currentCategory.name"
-                                    type="text"
-                                    class="w-full px-3 py-2 bg-dark-sidebar border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="Category Name"
-                                    required
-                                />
-                            </div>
+      <!-- Category Modal (Add/Edit) -->
+      <div v-if="modalOpen" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div class="fixed inset-0 bg-black/75 transition-opacity" @click="modalOpen = false"></div>
 
-                            <!-- Slug Field -->
-                            <div>
-                                <label
-                                    for="slug"
-                                    class="block text-sm font-medium text-gray-300 mb-1"
-                                    >Slug</label
-                                >
-                                <input
-                                    id="slug"
-                                    v-model="currentCategory.slug"
-                                    type="text"
-                                    class="w-full px-3 py-2 bg-dark-sidebar border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="category-slug"
-                                    required
-                                />
-                            </div>
-
-                            <!-- Icon Field -->
-                            <div>
-                                <label
-                                    for="icon"
-                                    class="block text-sm font-medium text-gray-300 mb-1"
-                                    >Icon (Emoji)</label
-                                >
-                                <input
-                                    id="icon"
-                                    v-model="currentCategory.icon"
-                                    type="text"
-                                    class="w-full px-3 py-2 bg-dark-sidebar border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="🎮"
-                                />
-                            </div>
-
-                            <!-- Status Field -->
-                            <div>
-                                <label
-                                    for="status"
-                                    class="block text-sm font-medium text-gray-300 mb-1"
-                                    >Status</label
-                                >
-                                <select
-                                    id="status"
-                                    v-model="currentCategory.status"
-                                    class="w-full px-3 py-2 bg-dark-sidebar border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-
-                            <div class="flex justify-end space-x-3 pt-4">
-                                <button
-                                    type="button"
-                                    @click="closeForm"
-                                    class="px-4 py-2 bg-dark-lighter text-gray-300 hover:text-white rounded-lg"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg hover:shadow-glow-primary transition-all duration-200"
-                                >
-                                    {{
-                                        formMode === "add"
-                                            ? "Create Category"
-                                            : "Update Category"
-                                    }}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+          <div class="inline-block align-bottom bg-dark-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-700">
+            <div class="px-6 py-5 border-b border-gray-700 flex justify-between items-center">
+              <h3 class="text-xl font-medium text-white">{{ editMode ? 'Edit Category' : 'Add New Category' }}</h3>
+              <button @click="modalOpen = false" class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
+            <div class="px-6 py-4">
+              <form @submit.prevent="handleSave">
+                <div class="mb-4">
+                  <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Category Name</label>
+                  <input 
+                    type="text" 
+                    id="name" 
+                    v-model="currentCategory.name" 
+                    class="w-full px-4 py-2 rounded-lg bg-dark-lighter border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    @input="currentCategory.slug = generateSlug(currentCategory.name)"
+                    required
+                  >
+                </div>
+                
+                <div class="mb-4">
+                  <label for="slug" class="block text-sm font-medium text-gray-300 mb-1">Slug</label>
+                  <input 
+                    type="text" 
+                    id="slug" 
+                    v-model="currentCategory.slug" 
+                    class="w-full px-4 py-2 rounded-lg bg-dark-lighter border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
+                  >
+                </div>
+                
+                <div class="mb-4">
+                  <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                  <textarea 
+                    id="description" 
+                    v-model="currentCategory.description" 
+                    class="w-full px-4 py-2 rounded-lg bg-dark-lighter border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    rows="3"
+                  ></textarea>
+                </div>
+                
+                <div class="mb-4">
+                  <label for="icon" class="block text-sm font-medium text-gray-300 mb-1">Icon</label>
+                  <input 
+                    type="text" 
+                    id="icon" 
+                    v-model="currentCategory.icon" 
+                    class="w-full px-4 py-2 rounded-lg bg-dark-lighter border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                </div>
+                
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                  <div class="flex items-center space-x-4">
+                    <label class="inline-flex items-center">
+                      <input 
+                        type="radio" 
+                        v-model="currentCategory.status" 
+                        :value="true"
+                        class="text-primary focus:ring-primary h-4 w-4"
+                      >
+                      <span class="ml-2 text-white">Active</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                      <input 
+                        type="radio" 
+                        v-model="currentCategory.status" 
+                        :value="false"
+                        class="text-red-500 focus:ring-red-500 h-4 w-4"
+                      >
+                      <span class="ml-2 text-white">Inactive</span>
+                    </label>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="px-6 py-4 bg-dark-lighter border-t border-gray-700 flex justify-end space-x-3">
+              <button 
+                @click="modalOpen = false" 
+                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                @click="handleSave" 
+                class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-md hover:shadow-glow-primary transition-all"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-    </AdminLayout>
+      </div>
+    </div>
+  </AdminLayout>
 </template>
