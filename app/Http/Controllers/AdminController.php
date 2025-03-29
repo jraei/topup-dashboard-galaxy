@@ -17,4 +17,14 @@ class AdminController extends Controller
     {
         return Inertia::render('Admin/Settings');
     }
+    
+    public function categories()
+    {
+        return Inertia::render('Admin/Categories');
+    }
+    
+    public function banners()
+    {
+        return Inertia::render('Admin/Banners');
+    }
 }
