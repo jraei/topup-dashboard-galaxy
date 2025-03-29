@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use App\Models\Kategori;
 
 class AdminController extends Controller
 {
@@ -21,8 +20,11 @@ class AdminController extends Controller
     
     public function categories()
     {
-        return Inertia::render('Admin/Categories', [
-            'categories' => Kategori::withCount('produks')->latest()->get()
-        ]);
+        return Inertia::render('Admin/Categories');
+    }
+    
+    public function banners()
+    {
+        return Inertia::render('Admin/Banners');
     }
 }
