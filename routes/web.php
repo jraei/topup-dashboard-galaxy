@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::get('/categories', [AdminController::class, 'categories'])->name('admin.categories');
     
     // User Management
     Route::resource('users', UserController::class)->names([
