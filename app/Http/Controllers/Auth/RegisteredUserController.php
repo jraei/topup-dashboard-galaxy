@@ -11,16 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(): Response
     {
-        return view('auth.register');
+        return Inertia::render('Auth/Register');
     }
 
     /**
@@ -31,14 +32,13 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'username' => ['required', 'string', 'max:255', 'unique:users', 'alpha_num:ascii', 'lowercase'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $username = trim(preg_replace('/\s+/', ' ', $request->username));
         $user = User::create([
-            'username' => $username,
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
@@ -47,6 +47,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect('verify-email');
+        return redirect(RouteServiceProvider::HOME);
     }
 }

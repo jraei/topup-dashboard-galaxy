@@ -11,7 +11,6 @@ use App\Models\SubKategori;
 use Illuminate\Support\Str;
 use App\Models\PaymentProvider;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,10 +20,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        // bikin role spatie
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'basic']);
-        Role::create(['name' => 'premium']);
 
         User::factory()->create([
             'username' => 'justin',
@@ -33,10 +28,10 @@ class DatabaseSeeder extends Seeder
             'phone' => '081932888380',
             'level' => 'admin',
             'status' => 'active'
-        ])->assignRole('admin');
+        ]);
 
         User::factory()->count(50)->create()->each(function ($user) {
-            $user->assignRole('basic');
+            $user->update(['level' => 'basic']);
         });
 
 

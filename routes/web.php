@@ -1,47 +1,33 @@
 <?php
 
-use App\Http\Controllers\DepositController;
-use GuzzleHttp\Client;
-use App\Models\SubKategori;
-use GuzzleHttp\Psr7\Request;
-use Gonon\Digiflazz\Digiflazz;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\LayananController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\KategoriController;
-use App\Http\Controllers\PayMethodController;
-use App\Http\Controllers\SubKategoriController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
 
 Route::get('/', function () {
-    return view('welcome');
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
 });
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    Route::get('/admin', function () {
-        return view('admin.index');
-    })->name('dashboard');
-
-    Route::get('produk/getProduk', [ProdukController::class, 'getProduk']);
-    Route::resource('produk', ProdukController::class);
-
-
-    Route::resource('kategori', KategoriController::class);
-    Route::resource('sub-kategori', SubKategoriController::class);
-
-    Route::get('layanan/getLayanan', [LayananController::class, 'getService'])->name('layanan.getService');
-    Route::resource('layanan', LayananController::class);
-
-    Route::post('user', [UserController::class, 'store']);
-    Route::put('user', [UserController::class, 'update']);
-    Route::resource('user', UserController::class);
-
-    Route::get('deposit', [DepositController::class, 'index'])->name('deposit');
-
-    Route::get('pay-method/getMethod', [PayMethodController::class, 'getMethod'])->name('pay-method.getMethod');
-    Route::resource('pay-method', PayMethodController::class);
-});
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -49,4 +35,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
