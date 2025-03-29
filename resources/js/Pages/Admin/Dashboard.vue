@@ -14,6 +14,12 @@ import {
   Package 
 } from "lucide-vue-next";
 
+// Import the newly created components
+import StatCard from "@/Components/AdminDashboard/StatCard.vue";
+import RevenueChart from "@/Components/AdminDashboard/RevenueChart.vue";
+import OrdersChart from "@/Components/AdminDashboard/OrdersChart.vue";
+import PopularGames from "@/Components/AdminDashboard/PopularGames.vue";
+
 // Mock data for charts and statistics (to be replaced with actual backend data)
 const stats = ref({
   users: {
@@ -73,91 +79,70 @@ const getStatusClass = (status) => {
       <!-- Stats Grid -->
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <!-- Users Stat Card -->
-        <Card class="bg-gradient-to-br from-dark-card to-dark-lighter border-gray-700 hover:shadow-glow-primary transition-all">
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium text-gray-400">Total Users</CardTitle>
-            <Users class="h-4 w-4 text-muted-foreground text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div class="text-2xl font-bold text-white">{{ stats.users.total.toLocaleString() }}</div>
-            <p :class="[
-              'text-xs',
-              stats.users.isPositive ? 'text-green-400' : 'text-red-400'
-            ]">
-              <TrendingUp v-if="stats.users.isPositive" class="inline-block mr-1 h-3 w-3" />
-              <TrendingDown v-else class="inline-block mr-1 h-3 w-3" />
-              {{ Math.abs(stats.users.growthPercent) }}% 
-              {{ stats.users.isPositive ? 'increase' : 'decrease' }}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Total Users" 
+          :value="stats.users.total" 
+          :icon="Users" 
+          icon-color="text-primary" 
+          :growth-percent="stats.users.growthPercent"
+          :is-positive="stats.users.isPositive"
+        />
 
         <!-- Revenue Stat Card -->
-        <Card class="bg-gradient-to-br from-dark-card to-dark-lighter border-gray-700 hover:shadow-glow-secondary transition-all">
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium text-gray-400">Total Revenue</CardTitle>
-            <DollarSign class="h-4 w-4 text-muted-foreground text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div class="text-2xl font-bold text-white">{{ formatCurrency(stats.revenue.total) }}</div>
-            <p :class="[
-              'text-xs',
-              stats.revenue.isPositive ? 'text-green-400' : 'text-red-400'
-            ]">
-              <TrendingUp v-if="stats.revenue.isPositive" class="inline-block mr-1 h-3 w-3" />
-              <TrendingDown v-else class="inline-block mr-1 h-3 w-3" />
-              {{ Math.abs(stats.revenue.growthPercent) }}% 
-              {{ stats.revenue.isPositive ? 'increase' : 'decrease' }}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Total Revenue" 
+          :value="stats.revenue.total" 
+          :icon="DollarSign" 
+          icon-color="text-secondary" 
+          :growth-percent="stats.revenue.growthPercent"
+          :is-positive="stats.revenue.isPositive"
+          :currency="stats.revenue.currency"
+        />
 
         <!-- Orders Stat Card -->
-        <Card class="bg-gradient-to-br from-dark-card to-dark-lighter border-gray-700 hover:shadow-glow-primary transition-all">
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium text-gray-400">Total Orders</CardTitle>
-            <ShoppingCart class="h-4 w-4 text-muted-foreground text-pink-400" />
-          </CardHeader>
-          <CardContent>
-            <div class="text-2xl font-bold text-white">{{ stats.orders.total.toLocaleString() }}</div>
-            <p :class="[
-              'text-xs',
-              stats.orders.isPositive ? 'text-green-400' : 'text-red-400'
-            ]">
-              <TrendingUp v-if="stats.orders.isPositive" class="inline-block mr-1 h-3 w-3" />
-              <TrendingDown v-else class="inline-block mr-1 h-3 w-3" />
-              {{ Math.abs(stats.orders.growthPercent) }}% 
-              {{ stats.orders.isPositive ? 'increase' : 'decrease' }}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Total Orders" 
+          :value="stats.orders.total" 
+          :icon="ShoppingCart" 
+          icon-color="text-pink-400" 
+          :growth-percent="stats.orders.growthPercent"
+          :is-positive="stats.orders.isPositive"
+        />
 
         <!-- Products Stat Card -->
-        <Card class="bg-gradient-to-br from-dark-card to-dark-lighter border-gray-700 hover:shadow-glow-secondary transition-all">
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium text-gray-400">Active Products</CardTitle>
-            <Package class="h-4 w-4 text-muted-foreground text-purple-400" />
-          </CardHeader>
-          <CardContent>
-            <div class="text-2xl font-bold text-white">{{ stats.products.total }}</div>
-            <p :class="[
-              'text-xs',
-              stats.products.isPositive ? 'text-green-400' : 'text-red-400'
-            ]">
-              <TrendingUp v-if="stats.products.isPositive" class="inline-block mr-1 h-3 w-3" />
-              <TrendingDown v-else class="inline-block mr-1 h-3 w-3" />
-              {{ Math.abs(stats.products.growthPercent) }}% 
-              {{ stats.products.isPositive ? 'increase' : 'decrease' }}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard 
+          title="Active Products" 
+          :value="stats.products.total" 
+          :icon="Package" 
+          icon-color="text-purple-400" 
+          :growth-percent="stats.products.growthPercent"
+          :is-positive="stats.products.isPositive"
+        />
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Revenue Chart - Takes 2/3 of the space on large screens -->
+        <div class="lg:col-span-2">
+          <RevenueChart />
+        </div>
+        
+        <!-- Popular Games - Takes 1/3 of the space -->
+        <div>
+          <PopularGames />
+        </div>
+      </div>
+
+      <!-- Orders Chart -->
+      <div>
+        <OrdersChart />
       </div>
 
       <!-- Recent Transactions -->
       <div class="bg-dark-card rounded-lg border border-gray-700 shadow-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
           <h3 class="text-xl font-semibold text-white">Recent Transactions</h3>
-          <Badge variant="secondary">View All</Badge>
+          <Badge variant="secondary" class="cursor-pointer hover:bg-secondary/80 transition-colors">View All</Badge>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full min-w-full">
