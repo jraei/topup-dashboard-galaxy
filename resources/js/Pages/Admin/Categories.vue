@@ -1,4 +1,3 @@
-
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import DataTable from "@/Components/DataTable.vue";
@@ -143,7 +142,7 @@ const generateSlug = (name) => {
       >
         <template #title>Game Categories</template>
         
-        <template #actions>
+        <template #tableActions>
           <button 
             @click="handleAddNew"
             class="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg hover:shadow-glow-primary transition-all duration-200 flex items-center space-x-2"
@@ -167,7 +166,7 @@ const generateSlug = (name) => {
         </template>
         
         <!-- Custom Actions Template -->
-        <template #actions="{ item }">
+        <template #rowActions="{ item }">
           <div class="flex space-x-3 justify-end">
             <button 
               @click="handleView(item)" 
