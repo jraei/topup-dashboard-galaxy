@@ -6,7 +6,5 @@ use Illuminate\Http\Request;
 
 class AjaxController extends Controller
 {
-    public function getAjax($url){
-        
-    }
+    public function getAjax($url) {}
 }

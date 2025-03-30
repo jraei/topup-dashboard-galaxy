@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -33,13 +32,13 @@ class Pembelian extends Model
         $date = now()->format('Ymd');
         $random = rand(1000, 9999);
         $uniqueId = $prefix . $date . $random;
-        
+
         // Check if ID already exists
         while (self::where('reference_id', $uniqueId)->exists()) {
             $random = rand(1000, 9999);
             $uniqueId = $prefix . $date . $random;
         }
-        
+
         return $uniqueId;
     }
 }

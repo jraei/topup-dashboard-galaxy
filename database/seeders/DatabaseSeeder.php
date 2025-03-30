@@ -26,14 +26,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'justin@gmail.com',
             'password' => bcrypt('123justin'),
             'phone' => '081932888380',
-            'level' => 'admin',
+            'user_role_id' => 1,
             'status' => 'active'
         ]);
 
-        User::factory()->count(50)->create()->each(function ($user) {
-            $user->update(['level' => 'basic']);
-        });
-
+        User::factory()->count(50)->create();
 
         PaymentProvider::create([
             'provider_name' => 'Tripay',

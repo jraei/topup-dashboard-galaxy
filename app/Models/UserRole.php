@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -20,6 +19,6 @@ class UserRole extends Model
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'level', 'role_name');
+        return $this->hasMany(User::class, 'user_role_id');
     }
 }
