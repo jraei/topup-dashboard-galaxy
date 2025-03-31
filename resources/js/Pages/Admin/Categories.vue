@@ -177,6 +177,7 @@ const saveCategory = () => {
             @view="handleView"
             @edit="openEditForm"
             @delete="handleDelete"
+            class="max-w-full overflow-x-auto"
         >
             <template #title> Game Categories </template>
 
@@ -215,10 +216,12 @@ const saveCategory = () => {
         <!-- Add/Edit Category Modal -->
         <div
             v-if="showForm"
-            class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
+            class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50"
+            @click.self="closeForm"
         >
             <div
-                class="relative w-full max-w-md p-6 m-4 border border-gray-700 rounded-lg shadow-lg bg-dark-card"
+                class="relative w-full max-w-md p-4 mx-4 my-6 border border-gray-700 rounded-lg shadow-lg bg-dark-card sm:p-6"
+                @click.stop
             >
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-bold text-white">
@@ -312,8 +315,13 @@ const saveCategory = () => {
         </div>
 
         <!-- View Category Modal -->
-        <Modal :show="showViewModal" @close="closeViewModal" max-width="md">
-            <div class="p-6 bg-dark-card rounded-lg border border-gray-700">
+        <Modal 
+            :show="showViewModal" 
+            @close="closeViewModal" 
+            max-width="md"
+            class="overflow-y-auto"
+        >
+            <div class="p-4 bg-dark-card rounded-lg border border-gray-700 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-bold text-white">Category Details</h3>
                     <button @click="closeViewModal" class="text-gray-400 hover:text-white">
@@ -339,16 +347,16 @@ const saveCategory = () => {
                 </div>
 
                 <div v-else-if="selectedCategory" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-dark-lighter p-4 rounded-lg">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="bg-dark-lighter p-3 rounded-lg">
                             <p class="text-gray-400 text-sm">Category ID</p>
                             <p class="text-white font-medium">{{ selectedCategory.id }}</p>
                         </div>
-                        <div class="bg-dark-lighter p-4 rounded-lg">
+                        <div class="bg-dark-lighter p-3 rounded-lg">
                             <p class="text-gray-400 text-sm">Name</p>
                             <p class="text-white font-medium">{{ selectedCategory.kategori_name }}</p>
                         </div>
-                        <div class="bg-dark-lighter p-4 rounded-lg">
+                        <div class="bg-dark-lighter p-3 rounded-lg">
                             <p class="text-gray-400 text-sm">Status</p>
                             <p>
                                 <span 
@@ -361,18 +369,18 @@ const saveCategory = () => {
                                 </span>
                             </p>
                         </div>
-                        <div class="bg-dark-lighter p-4 rounded-lg">
+                        <div class="bg-dark-lighter p-3 rounded-lg">
                             <p class="text-gray-400 text-sm">Product Count</p>
                             <p class="text-white font-medium">{{ selectedCategory.product_count || 0 }}</p>
                         </div>
                     </div>
                     
-                    <div class="bg-dark-lighter p-4 rounded-lg">
+                    <div class="bg-dark-lighter p-3 rounded-lg">
                         <p class="text-gray-400 text-sm">Created At</p>
                         <p class="text-white">{{ new Date(selectedCategory.created_at).toLocaleString() }}</p>
                     </div>
                     
-                    <div class="bg-dark-lighter p-4 rounded-lg">
+                    <div class="bg-dark-lighter p-3 rounded-lg">
                         <p class="text-gray-400 text-sm">Last Updated</p>
                         <p class="text-white">{{ new Date(selectedCategory.updated_at).toLocaleString() }}</p>
                     </div>
@@ -396,3 +404,46 @@ const saveCategory = () => {
         </Modal>
     </AdminLayout>
 </template>
+
+<style>
+/* Fix for mobile scrolling issues */
+body {
+    @apply bg-dark overflow-x-hidden min-h-screen;
+    width: 100vw;
+    overscroll-behavior: none;
+}
+
+/* Ensure modal content doesn't overflow */
+.fixed.inset-0 {
+    overflow-y: auto;
+    height: 100%;
+    max-height: 100vh;
+}
+
+/* Make DataTable responsive */
+.max-w-full {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Adjust spacing for mobile */
+@media (max-width: 640px) {
+    .p-6 {
+        padding: 1rem;
+    }
+    
+    .space-y-4 > * + * {
+        margin-top: 0.75rem;
+    }
+    
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Ensure content doesn't overflow viewport */
+.overflow-y-auto {
+    max-height: 80vh;
+}
+</style>
