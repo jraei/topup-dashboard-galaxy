@@ -5,20 +5,23 @@ import { Head, router, usePage } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import DataTable from "@/Components/DataTable.vue";
 import Modal from "@/Components/Modal.vue";
-import Dropdown from "@/Components/Dropdown.vue";
-import DropdownLink from "@/Components/DropdownLink.vue";
-import Pagination from "@/Components/Pagination.vue";
 import axios from "axios";
 
 const props = defineProps({
-    categories: Object,
+    categories: Array,
     errors: Object,
 });
 
 const { proxy } = getCurrentInstance();
 
-// Data computed property
-const categories = computed(() => props.categories.data || []);
+// flash message
+// nyalakan kalau mau pake alert biasa
+// const page = usePage();
+// const successMessage = computed(() => page.props.flash?.success || null);
+
+// Mock data for categories
+// In a real application, this would come from the backend
+const categories = computed(() => props.categories);
 
 // Column definitions for the table
 const columns = [
@@ -66,7 +69,18 @@ const handleView = async (item) => {
 };
 
 const handleEdit = (item) => {
-    openEditForm(item);
+    console.log("Edit", item);
+    
+    proxy.$showSwalConfirm({
+        onConfirm: () => {
+            // Logika penghapusan data
+            router.delete(route("categories.destroy", item.id), {
+                preserveScroll: true,
+            });
+        },
+    });
+
+    // In a real app, you would show a confirmation dialog before deleting
 };
 
 const handleDelete = (item) => {
@@ -110,14 +124,21 @@ const closeViewModal = () => {
 };
 
 const saveCategory = () => {
+    // In a real app, you would send a request to the backend
+    console.log("Save category", currentCategory.value);
+
     if (formMode.value === "add") {
+        // Simulate adding a new category
         router.post(route("categories.store"), currentCategory.value, {
+            // preserveState: false,
             preserveScroll: true,
             onSuccess: () => {
+                // successMessage.value = page.props.flash.success;
                 currentCategory.value.category_name = "";
             },
         });
     } else {
+        // Simulate updating an existing category
         router.put(
             route("categories.update", currentCategory.value.id),
             currentCategory.value,
@@ -135,6 +156,13 @@ const saveCategory = () => {
     <Head title="Categories" />
 
     <AdminLayout title="Categories">
+        <!-- nyalakan kalau mau pake alert biasa -->
+        <!-- <div
+            v-if="successMessage"
+            class="px-8 py-3 mb-4 text-sm text-white bg-green-500/80"
+        >
+            {{ successMessage }}
+        </div> -->
         <div
             v-if="Object.keys(errors).length > 0"
             class="px-8 py-3 mb-4 text-sm text-white bg-red-500/80"
@@ -143,85 +171,47 @@ const saveCategory = () => {
                 <li>{{ error }}</li>
             </ul>
         </div>
-        
-        <div class="w-full overflow-hidden">
-            <DataTable
-                :data="categories"
-                :columns="columns"
-                class="w-full"
-            >
-                <template #title> Game Categories </template>
+        <DataTable
+            :data="categories"
+            :columns="columns"
+            @view="handleView"
+            @edit="openEditForm"
+            @delete="handleDelete"
+            class="max-w-full overflow-x-auto"
+        >
+            <template #title> Game Categories </template>
 
-                <template #addButton>
-                    <button
-                        @click="openAddForm"
-                        class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+            <template #addButton>
+                <button
+                    @click="openAddForm"
+                    class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                        </svg>
-                        <span>Add Category</span>
-                    </button>
-                </template>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                    </svg>
+                    <span>Add Category</span>
+                </button>
+            </template>
 
-                <template #actions="{ item }">
-                    <Dropdown align="right" width="48">
-                        <template #trigger>
-                            <button class="inline-flex items-center justify-center p-2 text-gray-400 transition-colors rounded-full hover:text-white hover:bg-dark-lighter">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                            </button>
-                        </template>
-
-                        <template #content>
-                            <div class="py-1 bg-dark-card border border-gray-700 rounded-lg shadow-lg">
-                                <button 
-                                    @click="handleView(item)" 
-                                    class="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-dark-lighter hover:text-secondary"
-                                >
-                                    View
-                                </button>
-                                <button 
-                                    @click="handleEdit(item)" 
-                                    class="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-dark-lighter hover:text-primary"
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    @click="handleDelete(item)" 
-                                    class="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-dark-lighter hover:text-red-400"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </template>
-                    </Dropdown>
-                </template>
-
-                <template #cell(icon)="{ item }">
-                    <div
-                        class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary/20"
-                    >
-                        {{ item.icon }}
-                    </div>
-                </template>
-            </DataTable>
-
-            <!-- Pagination component -->
-            <Pagination :links="props.categories.links" />
-        </div>
+            <template #cell(icon)="{ item }">
+                <div
+                    class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary/20"
+                >
+                    {{ item.icon }}
+                </div>
+            </template>
+        </DataTable>
 
         <!-- Add/Edit Category Modal -->
         <div
@@ -431,14 +421,10 @@ body {
 }
 
 /* Make DataTable responsive */
-.w-full {
+.max-w-full {
     width: 100%;
-    max-width: 100vw;
-}
-
-/* Hide horizontal overflow on body */
-.overflow-x-hidden {
-    overflow-x: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Adjust spacing for mobile */
@@ -453,13 +439,6 @@ body {
     
     .grid-cols-2 {
         grid-template-columns: 1fr;
-    }
-}
-
-/* Fix modal width on small screens */
-@media (max-width: 640px) {
-    .max-w-md {
-        width: calc(100% - 2rem);
     }
 }
 
