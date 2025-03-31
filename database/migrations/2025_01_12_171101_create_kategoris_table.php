@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kategoris', function (Blueprint $table) {
             $table->id();
             $table->string('kategori_name')->unique();
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

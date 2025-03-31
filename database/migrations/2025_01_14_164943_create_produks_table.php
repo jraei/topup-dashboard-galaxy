@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('nama');
             $table->string('developer')->nullable();
             $table->string('brand');
-            $table->unsignedBigInteger('kelompok');
-            $table->foreign('kelompok')->references('id')->on('sub_kategoris');
+            $table->unsignedBigInteger('kategori_id');
+            $table->foreign('kategori_id')->references('id')->on('kategoris');
             $table->string('tipe');
             $table->string('slug')->unique();
             $table->string('sistem_id')->nullable();
