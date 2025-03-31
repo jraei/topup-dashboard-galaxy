@@ -1,9 +1,8 @@
-
 <script setup>
 import { ref, defineProps, computed, getCurrentInstance, onMounted } from "vue";
 import { Head, router, usePage } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import DataTable from "@/Components/DataTable.vue";
+import DataTable from "@/Components/DataTable/index.vue";
 import Modal from "@/Components/Modal.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
@@ -17,10 +16,8 @@ const props = defineProps({
 
 const { proxy } = getCurrentInstance();
 
-// Data computed property
 const categories = computed(() => props.categories.data || []);
 
-// Column definitions for the table
 const columns = [
     { key: "id", label: "ID" },
     { key: "kategori_name", label: "Kategori" },
@@ -38,12 +35,10 @@ const columns = [
     },
 ];
 
-// View modal states
 const showViewModal = ref(false);
 const selectedCategory = ref(null);
 const isLoading = ref(false);
 
-// Handle view action
 const handleView = async (item) => {
     isLoading.value = true;
     selectedCategory.value = { ...item, loading: true };
@@ -72,7 +67,6 @@ const handleEdit = (item) => {
 const handleDelete = (item) => {
     proxy.$showSwalConfirm({
         onConfirm: () => {
-            // Logika penghapusan data
             router.delete(route("categories.destroy", item.id), {
                 preserveScroll: true,
             });
@@ -80,9 +74,8 @@ const handleDelete = (item) => {
     });
 };
 
-// Form modal states
 const showForm = ref(false);
-const formMode = ref("add"); // 'add' or 'edit'
+const formMode = ref("add");
 const currentCategory = ref(null);
 
 const openAddForm = () => {
@@ -219,11 +212,9 @@ const saveCategory = () => {
                 </template>
             </DataTable>
 
-            <!-- Pagination component -->
             <Pagination :links="props.categories.links" />
         </div>
 
-        <!-- Add/Edit Category Modal -->
         <div
             v-if="showForm"
             class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50"
@@ -264,7 +255,6 @@ const saveCategory = () => {
 
                 <form @submit.prevent="saveCategory">
                     <div class="space-y-4">
-                        <!-- Name Field -->
                         <div>
                             <label
                                 for="kategori_name"
@@ -282,7 +272,6 @@ const saveCategory = () => {
                             />
                         </div>
 
-                        <!-- Status Field -->
                         <div>
                             <label
                                 for="status"
@@ -324,7 +313,6 @@ const saveCategory = () => {
             </div>
         </div>
 
-        <!-- View Category Modal -->
         <Modal 
             :show="showViewModal" 
             @close="closeViewModal" 
@@ -416,32 +404,27 @@ const saveCategory = () => {
 </template>
 
 <style>
-/* Fix for mobile scrolling issues */
 body {
     @apply bg-dark overflow-x-hidden min-h-screen;
     width: 100vw;
     overscroll-behavior: none;
 }
 
-/* Ensure modal content doesn't overflow */
 .fixed.inset-0 {
     overflow-y: auto;
     height: 100%;
     max-height: 100vh;
 }
 
-/* Make DataTable responsive */
 .w-full {
     width: 100%;
     max-width: 100vw;
 }
 
-/* Hide horizontal overflow on body */
 .overflow-x-hidden {
     overflow-x: hidden;
 }
 
-/* Adjust spacing for mobile */
 @media (max-width: 640px) {
     .p-6 {
         padding: 1rem;
@@ -456,14 +439,12 @@ body {
     }
 }
 
-/* Fix modal width on small screens */
 @media (max-width: 640px) {
     .max-w-md {
         width: calc(100% - 2rem);
     }
 }
 
-/* Ensure content doesn't overflow viewport */
 .overflow-y-auto {
     max-height: 80vh;
 }
