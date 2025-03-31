@@ -72,7 +72,7 @@ watch(searchQuery, (newValue) => {
 </script>
 
 <template>
-    <div class="overflow-hidden">
+    <div class="overflow-hidden rounded-lg border border-gray-700 bg-dark-card">
         <!-- Table Header with Search -->
         <div
             class="flex flex-col items-center justify-between p-4 space-y-4 border-b border-gray-700 bg-dark-lighter sm:flex-row sm:space-y-0"
@@ -137,7 +137,7 @@ watch(searchQuery, (newValue) => {
         </div>
 
         <!-- Table Body with Horizontal Scroll on Small Screens -->
-        <div class="overflow-x-auto">
+        <div class="w-full overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-700">
                 <thead class="bg-dark-lighter">
                     <tr>
@@ -224,7 +224,7 @@ watch(searchQuery, (newValue) => {
                             </slot>
                         </td>
                         <td
-                            class="px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap"
+                            class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap"
                         >
                             <slot name="actions" :item="item">
                                 <button
@@ -284,56 +284,6 @@ watch(searchQuery, (newValue) => {
                     </tr>
                 </tbody>
             </table>
-        </div>
-
-        <!-- Pagination -->
-        <div
-            v-if="pagination && pagination.total > 0"
-            class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-700 space-y-3 sm:space-y-0"
-        >
-            <div class="text-sm text-center sm:text-left text-gray-400">
-                Showing
-                {{ (pagination.current_page - 1) * pagination.per_page + 1 }} to
-                {{
-                    Math.min(
-                        pagination.current_page * pagination.per_page,
-                        pagination.total
-                    )
-                }}
-                of {{ pagination.total }} results
-            </div>
-
-            <div class="flex space-x-2">
-                <button
-                    @click="handlePageChange(pagination.current_page - 1)"
-                    :disabled="pagination.current_page === 1"
-                    :class="[
-                        'px-3 py-1 rounded-md text-sm',
-                        pagination.current_page === 1
-                            ? 'bg-dark-lighter text-gray-500 cursor-not-allowed'
-                            : 'bg-dark-lighter text-gray-300 hover:bg-primary/20 hover:text-white',
-                    ]"
-                >
-                    Previous
-                </button>
-
-                <button
-                    @click="handlePageChange(pagination.current_page + 1)"
-                    :disabled="
-                        pagination.current_page * pagination.per_page >=
-                        pagination.total
-                    "
-                    :class="[
-                        'px-3 py-1 rounded-md text-sm',
-                        pagination.current_page * pagination.per_page >=
-                        pagination.total
-                            ? 'bg-dark-lighter text-gray-500 cursor-not-allowed'
-                            : 'bg-dark-lighter text-gray-300 hover:bg-primary/20 hover:text-white',
-                    ]"
-                >
-                    Next
-                </button>
-            </div>
         </div>
     </div>
 </template>
