@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, watch, computed } from "vue";
 
@@ -135,7 +136,7 @@ watch(searchQuery, (newValue) => {
             </div>
         </div>
 
-        <!-- Table Body -->
+        <!-- Table Body with Horizontal Scroll on Small Screens -->
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-700">
                 <thead class="bg-dark-lighter">
@@ -144,7 +145,7 @@ watch(searchQuery, (newValue) => {
                             v-for="column in columns"
                             :key="column.key"
                             scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase transition-colors cursor-pointer hover:text-white"
+                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase transition-colors cursor-pointer hover:text-white whitespace-nowrap"
                             @click="handleSort(column)"
                         >
                             <div class="flex items-center space-x-1">
@@ -189,7 +190,7 @@ watch(searchQuery, (newValue) => {
                         </th>
                         <th
                             scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase"
+                            class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase whitespace-nowrap"
                         >
                             Actions
                         </th>
@@ -288,9 +289,9 @@ watch(searchQuery, (newValue) => {
         <!-- Pagination -->
         <div
             v-if="pagination && pagination.total > 0"
-            class="flex items-center justify-between px-6 py-4 border-t border-gray-700"
+            class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-700 space-y-3 sm:space-y-0"
         >
-            <div class="text-sm text-gray-400">
+            <div class="text-sm text-center sm:text-left text-gray-400">
                 Showing
                 {{ (pagination.current_page - 1) * pagination.per_page + 1 }} to
                 {{

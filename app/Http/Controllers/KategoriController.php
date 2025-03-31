@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers;
@@ -22,8 +23,6 @@ class KategoriController extends Controller
         ]);
     }
 
-
-
     /**
      * Store a newly created resource in storage.
      */
@@ -45,7 +44,13 @@ class KategoriController extends Controller
      */
     public function show(Kategori $kategori)
     {
-        //
+        // Return category data with related product count
+        $kategori->load('produk');
+        $kategori->product_count = $kategori->produk->count();
+        
+        return response()->json([
+            'category' => $kategori
+        ]);
     }
 
     /**
