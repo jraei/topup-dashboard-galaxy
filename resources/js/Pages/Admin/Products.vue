@@ -509,7 +509,9 @@ const handleFileUpload = (event, field) => {
                             </div>
 
                             <div class="col-span-1 sm:col-span-2">
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div
+                                    class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                                >
                                     <div>
                                         <label
                                             for="petunjuk_field"
@@ -518,8 +520,9 @@ const handleFileUpload = (event, field) => {
                                         >
                                         <div
                                             v-if="
-                                                getImagePreview('petunjuk_field')
-                                                    .value
+                                                getImagePreview(
+                                                    'petunjuk_field'
+                                                ).value
                                             "
                                             class="mb-2"
                                         >
@@ -556,7 +559,8 @@ const handleFileUpload = (event, field) => {
                                         >
                                         <div
                                             v-if="
-                                                getImagePreview('thumbnail').value
+                                                getImagePreview('thumbnail')
+                                                    .value
                                             "
                                             class="mb-2"
                                         >
@@ -604,17 +608,19 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
                         </div>
-                        <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
+                        <div
+                            class="flex flex-col justify-end pt-4 space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3"
+                        >
                             <button
                                 type="button"
                                 @click="closeForm"
-                                class="px-4 py-2 text-gray-300 rounded-lg bg-dark-lighter hover:text-white w-full sm:w-auto"
+                                class="w-full px-4 py-2 text-gray-300 rounded-lg bg-dark-lighter hover:text-white sm:w-auto"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                class="px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary w-full sm:w-auto"
+                                class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary sm:w-auto"
                             >
                                 {{
                                     formMode === "add"
@@ -628,11 +634,7 @@ const handleFileUpload = (event, field) => {
             </div>
         </div>
 
-        <Modal
-            :show="showViewModal"
-            @close="closeViewModal"
-            max-width="xl"
-        >
+        <Modal :show="showViewModal" @close="closeViewModal" max-width="xl">
             <div
                 class="p-4 border border-gray-700 rounded-lg bg-dark-card sm:p-6 max-h-[80vh] overflow-y-auto"
             >
@@ -668,7 +670,9 @@ const handleFileUpload = (event, field) => {
                 </div>
 
                 <div v-else-if="selectedProduct" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div
+                        class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    >
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Produk ID</p>
                             <p class="font-medium text-white truncate">
@@ -738,34 +742,43 @@ const handleFileUpload = (event, field) => {
                                 </span>
                             </p>
                         </div>
-                        
-                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
+
+                        <div
+                            class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter"
+                        >
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div v-if="selectedProduct.petunjuk_field">
-                                    <p class="text-sm text-gray-400">Petunjuk</p>
+                                    <p class="text-sm text-gray-400">
+                                        Petunjuk
+                                    </p>
                                     <img
                                         :src="
                                             '/storage/' +
                                             selectedProduct.petunjuk_field
                                         "
                                         alt="Preview Petunjuk"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
+                                        class="object-cover w-32 mt-2 border rounded-lg shadow-md border-primary/60"
                                     />
                                 </div>
                                 <div v-if="selectedProduct.thumbnail">
-                                    <p class="text-sm text-gray-400">Thumbnail</p>
+                                    <p class="text-sm text-gray-400">
+                                        Thumbnail
+                                    </p>
                                     <img
                                         :src="
-                                            '/storage/' + selectedProduct.thumbnail
+                                            '/storage/' +
+                                            selectedProduct.thumbnail
                                         "
                                         alt="Preview Thumbnail"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
+                                        class="object-cover w-32 mt-2 border rounded-lg shadow-md border-primary/60"
                                     />
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
+
+                        <div
+                            class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter"
+                        >
                             <p class="text-sm text-gray-400">Deskripsi Game</p>
                             <p class="font-medium text-white break-words">
                                 {{ selectedProduct.deskripsi_game }}
@@ -773,7 +786,9 @@ const handleFileUpload = (event, field) => {
                         </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
+                    <div
+                        class="flex flex-col justify-end pt-4 space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3"
+                    >
                         <button
                             @click="openEditForm(selectedProduct)"
                             class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:w-auto bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
@@ -808,10 +823,6 @@ body {
 
 .truncate {
     @apply overflow-hidden text-ellipsis whitespace-nowrap;
-}
-
-.break-words {
-    @apply break-words;
 }
 
 @media (max-width: 640px) {
