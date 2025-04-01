@@ -876,6 +876,10 @@ body {
     @apply overflow-hidden text-ellipsis whitespace-nowrap;
 }
 
+.break-words {
+    @apply break-words;
+}
+
 /* Make sure modals are responsive */
 @media (max-width: 640px) {
     .space-y-4 > * + * {
