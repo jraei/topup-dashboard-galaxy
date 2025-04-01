@@ -26,11 +26,9 @@ const searchQuery = ref("");
 const sortColumn = ref("");
 const sortDirection = ref("asc");
 
-// If the component is handling search itself (not via parent)
 const filteredData = computed(() => {
     let data = [...props.data];
 
-    // Filtering (search)
     if (props.searchable && searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
         data = data.filter((item) => {
@@ -41,15 +39,13 @@ const filteredData = computed(() => {
         });
     }
 
-    // Sorting
     if (sortColumn.value) {
         data.sort((a, b) => {
             const valueA = a[sortColumn.value];
             const valueB = b[sortColumn.value];
 
-            if (valueA == null || valueB == null) return 0; // Handle null/undefined
+            if (valueA == null || valueB == null) return 0;
 
-            // Convert numbers and strings properly
             const valA = isNaN(valueA)
                 ? String(valueA).toLowerCase()
                 : Number(valueA);
@@ -83,11 +79,6 @@ const handleAction = (action, item) => {
     emit(action, item);
 };
 
-// const handlePageChange = (page) => {
-//     emit("page-change", page);
-// };
-
-// Debounce search input
 let searchTimeout;
 watch(searchQuery, (newValue) => {
     clearTimeout(searchTimeout);
@@ -98,7 +89,7 @@ watch(searchQuery, (newValue) => {
 </script>
 
 <template>
-    <div class="">
+    <div class="w-full">
         <!-- Table Header with Search -->
         <div
             class="flex flex-col items-center justify-between p-4 space-y-4 border-b border-gray-700 bg-dark-lighter sm:flex-row sm:space-y-0"
@@ -162,168 +153,170 @@ watch(searchQuery, (newValue) => {
             </div>
         </div>
 
-        <!-- Table Body -->
+        <!-- Table Body - Improved with horizontal scrolling -->
         <div class="w-full overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-dark-lighter">
-                    <tr>
-                        <!-- Tambahkan Kolom "ID" sebagai ID dari loop -->
-                        <th
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase"
-                        >
-                            ID
-                        </th>
-                        <th
-                            v-for="column in columns.filter(
-                                (col) => col.key !== 'id'
-                            )"
-                            :key="column.key"
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase transition-colors cursor-pointer hover:text-white"
-                            @click="handleSort(column)"
-                        >
-                            <div class="flex items-center space-x-1">
-                                <span>{{ column.label }}</span>
-                                <!-- Sort Direction Indicator -->
-                                <div
-                                    v-if="sortColumn === column.key"
-                                    class="ml-1"
-                                >
-                                    <svg
-                                        v-if="sortDirection === 'asc'"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M5 15l7-7 7 7"
-                                        />
-                                    </svg>
-                                    <svg
-                                        v-else
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                        </th>
-                        <th
-                            scope="col"
-                            class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase"
-                        >
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-700 bg-dark-card">
-                    <tr
-                        v-for="(item, index) in filteredData"
-                        :key="index"
-                        class="transition-colors hover:bg-dark-lighter"
-                    >
-                        <!-- Kolom Nomor Urut (ID dari Looping) -->
-                        <td class="px-6 py-4 text-gray-200 whitespace-nowrap">
-                            {{ index + 1 }}
-                        </td>
-                        <td
-                            v-for="column in columns.filter(
-                                (col) => col.key !== 'id'
-                            )"
-                            :key="`${index}-${column.key}`"
-                            class="px-6 py-4 whitespace-nowrap"
-                        >
-                            <slot
-                                :name="`cell(${column.key})`"
-                                :item="item"
-                                :column="column"
+            <div class="min-w-full">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-dark-lighter">
+                        <tr>
+                            <!-- Tambahkan Kolom "ID" sebagai ID dari loop -->
+                            <th
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase"
                             >
-                                <div
-                                    v-if="column.format"
-                                    v-html="
-                                        column.format(item[column.key], item)
-                                    "
-                                ></div>
-                                <span v-else class="text-gray-200">{{
-                                    item[column.key]
-                                }}</span>
-                            </slot>
-                        </td>
-                        <td
-                            class="px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap"
-                        >
-                            <slot name="actions" :item="item">
-                                <button
-                                    @click="handleAction('view', item)"
-                                    class="transition-colors text-secondary hover:text-secondary-hover"
-                                >
-                                    View
-                                </button>
-                                <button
-                                    @click="handleAction('edit', item)"
-                                    class="transition-colors text-primary hover:text-primary-hover"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    @click="handleAction('delete', item)"
-                                    class="text-red-400 transition-colors hover:text-red-500"
-                                >
-                                    Delete
-                                </button>
-                            </slot>
-                        </td>
-                    </tr>
-
-                    <!-- Empty State -->
-                    <tr v-if="filteredData.length === 0">
-                        <td
-                            :colspan="columns.length + 1"
-                            class="px-6 py-12 text-center"
-                        >
-                            <div class="flex flex-col items-center">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="w-12 h-12 mb-4 text-gray-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                                    />
-                                </svg>
-                                <p class="text-lg text-gray-400">
-                                    No data found
-                                </p>
-                                <p class="mt-1 text-sm text-gray-500">
-                                    <span v-if="searchQuery"
-                                        >Try adjusting your search query</span
+                                ID
+                            </th>
+                            <th
+                                v-for="column in columns.filter(
+                                    (col) => col.key !== 'id'
+                                )"
+                                :key="column.key"
+                                scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-300 uppercase transition-colors cursor-pointer hover:text-white"
+                                @click="handleSort(column)"
+                            >
+                                <div class="flex items-center space-x-1">
+                                    <span>{{ column.label }}</span>
+                                    <!-- Sort Direction Indicator -->
+                                    <div
+                                        v-if="sortColumn === column.key"
+                                        class="ml-1"
                                     >
-                                    <span v-else>No records exist yet</span>
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                                        <svg
+                                            v-if="sortDirection === 'asc'"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M5 15l7-7 7 7"
+                                            />
+                                        </svg>
+                                        <svg
+                                            v-else
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase sticky right-0 bg-dark-lighter"
+                            >
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700 bg-dark-card">
+                        <tr
+                            v-for="(item, index) in filteredData"
+                            :key="index"
+                            class="transition-colors hover:bg-dark-lighter"
+                        >
+                            <!-- Kolom Nomor Urut (ID dari Looping) -->
+                            <td class="px-6 py-4 text-gray-200 whitespace-nowrap">
+                                {{ index + 1 }}
+                            </td>
+                            <td
+                                v-for="column in columns.filter(
+                                    (col) => col.key !== 'id'
+                                )"
+                                :key="`${index}-${column.key}`"
+                                class="px-6 py-4 whitespace-nowrap"
+                            >
+                                <slot
+                                    :name="`cell(${column.key})`"
+                                    :item="item"
+                                    :column="column"
+                                >
+                                    <div
+                                        v-if="column.format"
+                                        v-html="
+                                            column.format(item[column.key], item)
+                                        "
+                                    ></div>
+                                    <span v-else class="text-gray-200 truncate max-w-[150px] block">{{
+                                        item[column.key]
+                                    }}</span>
+                                </slot>
+                            </td>
+                            <td
+                                class="px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap sticky right-0 bg-dark-card"
+                            >
+                                <slot name="actions" :item="item">
+                                    <button
+                                        @click="handleAction('view', item)"
+                                        class="transition-colors text-secondary hover:text-secondary-hover"
+                                    >
+                                        View
+                                    </button>
+                                    <button
+                                        @click="handleAction('edit', item)"
+                                        class="transition-colors text-primary hover:text-primary-hover"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        @click="handleAction('delete', item)"
+                                        class="text-red-400 transition-colors hover:text-red-500"
+                                    >
+                                        Delete
+                                    </button>
+                                </slot>
+                            </td>
+                        </tr>
+
+                        <!-- Empty State -->
+                        <tr v-if="filteredData.length === 0">
+                            <td
+                                :colspan="columns.length + 1"
+                                class="px-6 py-12 text-center"
+                            >
+                                <div class="flex flex-col items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="w-12 h-12 mb-4 text-gray-500"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                        />
+                                    </svg>
+                                    <p class="text-lg text-gray-400">
+                                        No data found
+                                    </p>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        <span v-if="searchQuery"
+                                            >Try adjusting your search query</span
+                                        >
+                                        <span v-else>No records exist yet</span>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </template>

@@ -344,14 +344,14 @@ const handleFileUpload = (event, field) => {
             <Pagination :links="props.products.links" />
         </div>
 
-        <!-- Add/Edit Category Modal -->
+        <!-- Add/Edit Category Modal - Improved responsive layout -->
         <div
             v-if="showForm"
             class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
             @click.self="closeForm"
         >
             <div
-                class="relative w-full max-w-md p-6 m-4 border border-gray-700 rounded-lg shadow-lg sm:max-w-2xl bg-dark-card"
+                class="relative w-full max-h-[90vh] overflow-y-auto mx-4 p-4 sm:p-6 border border-gray-700 rounded-lg shadow-lg sm:max-w-2xl bg-dark-card"
                 @click.stop
             >
                 <div class="flex items-center justify-between mb-4">
@@ -385,7 +385,7 @@ const handleFileUpload = (event, field) => {
 
                 <form @submit.prevent="saveDataForm">
                     <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             <!-- Name Field -->
                             <div>
                                 <label
@@ -556,90 +556,91 @@ const handleFileUpload = (event, field) => {
                                 </select>
                             </div>
 
-                            <div
-                                class="col-span-2 grid grid-cols-1 sm:col-span-3 sm:grid-cols-[1.5fr_1.5fr] sm:gap-4"
-                            >
-                                <!-- Petunjuk Field -->
-                                <div>
-                                    <label
-                                        for="petunjuk_field"
-                                        class="block mb-1 text-sm font-medium text-gray-300"
-                                        >Petunjuk</label
-                                    >
-
-                                    <div
-                                        v-if="
-                                            getImagePreview('petunjuk_field')
-                                                .value
-                                        "
-                                        class="mb-2"
-                                    >
-                                        <img
-                                            :src="
-                                                getImagePreview(
-                                                    'petunjuk_field'
-                                                ).value
-                                            "
-                                            alt="Preview Petunjuk"
-                                            class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
-                                        />
-                                    </div>
-
-                                    <input
-                                        id="petunjuk_field"
-                                        @change="
-                                            handleFileUpload(
-                                                $event,
-                                                'petunjuk_field'
-                                            )
-                                        "
-                                        type="file"
-                                        class="w-full px-2 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                        placeholder="Petunjuk"
-                                        name="petunjuk_field"
-                                    />
-                                </div>
-                                <div>
-                                    <label
-                                        for="thumbnail"
-                                        class="block mb-1 text-sm font-medium text-gray-300"
-                                        >Thumbnail</label
-                                    >
-
-                                    <div
-                                        v-if="
-                                            getImagePreview('thumbnail').value
-                                        "
-                                        class="mb-2"
-                                    >
-                                        <img
-                                            :src="
-                                                getImagePreview('thumbnail')
+                            <!-- Images Section - Improved Layout -->
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-3">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <!-- Petunjuk Field -->
+                                    <div>
+                                        <label
+                                            for="petunjuk_field"
+                                            class="block mb-1 text-sm font-medium text-gray-300"
+                                            >Petunjuk</label
+                                        >
+                                        <div
+                                            v-if="
+                                                getImagePreview('petunjuk_field')
                                                     .value
                                             "
-                                            alt="Thumbnail"
-                                            class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
+                                            class="mb-2"
+                                        >
+                                            <img
+                                                :src="
+                                                    getImagePreview(
+                                                        'petunjuk_field'
+                                                    ).value
+                                                "
+                                                alt="Preview Petunjuk"
+                                                class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
+                                            />
+                                        </div>
+
+                                        <input
+                                            id="petunjuk_field"
+                                            @change="
+                                                handleFileUpload(
+                                                    $event,
+                                                    'petunjuk_field'
+                                                )
+                                            "
+                                            type="file"
+                                            class="w-full px-2 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                                            placeholder="Petunjuk"
+                                            name="petunjuk_field"
                                         />
                                     </div>
+                                    <!-- Thumbnail Field -->
+                                    <div>
+                                        <label
+                                            for="thumbnail"
+                                            class="block mb-1 text-sm font-medium text-gray-300"
+                                            >Thumbnail</label
+                                        >
 
-                                    <input
-                                        id="thumbnail"
-                                        @change="
-                                            handleFileUpload(
-                                                $event,
-                                                'thumbnail'
-                                            )
-                                        "
-                                        type="file"
-                                        class="w-full px-2 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                        placeholder="Thumbnail"
-                                        name="thumbnail"
-                                    />
+                                        <div
+                                            v-if="
+                                                getImagePreview('thumbnail').value
+                                            "
+                                            class="mb-2"
+                                        >
+                                            <img
+                                                :src="
+                                                    getImagePreview('thumbnail')
+                                                        .value
+                                                "
+                                                alt="Thumbnail"
+                                                class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
+                                            />
+                                        </div>
+
+                                        <input
+                                            id="thumbnail"
+                                            @change="
+                                                handleFileUpload(
+                                                    $event,
+                                                    'thumbnail'
+                                                )
+                                            "
+                                            type="file"
+                                            class="w-full px-2 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                                            placeholder="Thumbnail"
+                                            name="thumbnail"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Deskripsi game Field -->
-                            <div class="col-span-3">
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-3">
                                 <label
                                     for="deskripsi_game"
                                     class="block mb-1 text-sm font-medium text-gray-300"
@@ -680,15 +681,14 @@ const handleFileUpload = (event, field) => {
             </div>
         </div>
 
-        <!-- View Product Modal -->
+        <!-- View Product Modal - Improved Responsive Layout -->
         <Modal
             :show="showViewModal"
             @close="closeViewModal"
             max-width="xl"
-            class="overflow-y-auto"
         >
             <div
-                class="p-4 border border-gray-700 rounded-lg bg-dark-card sm:p-6"
+                class="p-4 border border-gray-700 rounded-lg bg-dark-card sm:p-6 max-h-[80vh] overflow-y-auto"
             >
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-bold text-white">
@@ -722,7 +722,7 @@ const handleFileUpload = (event, field) => {
                 </div>
 
                 <div v-else-if="selectedProduct" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Produk ID</p>
                             <p class="font-medium text-white">
@@ -792,37 +792,35 @@ const handleFileUpload = (event, field) => {
                                 </span>
                             </p>
                         </div>
-                        <div
-                            class="grid grid-cols-2 col-span-2 rounded-lg bg-dark-lighter sm:col-span-4"
-                        >
-                            <div
-                                class="p-3"
-                                v-if="selectedProduct.petunjuk_field"
-                            >
-                                <p class="text-sm text-gray-400">Petunjuk</p>
-                                <img
-                                    :src="
-                                        '/storage/' +
-                                        selectedProduct.petunjuk_field
-                                    "
-                                    alt="Preview Petunjuk"
-                                    class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
-                                />
-                            </div>
-                            <div class="p-3" v-if="selectedProduct.thumbnail">
-                                <p class="text-sm text-gray-400">Thumbnail</p>
-                                <img
-                                    :src="
-                                        '/storage/' + selectedProduct.thumbnail
-                                    "
-                                    alt="Preview Thumbnail"
-                                    class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
-                                />
+                        
+                        <!-- Image Preview Section - Improved Layout -->
+                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div v-if="selectedProduct.petunjuk_field">
+                                    <p class="text-sm text-gray-400">Petunjuk</p>
+                                    <img
+                                        :src="
+                                            '/storage/' +
+                                            selectedProduct.petunjuk_field
+                                        "
+                                        alt="Preview Petunjuk"
+                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
+                                    />
+                                </div>
+                                <div v-if="selectedProduct.thumbnail">
+                                    <p class="text-sm text-gray-400">Thumbnail</p>
+                                    <img
+                                        :src="
+                                            '/storage/' + selectedProduct.thumbnail
+                                        "
+                                        alt="Preview Thumbnail"
+                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
+                                    />
+                                </div>
                             </div>
                         </div>
-                        <div
-                            class="col-span-2 p-3 rounded-lg bg-dark-lighter sm:col-span-4"
-                        >
+                        
+                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
                             <p class="text-sm text-gray-400">Deskripsi Game</p>
                             <p class="font-medium text-white">
                                 {{ selectedProduct.deskripsi_game }}
@@ -830,16 +828,16 @@ const handleFileUpload = (event, field) => {
                         </div>
                     </div>
 
-                    <div class="flex justify-end pt-4 space-x-3">
+                    <div class="flex flex-wrap justify-end pt-4 space-x-0 space-y-2 sm:space-y-0 sm:space-x-3">
                         <button
                             @click="openEditForm(selectedProduct)"
-                            class="px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+                            class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:w-auto bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
                         >
                             Edit Product
                         </button>
                         <button
                             @click="closeViewModal"
-                            class="px-4 py-2 text-gray-300 rounded-lg bg-dark-lighter hover:text-white"
+                            class="w-full px-4 py-2 text-gray-300 rounded-lg sm:w-auto bg-dark-lighter hover:text-white"
                         >
                             Close
                         </button>

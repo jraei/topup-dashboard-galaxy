@@ -1,3 +1,4 @@
+
 <script setup>
 import { computed, onMounted, onUnmounted, watch } from "vue";
 
@@ -101,7 +102,7 @@ const maxWidthClass = computed(() => {
                 >
                     <div
                         v-show="show"
-                        class="mb-6 overflow-hidden transition-all transform bg-white rounded-lg shadow-xl dark:bg-gray-800 sm:w-full sm:mx-auto"
+                        class="w-full mb-6 mx-auto overflow-hidden transition-all transform bg-white rounded-lg shadow-xl dark:bg-gray-800"
                         :class="maxWidthClass"
                     >
                         <slot v-if="show" />
