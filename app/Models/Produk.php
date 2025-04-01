@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Kategori;
+use App\Models\Provider;
+use App\Models\ProfitProduk;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Produk extends Model
 {
@@ -12,8 +16,17 @@ class Produk extends Model
 
     protected $guarded = ['id'];
 
-    public function subKategori(): BelongsTo
+    public function Kategori(): BelongsTo
     {
-        return $this->belongsTo(SubKategori::class, 'kelompok');
+        return $this->belongsTo(Kategori::class, 'kategori_id');
+    }
+    public function Provider(): BelongsTo
+    {
+        return $this->belongsTo(Provider::class, 'provider_id');
+    }
+
+    public function ProfitProduk(): HasMany
+    {
+        return $this->hasMany(ProfitProduk::class, 'produk_id');
     }
 }

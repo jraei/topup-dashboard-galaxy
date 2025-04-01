@@ -16,10 +16,9 @@ return new class extends Migration
             $table->string('nama');
             $table->string('developer')->nullable();
             $table->string('brand');
-            $table->unsignedBigInteger('kelompok');
-            $table->foreign('kelompok')->references('id')->on('sub_kategoris');
-            $table->string('tipe');
+            $table->foreignId('kategori_id')->constrained('kategoris');
             $table->string('slug')->unique();
+            $table->foreignId('provider_id')->constrained('providers');
             $table->string('sistem_id')->nullable();
             $table->string('validasi_id')->default('tidak');
             $table->text('deskripsi_game')->nullable();

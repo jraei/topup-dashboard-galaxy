@@ -14,18 +14,23 @@ class ProfitProduk extends Model
 
     public function produk(): BelongsTo
     {
-        return $this->belongsTo(Produk::class);
+        return $this->belongsTo(Produk::class, 'produk_id');
     }
 
-    public static function calculatePrice($basePrice, $userLevel = 'guest')
+    public function user_role(): BelongsTo
     {
-        $profit = match ($userLevel) {
-            'basic' => $this->profit_basic,
-            'premium' => $this->profit_premium,
-            'h2h' => $this->profit_h2h,
-            default => $this->profit_guest, // guest or any unknown level
-        };
-
-        return $basePrice + ($basePrice * $profit / 100);
+        return $this->belongsTo(UserRole::class, 'user_roles_id');
     }
+
+    // public static function calculatePrice($basePrice, $userLevel = 'guest')
+    // {
+    //     $profit = match ($userLevel) {
+    //         'basic' => $this->profit_basic,
+    //         'premium' => $this->profit_premium,
+    //         'h2h' => $this->profit_h2h,
+    //         default => $this->profit_guest, // guest or any unknown level
+    //     };
+
+    //     return $basePrice + ($basePrice * $profit / 100);
+    // }
 }

@@ -46,14 +46,6 @@ class DatabaseSeeder extends Seeder
             "kategori_name" => "Game PC"
         ]);
 
-        SubKategori::create([
-            "sub_kategori" => "Via Id",
-            "kategori_id" => 1
-        ]);
-        SubKategori::create([
-            "sub_kategori" => "Via Login",
-            "kategori_id" => 2
-        ]);
 
         Provider::create([
             "provider_name" => "digiflazz",
