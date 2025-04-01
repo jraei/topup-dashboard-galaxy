@@ -214,7 +214,7 @@ const handleFileUpload = (event, field) => {
     <AdminLayout title="Products">
         <div
             v-if="Object.keys(errors).length > 0"
-            class="px-8 py-3 mb-4 text-sm text-white bg-red-500/80"
+            class="px-4 py-3 mb-4 text-sm text-white bg-red-500/80 rounded-lg"
         >
             <ul v-for="error in errors">
                 <li>{{ error }}</li>
@@ -223,100 +223,104 @@ const handleFileUpload = (event, field) => {
         <div
             class="w-full overflow-hidden border rounded-lg shadow-lg border-primary/40 bg-dark-card"
         >
-            <DataTable :data="products" :columns="columns" class="w-full">
-                <template #title> List Products </template>
+            <!-- Improved table container with explicit scrolling -->
+            <div class="w-full overflow-x-auto">
+                <DataTable :data="products" :columns="columns" class="w-full whitespace-nowrap">
+                    <template #title> List Products </template>
 
-                <template #addButton>
-                    <button
-                        @click="openAddForm"
-                        class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <template #addButton>
+                        <button
+                            @click="openAddForm"
+                            class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:px-4 bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                        </svg>
-                        <span>Add Products</span>
-                    </button>
-                </template>
-
-                <template #actions="{ item }">
-                    <Dropdown align="right" width="48">
-                        <template #trigger>
-                            <button
-                                class="inline-flex items-center justify-center p-2 text-gray-400 transition-colors rounded-full hover:text-white hover:bg-dark-lighter"
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4 sm:w-5 sm:h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="w-5 h-5"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
-                                    />
-                                </svg>
-                            </button>
-                        </template>
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                            </svg>
+                            <span>Add Products</span>
+                        </button>
+                    </template>
 
-                        <template #content>
-                            <div
-                                class="py-1 border border-gray-700 rounded-lg shadow-lg bg-dark-card"
-                            >
+                    <template #actions="{ item }">
+                        <Dropdown align="right" width="48">
+                            <template #trigger>
                                 <button
-                                    @click="handleView(item)"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-secondary"
+                                    class="inline-flex items-center justify-center p-2 text-gray-400 transition-colors rounded-full hover:text-white hover:bg-dark-lighter"
                                 >
-                                    View
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="w-5 h-5"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
+                                        />
+                                    </svg>
                                 </button>
-                                <button
-                                    @click="handleEdit(item)"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-primary"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    @click="handleDelete(item)"
-                                    class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-red-400"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </template>
-                    </Dropdown>
-                </template>
+                            </template>
 
-                <template #cell(icon)="{ item }">
-                    <div
-                        class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary/20"
-                    >
-                        {{ item.icon }}
-                    </div>
-                </template>
-            </DataTable>
+                            <template #content>
+                                <div
+                                    class="py-1 border border-gray-700 rounded-lg shadow-lg bg-dark-card"
+                                >
+                                    <button
+                                        @click="handleView(item)"
+                                        class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-secondary"
+                                    >
+                                        View
+                                    </button>
+                                    <button
+                                        @click="handleEdit(item)"
+                                        class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-primary"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        @click="handleDelete(item)"
+                                        class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-red-400"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </template>
+                        </Dropdown>
+                    </template>
+
+                    <template #cell(icon)="{ item }">
+                        <div
+                            class="flex items-center justify-center w-8 h-8 text-white rounded-full bg-primary/20"
+                        >
+                            {{ item.icon }}
+                        </div>
+                    </template>
+                </DataTable>
+            </div>
             <Pagination :links="props.products.links" />
         </div>
 
+        <!-- Modified Form Modal -->
         <div
             v-if="showForm"
             class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black/50"
             @click.self="closeForm"
         >
             <div
-                class="relative w-full max-w-full mx-4 p-4 border border-gray-700 rounded-lg shadow-lg sm:p-6 sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-dark-card max-h-[90vh] overflow-y-auto"
+                class="relative w-full max-w-md mx-4 p-3 border border-gray-700 rounded-lg shadow-lg sm:p-4 md:p-6 md:max-w-xl lg:max-w-2xl bg-dark-card max-h-[90vh] overflow-y-auto"
                 @click.stop
             >
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">
+                    <h3 class="text-lg sm:text-xl font-bold text-white">
                         {{
                             formMode === "add"
                                 ? "Add New Products"
@@ -329,7 +333,7 @@ const handleFileUpload = (event, field) => {
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="w-6 h-6"
+                            class="w-5 h-5 sm:w-6 sm:h-6"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -345,8 +349,8 @@ const handleFileUpload = (event, field) => {
                 </div>
 
                 <form @submit.prevent="saveDataForm" class="overflow-visible">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                             <div>
                                 <label
                                     for="nama"
@@ -509,7 +513,7 @@ const handleFileUpload = (event, field) => {
                             </div>
 
                             <div class="col-span-1 sm:col-span-2">
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div class="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                                     <div>
                                         <label
                                             for="petunjuk_field"
@@ -530,7 +534,7 @@ const handleFileUpload = (event, field) => {
                                                     ).value
                                                 "
                                                 alt="Preview Petunjuk"
-                                                class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
+                                                class="object-cover w-24 h-24 sm:w-32 sm:h-32 border rounded-lg shadow-md border-primary/60"
                                             />
                                         </div>
 
@@ -566,7 +570,7 @@ const handleFileUpload = (event, field) => {
                                                         .value
                                                 "
                                                 alt="Thumbnail"
-                                                class="object-cover w-32 h-32 border rounded-lg shadow-md border-primary/60"
+                                                class="object-cover w-24 h-24 sm:w-32 sm:h-32 border rounded-lg shadow-md border-primary/60"
                                             />
                                         </div>
 
@@ -604,7 +608,7 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
                         </div>
-                        <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
+                        <div class="flex flex-col sm:flex-row justify-end pt-3 sm:pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
                             <button
                                 type="button"
                                 @click="closeForm"
@@ -628,16 +632,17 @@ const handleFileUpload = (event, field) => {
             </div>
         </div>
 
+        <!-- Modified View Modal -->
         <Modal
             :show="showViewModal"
             @close="closeViewModal"
             max-width="xl"
         >
             <div
-                class="p-4 border border-gray-700 rounded-lg bg-dark-card sm:p-6 max-h-[80vh] overflow-y-auto"
+                class="p-3 sm:p-4 md:p-6 border border-gray-700 rounded-lg bg-dark-card max-h-[80vh] overflow-y-auto"
             >
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">
+                    <h3 class="text-lg sm:text-xl font-bold text-white">
                         Product Details
                     </h3>
                     <button
@@ -646,7 +651,7 @@ const handleFileUpload = (event, field) => {
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="w-6 h-6"
+                            class="w-5 h-5 sm:w-6 sm:h-6"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -661,70 +666,70 @@ const handleFileUpload = (event, field) => {
                     </button>
                 </div>
 
-                <div v-if="isLoading" class="flex justify-center py-8">
+                <div v-if="isLoading" class="flex justify-center py-6 sm:py-8">
                     <div
-                        class="w-10 h-10 border-4 rounded-full animate-spin border-primary border-t-transparent"
+                        class="w-8 h-8 sm:w-10 sm:h-10 border-4 rounded-full animate-spin border-primary border-t-transparent"
                     ></div>
                 </div>
 
-                <div v-else-if="selectedProduct" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Produk ID</p>
-                            <p class="font-medium text-white truncate">
+                <div v-else-if="selectedProduct" class="space-y-3 sm:space-y-4">
+                    <div class="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Produk ID</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.id }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Product</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Product</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.nama }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Kategori</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Kategori</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.kategori.kategori_name }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Provider</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Provider</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.provider.provider_name }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Developer</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Developer</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.developer }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Brand</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Brand</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.brand }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Slug</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Slug</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.slug }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Sistem ID</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Sistem ID</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.sistem_id }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Validasi ID</p>
-                            <p class="font-medium text-white truncate">
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Validasi ID</p>
+                            <p class="font-medium text-white truncate text-sm sm:text-base">
                                 {{ selectedProduct.validasi_id }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Status</p>
+                        <div class="p-2 sm:p-3 rounded-lg bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Status</p>
                             <p>
                                 <span
                                     :class="
@@ -739,41 +744,41 @@ const handleFileUpload = (event, field) => {
                             </p>
                         </div>
                         
-                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="col-span-1 p-2 sm:p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
+                            <div class="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                                 <div v-if="selectedProduct.petunjuk_field">
-                                    <p class="text-sm text-gray-400">Petunjuk</p>
+                                    <p class="text-xs sm:text-sm text-gray-400">Petunjuk</p>
                                     <img
                                         :src="
                                             '/storage/' +
                                             selectedProduct.petunjuk_field
                                         "
                                         alt="Preview Petunjuk"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
+                                        class="object-cover w-24 h-24 sm:w-32 sm:h-32 border rounded-lg shadow-md border-primary/60 mt-2"
                                     />
                                 </div>
                                 <div v-if="selectedProduct.thumbnail">
-                                    <p class="text-sm text-gray-400">Thumbnail</p>
+                                    <p class="text-xs sm:text-sm text-gray-400">Thumbnail</p>
                                     <img
                                         :src="
                                             '/storage/' + selectedProduct.thumbnail
                                         "
                                         alt="Preview Thumbnail"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
+                                        class="object-cover w-24 h-24 sm:w-32 sm:h-32 border rounded-lg shadow-md border-primary/60 mt-2"
                                     />
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
-                            <p class="text-sm text-gray-400">Deskripsi Game</p>
-                            <p class="font-medium text-white break-words">
+                        <div class="col-span-1 p-2 sm:p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
+                            <p class="text-xs sm:text-sm text-gray-400">Deskripsi Game</p>
+                            <p class="font-medium text-white break-words text-sm sm:text-base">
                                 {{ selectedProduct.deskripsi_game }}
                             </p>
                         </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
+                    <div class="flex flex-col sm:flex-row justify-end pt-3 sm:pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
                         <button
                             @click="openEditForm(selectedProduct)"
                             class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:w-auto bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
@@ -795,15 +800,13 @@ const handleFileUpload = (event, field) => {
 
 <style>
 body {
-    @apply bg-dark overflow-x-hidden min-h-screen;
-    width: 100vw;
+    @apply bg-dark min-h-screen;
     overscroll-behavior: none;
 }
 
-.fixed.inset-0 {
-    overflow-y: auto;
-    height: 100%;
-    max-height: 100vh;
+/* Ensure the page doesn't overflow horizontally */
+#app {
+    @apply max-w-full overflow-x-hidden;
 }
 
 .truncate {
@@ -814,11 +817,8 @@ body {
     @apply break-words;
 }
 
+/* Make sure modals are responsive */
 @media (max-width: 640px) {
-    .p-6 {
-        padding: 1rem;
-    }
-
     .space-y-4 > * + * {
         margin-top: 0.75rem;
     }
