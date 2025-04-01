@@ -17,16 +17,8 @@ const props = defineProps({
 
 const { proxy } = getCurrentInstance();
 
-// flash message
-// nyalakan kalau mau pake alert biasa
-// const page = usePage();
-// const successMessage = computed(() => page.props.flash?.success || null);
-
-// Mock data for categories
-// In a real application, this would come from the backend
 const products = computed(() => props.products.data || []);
 
-// Column definitions for the table
 const columns = [
     { key: "id", label: "ID" },
     { key: "nama", label: "Produk" },
@@ -68,12 +60,10 @@ const columns = [
     },
 ];
 
-// View modal states
 const showViewModal = ref(false);
 const selectedProduct = ref(null);
 const isLoading = ref(false);
 
-// Handle view action
 const handleView = async (item) => {
     isLoading.value = true;
     selectedProduct.value = { ...item, loading: true };
@@ -81,8 +71,6 @@ const handleView = async (item) => {
 
     try {
         const response = await axios.get(route("products.show", item.id));
-        // console.log(response.data);
-
         selectedProduct.value = response.data.product;
     } catch (error) {
         console.error("Error fetching product details:", error);
@@ -98,25 +86,20 @@ const handleView = async (item) => {
 
 const handleEdit = (item) => {
     openEditForm(item);
-    // In a real app, you would redirect to the edit page or show a modal
 };
 
 const handleDelete = (item) => {
     proxy.$showSwalConfirm({
         onConfirm: () => {
-            // Logika penghapusan data
             router.delete(route("products.destroy", item.id), {
                 preserveScroll: true,
             });
         },
     });
-
-    // In a real app, you would show a confirmation dialog before deleting
 };
 
-// Form modal states
 const showForm = ref(false);
-const formMode = ref("add"); // 'add' or 'edit'
+const formMode = ref("add");
 const currentProduct = ref({
     nama: "",
     developer: "",
@@ -160,21 +143,15 @@ const closeViewModal = () => {
 };
 
 const saveDataForm = () => {
-    // In a real app, you would send a request to the backend
-
     if (formMode.value === "add") {
-        // Simulate adding a new category
         router.post(route("products.store"), currentProduct.value, {
             forceFormData: true,
-            // preserveState: false,
             preserveScroll: true,
             onSuccess: () => {
-                // successMessage.value = page.props.flash.success;
                 currentProduct.value.category_name = "";
             },
         });
     } else {
-        // Simulate updating an existing category
         router.put(
             route("products.update", currentProduct.value.id),
             currentProduct.value,
@@ -187,16 +164,15 @@ const saveDataForm = () => {
     closeForm();
 };
 
-// Watch perubahan pada nama, lalu generate slug otomatis
 watch(
     () => currentProduct.value.nama,
     (newVal) => {
         if (newVal) {
             currentProduct.value.slug = newVal
                 .toLowerCase()
-                .replace(/\s+/g, "-") // Ganti spasi dengan "-"
-                .replace(/[^\w-]+/g, "") // Hapus karakter selain huruf, angka, dan "-"
-                .replace(/--+/g, "-") // Hindari double "-"
+                .replace(/\s+/g, "-")
+                .replace(/[^\w-]+/g, "")
+                .replace(/--+/g, "-")
                 .trim();
         } else {
             currentProduct.value.slug = "";
@@ -204,36 +180,30 @@ watch(
     }
 );
 
-// untuk image preview
-
 const imagePreviews = ref({
     petunjuk_field: null,
     thumbnail: null,
 });
 
-//  Fungsi Computed Preview (Dinamis)
 const getImagePreview = (field) => {
     return computed(() => {
         if (
             typeof currentProduct.value[field] === "string" &&
             currentProduct.value[field]
         ) {
-            // Jika berasal dari database
             return `/storage/${currentProduct.value[field]}`;
         } else if (imagePreviews.value[field]) {
-            // Jika file baru dipilih, gunakan object URL
             return imagePreviews.value[field];
         }
         return null;
     });
 };
 
-//  Fungsi Upload File & Update Preview
 const handleFileUpload = (event, field) => {
     const file = event.target.files[0];
     if (file) {
         currentProduct.value[field] = file;
-        imagePreviews.value[field] = URL.createObjectURL(file); // Simpan URL preview
+        imagePreviews.value[field] = URL.createObjectURL(file);
     }
 };
 </script>
@@ -242,13 +212,6 @@ const handleFileUpload = (event, field) => {
     <Head title="Products" />
 
     <AdminLayout title="Products">
-        <!-- nyalakan kalau mau pake alert biasa -->
-        <!-- <div
-            v-if="successMessage"
-            class="px-8 py-3 mb-4 text-sm text-white bg-green-500/80"
-        >
-            {{ successMessage }}
-        </div> -->
         <div
             v-if="Object.keys(errors).length > 0"
             class="px-8 py-3 mb-4 text-sm text-white bg-red-500/80"
@@ -340,18 +303,16 @@ const handleFileUpload = (event, field) => {
                     </div>
                 </template>
             </DataTable>
-            <!-- Pagination component -->
             <Pagination :links="props.products.links" />
         </div>
 
-        <!-- Add/Edit Category Modal - Improved responsive layout -->
         <div
             v-if="showForm"
-            class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
+            class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black/50"
             @click.self="closeForm"
         >
             <div
-                class="relative w-full max-h-[90vh] overflow-y-auto mx-4 p-4 sm:p-6 border border-gray-700 rounded-lg shadow-lg sm:max-w-2xl bg-dark-card"
+                class="relative w-full max-w-full mx-4 p-4 border border-gray-700 rounded-lg shadow-lg sm:p-6 sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-dark-card max-h-[90vh] overflow-y-auto"
                 @click.stop
             >
                 <div class="flex items-center justify-between mb-4">
@@ -383,10 +344,9 @@ const handleFileUpload = (event, field) => {
                     </button>
                 </div>
 
-                <form @submit.prevent="saveDataForm">
+                <form @submit.prevent="saveDataForm" class="overflow-visible">
                     <div class="space-y-4">
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <!-- Name Field -->
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label
                                     for="nama"
@@ -403,7 +363,6 @@ const handleFileUpload = (event, field) => {
                                     required
                                 />
                             </div>
-                            <!-- Developer Field -->
                             <div>
                                 <label
                                     for="developer"
@@ -420,7 +379,6 @@ const handleFileUpload = (event, field) => {
                                     required
                                 />
                             </div>
-                            <!-- Brand Field -->
                             <div>
                                 <label
                                     for="brand"
@@ -437,7 +395,6 @@ const handleFileUpload = (event, field) => {
                                     required
                                 />
                             </div>
-                            <!-- Kategori Field -->
                             <div v-if="kategori_list">
                                 <label
                                     for="kategori_id"
@@ -460,7 +417,6 @@ const handleFileUpload = (event, field) => {
                                 </select>
                             </div>
 
-                            <!-- slug Field -->
                             <div>
                                 <label
                                     for="slug"
@@ -479,7 +435,6 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
 
-                            <!-- Provider Field -->
                             <div>
                                 <label
                                     for="provider_id"
@@ -502,7 +457,6 @@ const handleFileUpload = (event, field) => {
                                 </select>
                             </div>
 
-                            <!-- Sistem ID Field -->
                             <div>
                                 <label
                                     for="sistem_id"
@@ -520,7 +474,6 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
 
-                            <!-- Validasi ID Field -->
                             <div>
                                 <label
                                     for="validasi_id"
@@ -538,7 +491,6 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
 
-                            <!-- Status Field -->
                             <div>
                                 <label
                                     for="status"
@@ -556,10 +508,8 @@ const handleFileUpload = (event, field) => {
                                 </select>
                             </div>
 
-                            <!-- Images Section - Improved Layout -->
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-3">
+                            <div class="col-span-1 sm:col-span-2">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <!-- Petunjuk Field -->
                                     <div>
                                         <label
                                             for="petunjuk_field"
@@ -598,14 +548,12 @@ const handleFileUpload = (event, field) => {
                                             name="petunjuk_field"
                                         />
                                     </div>
-                                    <!-- Thumbnail Field -->
                                     <div>
                                         <label
                                             for="thumbnail"
                                             class="block mb-1 text-sm font-medium text-gray-300"
                                             >Thumbnail</label
                                         >
-
                                         <div
                                             v-if="
                                                 getImagePreview('thumbnail').value
@@ -639,8 +587,7 @@ const handleFileUpload = (event, field) => {
                                 </div>
                             </div>
 
-                            <!-- Deskripsi game Field -->
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-3">
+                            <div class="col-span-1 sm:col-span-2">
                                 <label
                                     for="deskripsi_game"
                                     class="block mb-1 text-sm font-medium text-gray-300"
@@ -657,17 +604,17 @@ const handleFileUpload = (event, field) => {
                                 />
                             </div>
                         </div>
-                        <div class="flex justify-end pt-4 space-x-3">
+                        <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
                             <button
                                 type="button"
                                 @click="closeForm"
-                                class="px-4 py-2 text-gray-300 rounded-lg bg-dark-lighter hover:text-white"
+                                class="px-4 py-2 text-gray-300 rounded-lg bg-dark-lighter hover:text-white w-full sm:w-auto"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                class="px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+                                class="px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary w-full sm:w-auto"
                             >
                                 {{
                                     formMode === "add"
@@ -681,7 +628,6 @@ const handleFileUpload = (event, field) => {
             </div>
         </div>
 
-        <!-- View Product Modal - Improved Responsive Layout -->
         <Modal
             :show="showViewModal"
             @close="closeViewModal"
@@ -722,58 +668,58 @@ const handleFileUpload = (event, field) => {
                 </div>
 
                 <div v-else-if="selectedProduct" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Produk ID</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.id }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Product</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.nama }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Kategori</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.kategori.kategori_name }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Provider</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.provider.provider_name }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Developer</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.developer }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Brand</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.brand }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Slug</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.slug }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Sistem ID</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.sistem_id }}
                             </p>
                         </div>
                         <div class="p-3 rounded-lg bg-dark-lighter">
                             <p class="text-sm text-gray-400">Validasi ID</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white truncate">
                                 {{ selectedProduct.validasi_id }}
                             </p>
                         </div>
@@ -793,7 +739,6 @@ const handleFileUpload = (event, field) => {
                             </p>
                         </div>
                         
-                        <!-- Image Preview Section - Improved Layout -->
                         <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div v-if="selectedProduct.petunjuk_field">
@@ -804,7 +749,7 @@ const handleFileUpload = (event, field) => {
                                             selectedProduct.petunjuk_field
                                         "
                                         alt="Preview Petunjuk"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
+                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
                                     />
                                 </div>
                                 <div v-if="selectedProduct.thumbnail">
@@ -814,7 +759,7 @@ const handleFileUpload = (event, field) => {
                                             '/storage/' + selectedProduct.thumbnail
                                         "
                                         alt="Preview Thumbnail"
-                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60"
+                                        class="object-cover w-32 border rounded-lg shadow-md border-primary/60 mt-2"
                                     />
                                 </div>
                             </div>
@@ -822,13 +767,13 @@ const handleFileUpload = (event, field) => {
                         
                         <div class="col-span-1 p-3 rounded-lg sm:col-span-2 lg:col-span-4 bg-dark-lighter">
                             <p class="text-sm text-gray-400">Deskripsi Game</p>
-                            <p class="font-medium text-white">
+                            <p class="font-medium text-white break-words">
                                 {{ selectedProduct.deskripsi_game }}
                             </p>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap justify-end pt-4 space-x-0 space-y-2 sm:space-y-0 sm:space-x-3">
+                    <div class="flex flex-col sm:flex-row justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
                         <button
                             @click="openEditForm(selectedProduct)"
                             class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:w-auto bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
@@ -855,21 +800,20 @@ body {
     overscroll-behavior: none;
 }
 
-/* Ensure modal content doesn't overflow */
 .fixed.inset-0 {
     overflow-y: auto;
     height: 100%;
     max-height: 100vh;
 }
 
-/* Make DataTable responsive */
-
-/* Hide horizontal overflow on body */
-.overflow-x-hidden {
-    overflow-x: hidden;
+.truncate {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
 }
 
-/* Adjust spacing for mobile */
+.break-words {
+    @apply break-words;
+}
+
 @media (max-width: 640px) {
     .p-6 {
         padding: 1rem;
@@ -877,10 +821,6 @@ body {
 
     .space-y-4 > * + * {
         margin-top: 0.75rem;
-    }
-
-    .grid-cols-2 {
-        grid-template-columns: 1fr;
     }
 }
 </style>
