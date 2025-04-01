@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, watch, computed } from "vue";
 
@@ -155,10 +154,14 @@ watch(searchQuery, (newValue) => {
         </div>
 
         <!-- Table Body - Improved horizontal scrolling container -->
-        <div class="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            <div class="min-w-full inline-block align-middle">
+        <div
+            class="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+        >
+            <div class="inline-block min-w-full align-middle">
                 <div class="overflow-hidden">
-                    <table class="min-w-full table-auto divide-y divide-gray-700">
+                    <table
+                        class="w-full divide-y divide-gray-700 table-auto min-w-max"
+                    >
                         <thead class="bg-dark-lighter">
                             <tr>
                                 <!-- ID Column -->
@@ -218,7 +221,7 @@ watch(searchQuery, (newValue) => {
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase sticky right-0 bg-dark-lighter whitespace-nowrap z-10"
+                                    class="sticky right-0 z-10 px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase bg-dark-lighter whitespace-nowrap"
                                 >
                                     Actions
                                 </th>
@@ -231,7 +234,9 @@ watch(searchQuery, (newValue) => {
                                 class="transition-colors hover:bg-dark-lighter"
                             >
                                 <!-- ID Column -->
-                                <td class="px-6 py-4 text-gray-200 whitespace-nowrap">
+                                <td
+                                    class="px-6 py-4 text-gray-200 whitespace-nowrap"
+                                >
                                     {{ index + 1 }}
                                 </td>
                                 <td
@@ -249,16 +254,21 @@ watch(searchQuery, (newValue) => {
                                         <div
                                             v-if="column.format"
                                             v-html="
-                                                column.format(item[column.key], item)
+                                                column.format(
+                                                    item[column.key],
+                                                    item
+                                                )
                                             "
                                         ></div>
-                                        <span v-else class="text-gray-200 truncate max-w-[150px] inline-block">{{
-                                            item[column.key]
-                                        }}</span>
+                                        <span
+                                            v-else
+                                            class="text-gray-200 truncate max-w-[150px] inline-block"
+                                            >{{ item[column.key] }}</span
+                                        >
                                     </slot>
                                 </td>
                                 <td
-                                    class="px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap sticky right-0 bg-dark-card z-10"
+                                    class="sticky right-0 z-10 px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap bg-dark-card"
                                 >
                                     <slot name="actions" :item="item">
                                         <button
@@ -274,7 +284,9 @@ watch(searchQuery, (newValue) => {
                                             Edit
                                         </button>
                                         <button
-                                            @click="handleAction('delete', item)"
+                                            @click="
+                                                handleAction('delete', item)
+                                            "
                                             class="text-red-400 transition-colors hover:text-red-500"
                                         >
                                             Delete
@@ -309,9 +321,12 @@ watch(searchQuery, (newValue) => {
                                         </p>
                                         <p class="mt-1 text-sm text-gray-500">
                                             <span v-if="searchQuery"
-                                                >Try adjusting your search query</span
+                                                >Try adjusting your search
+                                                query</span
                                             >
-                                            <span v-else>No records exist yet</span>
+                                            <span v-else
+                                                >No records exist yet</span
+                                            >
                                         </p>
                                     </div>
                                 </td>
@@ -355,5 +370,19 @@ watch(searchQuery, (newValue) => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Scrollbar horizontal */
+.overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(55, 65, 81, 0.5);
+    border-radius: 3px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.7);
 }
 </style>
