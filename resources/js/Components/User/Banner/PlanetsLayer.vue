@@ -1,4 +1,3 @@
-
 <template>
     <div class="absolute inset-0 pointer-events-none planets-container z-15">
         <!-- Saturn-like planet with distinctive ring system -->
@@ -83,8 +82,9 @@ import { ref, onMounted, computed } from 'vue';
 const planets = ref([]);
 const isReducedMotion = window?.matchMedia('(prefers-reduced-motion: reduce)')?.matches || false;
 const isMobile = computed(() => window?.innerWidth < 768);
+const isDesktop = computed(() => window?.innerWidth >= 768);
 
-// Saturn planet properties
+// Saturn planet properties - now positioned in top-right quadrant for desktop
 const saturnSize = ref(80); // Larger than regular planets
 const saturnLeft = ref(75);
 const saturnTop = ref(25);
@@ -97,7 +97,12 @@ const saturnRingTilt = ref(30); // 30° tilt for the rings
 
 onMounted(() => {
     // Adjust Saturn properties based on screen size
-    if (isMobile.value) {
+    if (isDesktop.value) {
+        // Position Saturn in top-right quadrant on desktop
+        saturnSize.value = 100; // Larger on desktop
+        saturnLeft.value = 85; // Further right, extending beyond container
+        saturnTop.value = 15;  // Higher position
+    } else if (isMobile.value) {
         saturnSize.value = 60;
         saturnLeft.value = 70;
         saturnTop.value = 15;
@@ -108,16 +113,26 @@ onMounted(() => {
 });
 
 const generatePlanets = () => {
-    const planetCount = isMobile.value ? 2 : 3; // 2-3 additional planets
+    const planetCount = isMobile.value ? 2 : 4; // More planets on desktop
     const planetData = [];
     
     // Create dynamic keyframes for each planet
     const styleSheet = document.styleSheets[0];
     
     for (let i = 0; i < planetCount; i++) {
-        const size = Math.random() * 40 + 30; // 30-70px
-        const left = Math.random() * 60 + 10; // 10-70%
-        const top = Math.random() * 50 + 25; // 25-75%
+        // Desktop: Position planets partly outside container (-20% to 120%)
+        // Mobile: Keep planets contained (10% to 70%)
+        const minPosition = isDesktop.value ? -20 : 10;
+        const maxPosition = isDesktop.value ? 120 : 70;
+        const range = maxPosition - minPosition;
+        
+        const size = isDesktop.value ? 
+            (Math.random() * 50 + 40) : // 40-90px desktop
+            (Math.random() * 40 + 30);  // 30-70px mobile
+            
+        const left = minPosition + Math.random() * range;
+        const top = minPosition + Math.random() * range;
+        
         const duration = Math.random() * 60 + 60; // 60-120s
         const hasRing = Math.random() > 0.6;
         const hasAtmosphere = Math.random() > 0.4;
@@ -149,12 +164,13 @@ const generatePlanets = () => {
             }
         }
             
-        // Create unique keyframes for this planet
+        // Create unique keyframes for this planet - expanded orbit for desktop
+        const orbitRange = isDesktop.value ? 8 : 5; // Larger orbit range on desktop
         const orbitRule = `
             @keyframes orbit-${i + 1} {
                 0% { transform: translate(0, 0) rotate(0deg); }
-                33% { transform: translate(${Math.random() * 5 - 2.5}%, ${Math.random() * 5 - 2.5}%) rotate(120deg); }
-                66% { transform: translate(${Math.random() * 5 - 2.5}%, ${Math.random() * 5 - 2.5}%) rotate(240deg); }
+                33% { transform: translate(${Math.random() * orbitRange - orbitRange/2}%, ${Math.random() * orbitRange - orbitRange/2}%) rotate(120deg); }
+                66% { transform: translate(${Math.random() * orbitRange - orbitRange/2}%, ${Math.random() * orbitRange - orbitRange/2}%) rotate(240deg); }
                 100% { transform: translate(0, 0) rotate(360deg); }
             }
         `;
@@ -207,6 +223,7 @@ const generatePlanets = () => {
     animation-timing-function: linear;
     animation-iteration-count: infinite;
     position: relative;
+    transition: transform 0.3s ease;
 }
 
 .planet-ring {
@@ -240,6 +257,13 @@ const generatePlanets = () => {
     0% { transform: translate(0, 0) rotate(0deg); }
     50% { transform: translate(-2%, 1%) rotate(180deg); }
     100% { transform: translate(0, 0) rotate(360deg); }
+}
+
+/* Scale planets by 20% when outside container on desktop */
+@media (min-width: 768px) {
+    .planet:hover, .saturn-planet:hover {
+        transform: scale(1.2);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

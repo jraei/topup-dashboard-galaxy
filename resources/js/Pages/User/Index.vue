@@ -1,3 +1,4 @@
+
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -26,8 +27,8 @@ defineProps({
             <section
                 class="relative overflow-hidden w-full min-h-[400px] md:min-h-[500px] lg:min-h-[600px] py-8"
             >
-                <!-- Enhanced Background Layers with Visual Priority System -->
-                <div class="absolute inset-0 z-0">
+                <!-- Cosmic Background Wrapper - Extended beyond banner container -->
+                <div class="cosmic-wrapper absolute inset-0 z-0 overflow-hidden">
                     <CyberpunkGrid class="z-2" />
                     <StarfieldLayer class="z-5" />
                     <NebulasLayer class="z-10" />
@@ -51,5 +52,17 @@ defineProps({
 .cyberpunk-text {
     text-shadow: 0 0 5px rgba(155, 135, 245, 0.8);
     letter-spacing: 1px;
+}
+
+.cosmic-wrapper {
+    /* Default mobile positioning */
+    margin: 0;
+    padding: 0;
+    
+    /* Extended positioning for desktop/tablet */
+    @media (min-width: 768px) {
+        margin: -15%;
+        padding: 20%;
+    }
 }
 </style>

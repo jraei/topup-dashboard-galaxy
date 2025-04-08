@@ -25,6 +25,7 @@ import { ref, onMounted, computed } from 'vue';
 
 const isReducedMotion = window?.matchMedia('(prefers-reduced-motion: reduce)')?.matches || false;
 const isMobile = computed(() => window?.innerWidth < 768);
+const isDesktop = computed(() => window?.innerWidth >= 768);
 
 const stars = ref([]);
 
@@ -34,20 +35,43 @@ onMounted(() => {
 });
 
 const generateStars = () => {
-    const starCount = isMobile.value ? 5 : 10; // Reduced on mobile
+    const starCount = isMobile.value ? 5 : 12; // More stars on desktop
     const starData = [];
     
-    // Generate stars with higher density near center
+    // Generate stars with full viewport coverage for desktop
     for (let i = 0; i < starCount; i++) {
-        // Create bias toward center for x and y
-        const centralBiasX = Math.pow(Math.random(), 1.5) * 2 - 1; // -1 to 1, biased toward 0
-        const centralBiasY = Math.pow(Math.random(), 1.5) * 2 - 1; // -1 to 1, biased toward 0
+        // For desktop: -20% to 120% (beyond container)
+        // For mobile: 15% to 85% (within container)
+        const minPosition = isDesktop.value ? -20 : 15;
+        const maxPosition = isDesktop.value ? 120 : 85;
+        const range = maxPosition - minPosition;
+
+        // Higher density near edges on desktop
+        let x, y;
         
-        // Convert to percentage (40% to 60% for more center density)
-        const x = 50 + centralBiasX * 25; // 25% to 75% with center bias
-        const y = 50 + centralBiasY * 25; // 25% to 75% with center bias
+        if (isDesktop.value && Math.random() > 0.5) {
+            // 40% chance to place stars near edges
+            const nearEdge = Math.random() > 0.5;
+            if (nearEdge) {
+                // Near horizontal edges (top/bottom)
+                x = minPosition + Math.random() * range;
+                y = Math.random() > 0.5 ? 
+                    minPosition + Math.random() * 25 : // Top edge
+                    maxPosition - Math.random() * 25;  // Bottom edge
+            } else {
+                // Near vertical edges (left/right)
+                y = minPosition + Math.random() * range;
+                x = Math.random() > 0.5 ? 
+                    minPosition + Math.random() * 25 : // Left edge
+                    maxPosition - Math.random() * 25;  // Right edge
+            }
+        } else {
+            // Regular distribution
+            x = minPosition + Math.random() * range;
+            y = minPosition + Math.random() * range;
+        }
         
-        const size = Math.random() * 2 + 2; // 2-4px
+        const size = Math.random() * 2 + (isDesktop.value ? 2.5 : 2); // 2-4px mobile, 2.5-4.5px desktop
         const useSecondary = Math.random() > 0.3;
         const color = useSecondary ? '#33C3F0' : '#ffffff'; // secondary or white
         const glowSize = size * 2;
@@ -55,6 +79,13 @@ const generateStars = () => {
         const glow = `0 0 ${glowSize}px ${glowSize / 2}px ${glowColor}`;
         const duration = Math.random() * 2 + 2; // 2-4s
         const delay = Math.random() * 2; // 0-2s
+        
+        // Calculate distance from center to adjust opacity
+        const distanceFromCenter = Math.sqrt(Math.pow((x - 50), 2) + Math.pow((y - 50), 2));
+        const normalizedDistance = Math.min(distanceFromCenter / 70, 1); // 0-1 scale
+        
+        // Stars near banner edge get higher opacity
+        const edgeOpacityBonus = isDesktop.value && normalizedDistance > 0.7 ? 0.2 : 0;
         
         starData.push({
             size,
@@ -64,7 +95,7 @@ const generateStars = () => {
             glow,
             duration,
             delay,
-            baseOpacity: Math.random() * 0.4 + 0.6, // 0.6-1.0
+            baseOpacity: Math.random() * 0.4 + 0.6 + edgeOpacityBonus, // 0.6-1.0 + edge bonus
         });
     }
     
@@ -79,6 +110,7 @@ const generateStars = () => {
 
 .star {
     animation: star-pulse infinite alternate ease-in-out;
+    will-change: opacity, transform;
 }
 
 @keyframes star-pulse {
