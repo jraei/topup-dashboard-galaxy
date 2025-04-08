@@ -1,13 +1,12 @@
-
 <!-- We need to significantly revise MeteorBackground.vue with new trajectory and effects -->
 <template>
     <div
-        class="absolute inset-0 overflow-hidden pointer-events-none meteor-container z-20"
+        class="absolute inset-0 z-20 overflow-hidden pointer-events-none meteor-container"
     >
         <div
             v-for="(meteor, index) in meteors"
             :key="index"
-            class="absolute bg-primary rounded-full meteor"
+            class="absolute rounded-full bg-primary meteor"
             :class="[`meteor-${index + 1}`]"
             :style="{
                 left: `${meteor.left}px`,
@@ -32,8 +31,8 @@
             ></div>
 
             <!-- Enhanced fire particles -->
-            <span 
-                v-for="particle in meteor.particles" 
+            <span
+                v-for="particle in meteor.particles"
                 :key="`particle-${particle.id}`"
                 class="absolute rounded-full animate-ping"
                 :style="{
@@ -43,13 +42,13 @@
                     top: `${particle.offsetY}px`,
                     backgroundColor: particle.color,
                     animationDuration: `${particle.duration}s`,
-                    opacity: particle.opacity
+                    opacity: particle.opacity,
                 }"
             ></span>
-            
+
             <!-- Debris particles -->
-            <span 
-                v-for="debris in meteor.debris" 
+            <span
+                v-for="debris in meteor.debris"
                 :key="`debris-${debris.id}`"
                 class="absolute rounded-full"
                 :style="{
@@ -74,43 +73,45 @@ import { ref, computed, onMounted } from "vue";
 // All meteors now come from the top area of the viewport
 const positions = [
     // Top edge entries with downward angle
-    { left: '20%', top: '-20px', rotation: 30, delay: 0.686975, duration: 8 },
-    { left: '30%', top: '-20px', rotation: 30, delay: 0.670151, duration: 8 },
-    { left: '40%', top: '-20px', rotation: 30, delay: 0.632454, duration: 9 },
-    { left: '50%', top: '-20px', rotation: 30, delay: 0.524996, duration: 5 },
-    { left: '60%', top: '-20px', rotation: 30, delay: 0.460272, duration: 8 },
-    { left: '70%', top: '-20px', rotation: 30, delay: 0.223791, duration: 6 },
-    { left: '80%', top: '-20px', rotation: 30, delay: 0.406558, duration: 4 },
-    { left: '10%', top: '-20px', rotation: 30, delay: 0.475533, duration: 6 },
-    { left: '25%', top: '-20px', rotation: 30, delay: 0.394929, duration: 5 },
-    { left: '35%', top: '-20px', rotation: 30, delay: 0.78249, duration: 2 },
-    { left: '45%', top: '-20px', rotation: 30, delay: 0.353787, duration: 5 },
-    { left: '55%', top: '-20px', rotation: 30, delay: 0.309607, duration: 5 },
-    { left: '65%', top: '-20px', rotation: 30, delay: 0.35162, duration: 8 },
-    { left: '75%', top: '-20px', rotation: 30, delay: 0.413144, duration: 7 },
-    { left: '85%', top: '-20px', rotation: 30, delay: 0.395388, duration: 6 },
-    { left: '15%', top: '-20px', rotation: 30, delay: 0.582248, duration: 4 },
-    { left: '27%', top: '-20px', rotation: 30, delay: 0.710367, duration: 4 },
-    { left: '37%', top: '-20px', rotation: 30, delay: 0.564896, duration: 6 },
-    { left: '47%', top: '-20px', rotation: 30, delay: 0.206357, duration: 7 },
-    { left: '57%', top: '-20px', rotation: 30, delay: 0.628613, duration: 9 },
-    { left: '67%', top: '-20px', rotation: 30, delay: 0.529785, duration: 7 },
-    { left: '77%', top: '-20px', rotation: 30, delay: 0.64863, duration: 6 },
-    { left: '87%', top: '-20px', rotation: 30, delay: 0.701722, duration: 3 },
-    { left: '5%', top: '-20px', rotation: 30, delay: 0.366231, duration: 5 },
-    { left: '22%', top: '-20px', rotation: 30, delay: 0.521904, duration: 7 },
-    { left: '32%', top: '-20px', rotation: 30, delay: 0.484818, duration: 9 },
-    { left: '42%', top: '-20px', rotation: 30, delay: 0.502043, duration: 3 },
-    { left: '52%', top: '-20px', rotation: 30, delay: 0.577243, duration: 7 },
-    { left: '62%', top: '-20px', rotation: 30, delay: 0.273317, duration: 5 },
-    { left: '72%', top: '-20px', rotation: 30, delay: 0.556245, duration: 7 },
+    { left: "20%", top: "-20px", rotation: 30, delay: 0.686975, duration: 8 },
+    { left: "30%", top: "-20px", rotation: 10, delay: 0.670151, duration: 8 },
+    { left: "40%", top: "-20px", rotation: 30, delay: 0.632454, duration: 9 },
+    { left: "50%", top: "-20px", rotation: 10, delay: 0.524996, duration: 5 },
+    { left: "60%", top: "-20px", rotation: 30, delay: 0.460272, duration: 8 },
+    { left: "70%", top: "-20px", rotation: 10, delay: 0.223791, duration: 6 },
+    { left: "80%", top: "-20px", rotation: 30, delay: 0.406558, duration: 4 },
+    { left: "10%", top: "-20px", rotation: 10, delay: 0.475533, duration: 6 },
+    { left: "25%", top: "-20px", rotation: 30, delay: 0.394929, duration: 5 },
+    { left: "35%", top: "-20px", rotation: 10, delay: 0.78249, duration: 2 },
+    { left: "45%", top: "-20px", rotation: 30, delay: 0.353787, duration: 5 },
+    { left: "55%", top: "-20px", rotation: 10, delay: 0.309607, duration: 5 },
+    { left: "65%", top: "-20px", rotation: 30, delay: 0.35162, duration: 8 },
+    { left: "75%", top: "-20px", rotation: 10, delay: 0.413144, duration: 7 },
+    { left: "85%", top: "-20px", rotation: 30, delay: 0.395388, duration: 6 },
+    { left: "15%", top: "-20px", rotation: 10, delay: 0.582248, duration: 4 },
+    { left: "27%", top: "-20px", rotation: 30, delay: 0.710367, duration: 4 },
+    { left: "37%", top: "-20px", rotation: 10, delay: 0.564896, duration: 6 },
+    { left: "47%", top: "-20px", rotation: 30, delay: 0.206357, duration: 7 },
+    { left: "57%", top: "-20px", rotation: 10, delay: 0.628613, duration: 9 },
+    { left: "67%", top: "-20px", rotation: 30, delay: 0.529785, duration: 7 },
+    { left: "77%", top: "-20px", rotation: 10, delay: 0.64863, duration: 6 },
+    { left: "87%", top: "-20px", rotation: 30, delay: 0.701722, duration: 3 },
+    { left: "5%", top: "-20px", rotation: 10, delay: 0.366231, duration: 5 },
+    { left: "22%", top: "-20px", rotation: 30, delay: 0.521904, duration: 7 },
+    { left: "32%", top: "-20px", rotation: 10, delay: 0.484818, duration: 9 },
+    { left: "42%", top: "-20px", rotation: 30, delay: 0.502043, duration: 3 },
+    { left: "52%", top: "-20px", rotation: 10, delay: 0.577243, duration: 7 },
+    { left: "62%", top: "-20px", rotation: 30, delay: 0.273317, duration: 5 },
+    { left: "72%", top: "-20px", rotation: 30, delay: 0.556245, duration: 7 },
 ];
 
 // Calculate responsive meteor count
 const getMeteorCount = () => {
-    if (typeof window === 'undefined') return positions.length;
+    if (typeof window === "undefined") return positions.length;
     const isMobile = window.innerWidth < 768;
-    const isReducedMotion = window?.matchMedia('(prefers-reduced-motion: reduce)')?.matches || false;
+    const isReducedMotion =
+        window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches ||
+        false;
     return isMobile || isReducedMotion ? 15 : positions.length;
 };
 
@@ -127,9 +128,10 @@ const createDebris = (count) => {
             offsetY: Math.random() * 6 - 3, // Slightly offset from center
             translateX: Math.cos(angle) * speed, // X movement based on angle
             translateY: Math.sin(angle) * speed, // Y movement based on angle
-            color: i % 3 === 0 ? '#FCD34D' : i % 2 === 0 ? '#F97316' : '#EF4444', // Amber, orange, red
+            color:
+                i % 3 === 0 ? "#FCD34D" : i % 2 === 0 ? "#F97316" : "#EF4444", // Amber, orange, red
             duration: Math.random() * 2 + 1, // 1-3s
-            opacity: Math.random() * 0.7 + 0.3 // 0.3-1
+            opacity: Math.random() * 0.7 + 0.3, // 0.3-1
         });
     }
     return debris;
@@ -144,9 +146,10 @@ const createParticles = (count) => {
             size: Math.random() * 3 + 1.5, // 1.5-4.5px (increased size)
             offsetX: Math.random() * 10 - 20, // Position behind meteor
             offsetY: Math.random() * 6 - 3, // Slightly offset from center
-            color: i % 3 === 0 ? '#FCD34D' : i % 2 === 0 ? '#F97316' : '#EF4444', // Amber, orange, red
+            color:
+                i % 3 === 0 ? "#FCD34D" : i % 2 === 0 ? "#F97316" : "#EF4444", // Amber, orange, red
             duration: Math.random() * 1.5 + 0.5, // 0.5-2s
-            opacity: Math.random() * 0.7 + 0.3 // 0.3-1
+            opacity: Math.random() * 0.7 + 0.3, // 0.3-1
         });
     }
     return particles;
@@ -154,7 +157,8 @@ const createParticles = (count) => {
 
 // Enhanced meteor properties with glow and particles
 const meteors = computed(() => {
-    const count = typeof window !== 'undefined' ? getMeteorCount() : positions.length;
+    const count =
+        typeof window !== "undefined" ? getMeteorCount() : positions.length;
     return positions.slice(0, count).map((position, index) => {
         const particleCount = Math.floor(Math.random() * 3) + 3; // 3-5 particles
         const debrisCount = Math.floor(Math.random() * 4) + 2; // 2-5 debris particles
@@ -163,14 +167,14 @@ const meteors = computed(() => {
         const trailLength = Math.floor(Math.random() * 80 + 80); // Longer trail length 80-160px
 
         // Use tailwind colors directly
-        const glowColor = 'rgba(155, 135, 245, 0.8)'; // Primary color with opacity
-        const trailColor = 'rgba(155, 135, 245, 0.8)'; // Primary color with opacity
-        
+        const glowColor = "rgba(155, 135, 245, 0.8)"; // Primary color with opacity
+        const trailColor = "rgba(155, 135, 245, 0.8)"; // Primary color with opacity
+
         // Parse the left position if it's a percentage
-        const leftPos = position.left.toString().includes('%') 
+        const leftPos = position.left.toString().includes("%")
             ? (parseFloat(position.left) * window.innerWidth) / 100
             : parseFloat(position.left);
-            
+
         return {
             ...position,
             left: leftPos,
@@ -181,15 +185,15 @@ const meteors = computed(() => {
             trailColor,
             opacity: Math.random() * 0.2 + 0.8, // Higher base opacity 0.8-1
             particles: createParticles(particleCount),
-            debris: createDebris(debrisCount)
+            debris: createDebris(debrisCount),
         };
     });
 });
 
 // Adjust for responsive behavior on mounted
 onMounted(() => {
-    if (typeof window !== 'undefined') {
-        window.addEventListener('resize', () => {
+    if (typeof window !== "undefined") {
+        window.addEventListener("resize", () => {
             meteors.value = meteors.value;
         });
     }
@@ -218,14 +222,14 @@ onMounted(() => {
     }
     10% {
         opacity: var(--opacity, 0.8);
-        transform: translateX(-20px) translateY(30px);
+        transform: translateX(-30px) translateY(52px); /* 60° */
     }
     70% {
         opacity: var(--opacity, 0.8);
     }
     100% {
         opacity: 0;
-        transform: translateX(-100px) translateY(500px);
+        transform: translateX(-200px) translateY(346px); /* 60° */
     }
 }
 
@@ -260,14 +264,14 @@ onMounted(() => {
     }
     10% {
         opacity: var(--opacity, 0.8);
-        transform: translateX(-30px) translateY(40px);
+        transform: translateX(-40px) translateY(69px); /* 60° */
     }
     70% {
         opacity: var(--opacity, 0.8);
     }
     100% {
         opacity: 0;
-        transform: translateX(-150px) translateY(550px);
+        transform: translateX(-300px) translateY(519px); /* 60° */
     }
 }
 
@@ -275,7 +279,7 @@ onMounted(() => {
     .meteor {
         animation-duration: 10s !important;
     }
-    
+
     .meteor:nth-child(even) {
         display: none;
     }

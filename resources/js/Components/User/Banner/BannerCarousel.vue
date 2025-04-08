@@ -1,7 +1,7 @@
 <template>
     <div
         class="relative z-10 overflow-hidden rounded-2xl"
-        :class="{ 'w-[90%] mx-auto': true, 'md:w-[80%]': true }"
+        :class="{ 'w-[90%] mx-auto': true, 'md:w-[100%]': true }"
         @mouseenter="pauseAutoplay"
         @mouseleave="resumeAutoplay"
     >
@@ -29,7 +29,7 @@
                     <img
                         :src="banner.imageUrl"
                         alt="Banner"
-                        class="object-cover w-full h-full aspect-video"
+                        class="object-cover w-full h-full"
                         loading="lazy"
                     />
                 </div>
