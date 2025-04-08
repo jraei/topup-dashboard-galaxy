@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -19,9 +18,11 @@ defineProps({
 <template>
     <GuestLayout>
         <div class="bg-content_background">
-            <section class="relative min-h-[500px] overflow-hidden py-8 mx-auto">
+            <section
+                class="relative min-h-[500px] overflow-hidden py-8 mx-auto"
+            >
                 <MeteorBackground />
-                <div class="mx-auto max-w-7xl">
+                <div class="max-w-6xl mx-auto">
                     <BannerCarousel :banners="banners" />
                 </div>
             </section>

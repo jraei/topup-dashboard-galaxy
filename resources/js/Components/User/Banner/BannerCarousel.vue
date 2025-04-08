@@ -1,8 +1,7 @@
-
 <template>
     <div
-        class="relative overflow-hidden rounded-2xl z-10"
-        :class="{ 'w-[95%] mx-auto': true, 'md:w-[80%]': true }"
+        class="relative z-10 overflow-hidden rounded-2xl"
+        :class="{ 'w-[90%] mx-auto': true, 'md:w-[80%]': true }"
         @mouseenter="pauseAutoplay"
         @mouseleave="resumeAutoplay"
     >
@@ -60,9 +59,11 @@
             <div
                 class="absolute inset-0 pointer-events-none hexagon-grid opacity-10"
             ></div>
-            
+
             <!-- CRT Scan Lines Overlay -->
-            <div class="absolute inset-0 pointer-events-none crt-scanlines opacity-10"></div>
+            <div
+                class="absolute inset-0 pointer-events-none crt-scanlines opacity-10"
+            ></div>
         </div>
     </div>
 </template>
