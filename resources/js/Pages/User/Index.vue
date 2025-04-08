@@ -1,7 +1,9 @@
+
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
-import Carousel from "@/Components/User/Banner/Carousel.vue";
-import MeteorEffects from "@/Components/User/Banner/MeteorEffects.vue";
+import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
+import MeteorBackground from "@/Components/User/Banner/MeteorBackground.vue";
+
 defineProps({
     banners: {
         type: Array,
@@ -17,10 +19,10 @@ defineProps({
 <template>
     <GuestLayout>
         <div class="bg-content_background">
-            <section class="max-w-full py-8 mx-auto">
+            <section class="relative min-h-[500px] overflow-hidden py-8 mx-auto">
+                <MeteorBackground />
                 <div class="mx-auto max-w-7xl">
-                    <Carousel :banners="banners" />
-                    <MeteorEffects />
+                    <BannerCarousel :banners="banners" />
                 </div>
             </section>
 

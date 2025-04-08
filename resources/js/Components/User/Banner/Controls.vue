@@ -21,9 +21,6 @@
       </svg>
     </button>
   </div>
-  
-  <!-- CRT Scan Lines Overlay -->
-  <div class="absolute inset-0 pointer-events-none crt-scanlines opacity-10"></div>
 </template>
 
 <script setup>
@@ -40,15 +37,5 @@ defineEmits(['prev', 'next']);
   opacity: 0.7;
   transform: scale(1.1);
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.5);
-}
-
-.crt-scanlines {
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.2),
-    rgba(0, 0, 0, 0.2) 1px,
-    transparent 1px,
-    transparent 2px
-  );
 }
 </style>
