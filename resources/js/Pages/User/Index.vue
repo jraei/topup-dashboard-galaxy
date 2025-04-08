@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -32,7 +31,7 @@ defineProps({
                     <MeteorBackground class="z-15" />
                     <PlanetsLayer class="z-10" />
                 </div>
-                
+
                 <!-- Carousel Content -->
                 <div class="relative z-30 max-w-6xl mx-auto">
                     <BannerCarousel :banners="banners" />
