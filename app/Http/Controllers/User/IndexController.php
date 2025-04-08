@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\User;
@@ -13,8 +12,8 @@ class IndexController extends Controller
     public function index()
     {
         $banners = Banner::where('status', 'active')
-                        ->orderBy('order')
-                        ->get(['id', 'image_path']);
+            ->orderBy('order')
+            ->get(['id', 'image_path']);
 
         return Inertia::render('User/Index', [
             'banners' => $banners

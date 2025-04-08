@@ -24,7 +24,7 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
-
+use App\Http\Controllers\User\IndexController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,14 +37,7 @@ use App\Http\Controllers\Admin\ProdukInputOptionController;
 |
 */
 
-Route::get('/', function () {
-    return Inertia::render('User/Index', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+Route::get('/', [IndexController::class, 'index'])->name('index');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

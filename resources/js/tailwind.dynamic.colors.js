@@ -11,7 +11,7 @@ module.exports = {
     },
     header_background: "#111827",
     footer_background: "#111827",
-    content_background: "#1F2937",
+    content_background: "#074cac",
     dark: {
         DEFAULT: "#070c16",
         lighter: "#111927",
