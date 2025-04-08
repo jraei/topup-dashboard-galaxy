@@ -1,6 +1,6 @@
 
 <template>
-    <div class="absolute inset-0 pointer-events-none nebulas-container">
+    <div class="absolute inset-0 pointer-events-none nebulas-container z-10">
         <div 
             v-for="(nebula, index) in nebulas" 
             :key="`nebula-${index}`"
@@ -15,7 +15,8 @@
                 animationDuration: `${nebula.duration}s`,
                 animationDelay: `${nebula.delay}s`,
                 transform: `rotate(${nebula.rotation}deg) scale(${nebula.scale})`,
-                filter: `blur(${nebula.blur}px)`
+                filter: `blur(${nebula.blur}px)`,
+                mixBlendMode: 'overlay'
             }"
         ></div>
     </div>
@@ -25,7 +26,7 @@
 import { ref, onMounted, computed } from 'vue';
 
 // Generate nebulas based on screen size
-const isReduced = window?.matchMedia('(prefers-reduced-motion: reduce)')?.matches || false;
+const isReducedMotion = window?.matchMedia('(prefers-reduced-motion: reduce)')?.matches || false;
 const isMobile = computed(() => window?.innerWidth < 768);
 
 const nebulas = ref([]);
@@ -36,28 +37,33 @@ onMounted(() => {
 });
 
 const generateNebulas = () => {
-    // Skip for mobile or reduced motion
-    if (isMobile.value || isReduced) {
-        nebulas.value = [];
-        return;
-    }
-    
-    const count = 3; // Keep nebula count low for performance
+    // Simplified for mobile but ensure visible
+    const count = isMobile.value ? 2 : 3; // Keep nebula count manageable for performance
     const nebulaData = [];
     
     for (let i = 0; i < count; i++) {
+        // Ensure nebulas cover 60% of banner area
+        const centerX = 20 + Math.random() * 60; // 20-80% horizontally
+        const centerY = 20 + Math.random() * 60; // 20-80% vertically
+        
+        // Increased size for better visibility
+        const size = Math.random() * 400 + 300; // 300-700px
+
+        // Higher opacity values for visibility
+        const baseOpacity = Math.random() * 0.10 + 0.15; // 0.15-0.25 (increased minimum)
+        
         nebulaData.push({
-            size: Math.random() * 400 + 200, // 200-600px
-            x: Math.random() * 100, // 0-100%
-            y: Math.random() * 100, // 0-100%
-            opacity: Math.random() * 0.1 + 0.05, // 0.05-0.15
-            color1: 'rgba(155, 135, 245, 0.2)', // primary with low opacity
-            color2: 'rgba(51, 195, 240, 0.1)', // secondary with lower opacity
+            size,
+            x: centerX, 
+            y: centerY,
+            opacity: baseOpacity,
+            color1: 'rgba(155, 135, 245, 0.3)', // primary with higher opacity
+            color2: 'rgba(51, 195, 240, 0.2)', // secondary with higher opacity
             duration: Math.random() * 100 + 100, // 100-200s
             delay: Math.random() * 10, // 0-10s
             rotation: Math.random() * 360, // 0-360deg
-            scale: Math.random() * 0.5 + 0.5, // 0.5-1
-            blur: Math.random() * 50 + 30 // 30-80px
+            scale: Math.random() * 0.5 + 0.8, // 0.8-1.3 (increased scale)
+            blur: Math.random() * 40 + 30 // 30-70px
         });
     }
     
@@ -68,6 +74,7 @@ const generateNebulas = () => {
 <style scoped>
 .nebulas-container {
     overflow: hidden;
+    z-index: 10;
 }
 
 .nebula {
@@ -80,11 +87,11 @@ const generateNebulas = () => {
 @keyframes nebula-pulse {
     0% {
         transform: scale(1) rotate(0deg);
-        opacity: var(--opacity, 0.1);
+        opacity: var(--opacity, 0.15);
     }
     100% {
         transform: scale(1.05) rotate(5deg);
-        opacity: calc(var(--opacity, 0.1) * 1.3);
+        opacity: calc(var(--opacity, 0.15) * 1.3);
     }
 }
 
