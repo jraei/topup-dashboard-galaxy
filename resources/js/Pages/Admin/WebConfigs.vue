@@ -1,1651 +1,567 @@
 <script setup>
-import { Head, router, useForm } from "@inertiajs/vue3";
-import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { ref, computed, watch } from "vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import TextInput from "@/Components/TextInput.vue";
-import InputError from "@/Components/InputError.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
+import { ref, reactive } from 'vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/Components/InputError.vue';
+import ColorManagement from '@/Components/ColorManagement.vue';
 
 const props = defineProps({
     generalSettings: Object,
     appearanceSettings: Object,
     providers: Array,
-    errors: Object,
+    status: Object,
 });
 
-const activeTab = ref("general");
-
-const tabs = [
-    { id: "general", name: "General Settings", icon: "cog" },
-    { id: "appearance", name: "Appearance", icon: "palette" },
-    { id: "api", name: "API Connections", icon: "link" },
-    { id: "security", name: "Security", icon: "shield" },
-];
-
-const setActiveTab = (tabId) => {
-    activeTab.value = tabId;
-};
-
-// General settings form
+// Forms
 const generalForm = useForm({
-    judul_web: props.generalSettings?.judul_web || "",
-    meta_title: props.generalSettings?.meta_title || "",
-    meta_description: props.generalSettings?.meta_description || "",
-    meta_keywords: props.generalSettings?.meta_keywords || "",
-    support_instagram: props.generalSettings?.support_instagram || "",
-    support_whatsapp: props.generalSettings?.support_whatsapp || "",
-    support_email: props.generalSettings?.support_email || "",
-    support_youtube: props.generalSettings?.support_youtube || "",
-    support_facebook: props.generalSettings?.support_facebook || "",
+    judul_web: props.generalSettings.judul_web,
+    meta_title: props.generalSettings.meta_title,
+    meta_description: props.generalSettings.meta_description,
+    meta_keywords: props.generalSettings.meta_keywords,
+    support_instagram: props.generalSettings.support_instagram,
+    support_whatsapp: props.generalSettings.support_whatsapp,
+    support_email: props.generalSettings.support_email,
+    support_youtube: props.generalSettings.support_youtube,
+    support_facebook: props.generalSettings.support_facebook,
 });
 
-// Appearance form
 const appearanceForm = useForm({
-    primary_color: props.appearanceSettings?.primary_color || "#6366F1",
-    primary_hover: props.appearanceSettings?.primary_hover || "#4F46E5",
-    secondary_color: props.appearanceSettings?.secondary_color || "#8B5CF6",
-    secondary_hover: props.appearanceSettings?.secondary_hover || "#7C3AED",
-    content_bg: props.appearanceSettings?.content_bg || "#1F2937",
-    footer_bg: props.appearanceSettings?.footer_bg || "#111827",
-    header_bg: props.appearanceSettings?.header_bg || "#111827",
-    text_primary: props.appearanceSettings?.text_primary || "#F9FAFB",
-    text_secondary: props.appearanceSettings?.text_secondary || "#E5E7EB",
+    primary_color: props.appearanceSettings.primary_color,
+    primary_hover: props.appearanceSettings.primary_hover,
+    secondary_color: props.appearanceSettings.secondary_color,
+    secondary_hover: props.appearanceSettings.secondary_hover,
+    content_bg: props.appearanceSettings.content_bg,
+    footer_bg: props.appearanceSettings.footer_bg,
+    header_bg: props.appearanceSettings.header_bg,
+    text_primary: props.appearanceSettings.text_primary,
+    text_secondary: props.appearanceSettings.text_secondary,
     logo_header: null,
     logo_footer: null,
     logo_favicon: null,
 });
 
 // API connections form
+const providersForm = reactive({});
+props.providers.forEach(provider => {
+    providersForm[provider.id] = {
+        api_username: provider.api_username,
+        api_key: provider.api_key,
+        api_private_key: provider.api_private_key,
+        status: provider.status,
+    };
+});
+
 const apiForm = useForm({
-    providers: props.providers.reduce((acc, provider) => {
-        acc[provider.id] = {
-            api_username: provider.api_username || "",
-            api_key: provider.api_key || "",
-            api_private_key: provider.api_private_key || "",
-            status: provider.status || "active",
-            provider_name: provider.provider_name,
-        };
-        return acc;
-    }, {}),
+    providers: providersForm,
 });
 
-// Security form
-const securityForm = useForm({
-    enable_2fa: false,
-    ip_restriction: false,
-    enforce_complex_password: true,
-    password_expiry_days: 90,
-});
-
-// Character counters for SEO fields
-const metaTitleCount = computed(() => generalForm.meta_title.length);
-const metaDescriptionCount = computed(
-    () => generalForm.meta_description.length
-);
+// Active tab state
+const activeTab = ref('general');
 
 // Form submission handlers
-const submitGeneralSettings = () => {
-    generalForm.patch(route("admin.settings.general"), {
-        preserveScroll: true,
+const submitGeneralForm = () => {
+    generalForm.patch(route('admin.settings.general'));
+};
+
+const submitAppearanceForm = () => {
+    appearanceForm.post(route('admin.settings.appearance'), {
+        forceFormData: true,
     });
 };
 
-const submitAppearanceSettings = () => {
-    appearanceForm._method = "patch";
-
-    router.post(route("admin.settings.appearance"), appearanceForm, {
-        preserveScroll: true,
-    });
+const submitApiForm = () => {
+    apiForm.patch(route('admin.settings.api'));
 };
 
-const submitApiSettings = () => {
-    apiForm.patch(route("admin.settings.api"), {
-        preserveScroll: true,
-    });
-};
+// Logo preview and deletion
+const logoHeaderPreview = ref(props.appearanceSettings.logo_header);
+const logoFooterPreview = ref(props.appearanceSettings.logo_footer);
+const logoFaviconPreview = ref(props.appearanceSettings.logo_favicon);
 
-const submitSecuritySettings = () => {
-    // Placeholder for security settings submission
-    showToast("Success", "Security settings updated successfully", "success");
-};
-
-const imagePreviews = ref({
-    logo_header: props.appearanceSettings?.logo_header ?? null,
-    logo_footer: props.appearanceSettings?.logo_footer ?? null,
-    logo_favicon: props.appearanceSettings?.logo_favicon ?? null,
-});
-
-// File handling
-const getImagePreview = (field) => {
-    return computed(() => {
-        if (
-            typeof appearanceForm[field] === "string" &&
-            appearanceForm[field]
-        ) {
-            return `/storage/${appearanceForm[field]}`;
-        } else if (imagePreviews.value[field]) {
-            return imagePreviews.value[field];
-        }
-        return null;
-    });
-};
-
-const handleLogoUpload = (event, field) => {
+const previewLogo = (event, type) => {
     const file = event.target.files[0];
-    if (file) {
-        appearanceForm[field] = file;
-        imagePreviews.value[field] = URL.createObjectURL(file);
-    }
-};
-
-// Visual color preview elements
-const previewElements = ref([
-    {
-        name: "Header",
-        color: "header_bg",
-        primaryColor: "text_primary",
-        secondaryColor: "text_secondary",
-    },
-    {
-        name: "Content",
-        color: "content_bg",
-        primaryColor: "text_primary",
-        secondaryColor: "text_secondary",
-    },
-    {
-        name: "Button",
-        color: "primary_color",
-        primaryColor: "text_primary",
-        secondaryColor: "text_secondary",
-    },
-    {
-        name: "Secondary",
-        color: "secondary_color",
-        primaryColor: "text_primary",
-        secondaryColor: "text_secondary",
-    },
-    {
-        name: "Footer",
-        color: "footer_bg",
-        primaryColor: "text_primary",
-        secondaryColor: "text_secondary",
-    },
-]);
-
-// Masking/unmasking API keys
-const maskedFields = ref({});
-
-const toggleFieldVisibility = (providerId, field) => {
-    const key = `${providerId}-${field}`;
-    maskedFields.value[key] = !maskedFields.value[key];
-};
-
-const isFieldVisible = (providerId, field) => {
-    const key = `${providerId}-${field}`;
-    return maskedFields.value[key] || false;
-};
-
-// Toast notification
-const showToast = (title, message, type = "success") => {
-    // This would be connected to your existing notification system
-    if (window.Toast) {
-        window.Toast.fire({
-            icon: type,
-            title: message,
-        });
-    } else {
-        alert(`${title}: ${message}`);
-    }
-};
-
-// WCAG contrast checker (simplified)
-const getContrastRatio = (color1, color2) => {
-    // Convert hex to RGB and calculate luminance
-    // Simplified version - would need proper luminance calculation for accuracy
-    return "Subtext"; // Placeholder
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if (type === 'header') {
+            logoHeaderPreview.value = e.target.result;
+        } else if (type === 'footer') {
+            logoFooterPreview.value = e.target.result;
+        } else if (type === 'favicon') {
+            logoFaviconPreview.value = e.target.result;
+        }
+    };
+    reader.readAsDataURL(file);
 };
 
 const deleteLogo = (field) => {
-    if (!confirm("Are you sure you want to delete this logo?")) return;
+    if (confirm('Are you sure you want to delete this logo?')) {
+        window.axios.delete(route('admin.settings.logo.delete', field))
+            .then(() => {
+                if (field === 'logo_header') {
+                    logoHeaderPreview.value = null;
+                } else if (field === 'logo_footer') {
+                    logoFooterPreview.value = null;
+                } else if (field === 'logo_favicon') {
+                    logoFaviconPreview.value = null;
+                }
+                
+                // Show success message
+                Swal.fire({
+                    title: 'Logo Deleted',
+                    text: 'The logo has been deleted successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            })
+            .catch(error => {
+                console.error('Error deleting logo:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'There was an error deleting the logo.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+    }
+};
 
-    router.delete(route("admin.settings.logo.delete", field), {
-        preserveScroll: true,
+// Handle color updates from the ColorManagement component
+const handleColorUpdated = ({ key, value }) => {
+    // Update the form values to keep them in sync
+    if (appearanceForm[key] !== undefined) {
+        appearanceForm[key] = value;
+    }
+};
 
-        onSuccess: () => {
-            imagePreviews.value[field] = null;
-            appearanceForm[field] = null;
-        },
-
-        onError: () => {
-            showToast("Error", "Failed to delete logo.", "error");
-        },
+// Handle apply colors action (manual refresh)
+const handleApplyColors = (colors) => {
+    // Update appearance form with the latest colors
+    Object.keys(colors).forEach(key => {
+        if (appearanceForm[key] !== undefined) {
+            appearanceForm[key] = colors[key];
+        }
+    });
+    
+    // Submit the form to save all colors at once
+    submitAppearanceForm();
+    
+    // Show a message
+    Swal.fire({
+        title: 'Colors Applied',
+        text: 'All colors have been applied and saved.',
+        icon: 'success',
+        confirmButtonText: 'OK'
     });
 };
 </script>
 
 <template>
-    <Head title="Settings | Admin" />
+    <Head title="Web Configurations" />
 
-    <AdminLayout title="System Settings">
-        <div
-            class="w-full border rounded-lg shadow-lg border-primary/40 bg-dark-card"
-        >
-            <!-- Tab Navigation -->
-            <div class="border-b border-gray-800">
-                <div class="flex overflow-x-auto">
-                    <nav class="flex" aria-label="Tabs">
-                        <button
-                            v-for="tab in tabs"
-                            :key="tab.id"
-                            @click="setActiveTab(tab.id)"
-                            class="px-6 py-4 text-sm font-medium transition-all duration-300 border-b-2 whitespace-nowrap group"
-                            :class="[
-                                activeTab === tab.id
-                                    ? 'border-indigo-500 text-indigo-400'
-                                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700',
-                            ]"
-                            :aria-current="
-                                activeTab === tab.id ? 'page' : undefined
-                            "
-                        >
-                            <!-- Icon would go here if using an icon library -->
-                            <span class="relative">
-                                {{ tab.name }}
-                                <span
-                                    v-if="activeTab === tab.id"
-                                    class="absolute inset-x-0 -bottom-1 h-0.5 bg-indigo-500 animate-pulse"
-                                ></span>
-                            </span>
-                        </button>
-                    </nav>
-                </div>
-            </div>
+    <AdminLayout>
+        <template #header>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                Web Configurations
+            </h2>
+        </template>
 
-            <!-- Tab Content with Glassmorphism styling -->
-            <div class="p-6 backdrop-blur-sm bg-gray-900/70">
-                <!-- General Settings Tab -->
-                <div
-                    v-if="activeTab === 'general'"
-                    class="space-y-8 transition-all duration-300 animate-fade-in"
-                >
-                    <div
-                        class="p-6 border border-gray-700 rounded-lg shadow-lg bg-gray-800/70 backdrop-blur-sm"
-                    >
-                        <h3 class="mb-4 text-lg font-medium text-white">
-                            Website Information
-                        </h3>
-                        <form @submit.prevent="submitGeneralSettings">
-                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="judul_web"
-                                        value="Site Name"
-                                    />
-                                    <TextInput
-                                        id="judul_web"
-                                        name="judul_web"
-                                        type="text"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="Game Top-Up Website"
-                                        v-model="generalForm.judul_web"
-                                    />
-                                    <InputError
-                                        :message="generalForm.errors.judul_web"
-                                        class="mt-1"
-                                    />
-                                </div>
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <!-- Tabs -->
+                        <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+                            <ul class="flex flex-wrap -mb-px">
+                                <li class="mr-2">
+                                    <button 
+                                        :class="['inline-block px-4 py-2 rounded-t-lg border-b-2', 
+                                        activeTab === 'general' 
+                                            ? 'border-primary text-primary font-medium' 
+                                            : 'border-transparent hover:border-gray-300']"
+                                        @click="activeTab = 'general'"
+                                    >
+                                        General
+                                    </button>
+                                </li>
+                                <li class="mr-2">
+                                    <button 
+                                        :class="['inline-block px-4 py-2 rounded-t-lg border-b-2', 
+                                        activeTab === 'appearance' 
+                                            ? 'border-primary text-primary font-medium' 
+                                            : 'border-transparent hover:border-gray-300']"
+                                        @click="activeTab = 'appearance'"
+                                    >
+                                        Appearance
+                                    </button>
+                                </li>
+                                <li class="mr-2">
+                                    <button 
+                                        :class="['inline-block px-4 py-2 rounded-t-lg border-b-2', 
+                                        activeTab === 'api' 
+                                            ? 'border-primary text-primary font-medium' 
+                                            : 'border-transparent hover:border-gray-300']"
+                                        @click="activeTab = 'api'"
+                                    >
+                                        API Connections
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="support_instagram"
-                                        value="Instagram URL"
-                                    />
-                                    <TextInput
-                                        id="support_instagram"
-                                        name="support_instagram"
-                                        type="text"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="https://instagram.com/your-account"
-                                        v-model="generalForm.support_instagram"
-                                    />
-                                    <InputError
-                                        :message="
-                                            generalForm.errors.support_instagram
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
+                        <!-- General Tab -->
+                        <div v-if="activeTab === 'general'" class="space-y-6">
+                            <form @submit.prevent="submitGeneralForm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Website Title -->
+                                    <div>
+                                        <InputLabel for="judul_web" value="Website Title" />
+                                        <TextInput
+                                            id="judul_web"
+                                            type="text"
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.judul_web"
+                                            required
+                                            autofocus
+                                        />
+                                        <InputError class="mt-2" :message="generalForm.errors.judul_web" />
+                                    </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="support_email"
-                                        value="Support Email"
-                                    />
-                                    <TextInput
-                                        id="support_email"
-                                        name="support_email"
-                                        type="email"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="support@yourdomain.com"
-                                        v-model="generalForm.support_email"
-                                    />
-                                    <InputError
-                                        :message="
-                                            generalForm.errors.support_email
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="support_whatsapp"
-                                        value="WhatsApp Number"
-                                    />
-                                    <TextInput
-                                        id="support_whatsapp"
-                                        name="support_whatsapp"
-                                        type="text"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="6281234567890 (no spaces or dashes)"
-                                        v-model="generalForm.support_whatsapp"
-                                    />
-                                    <InputError
-                                        :message="
-                                            generalForm.errors.support_whatsapp
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="support_facebook"
-                                        value="Facebook URL"
-                                    />
-                                    <TextInput
-                                        id="support_facebook"
-                                        name="support_facebook"
-                                        type="text"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="https://facebook.com/your-page"
-                                        v-model="generalForm.support_facebook"
-                                    />
-                                    <InputError
-                                        :message="
-                                            generalForm.errors.support_facebook
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="support_youtube"
-                                        value="YouTube URL"
-                                    />
-                                    <TextInput
-                                        id="support_youtube"
-                                        name="support_youtube"
-                                        type="text"
-                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                        placeholder="https://youtube.com/your-channel"
-                                        v-model="generalForm.support_youtube"
-                                    />
-                                    <InputError
-                                        :message="
-                                            generalForm.errors.support_youtube
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                class="p-6 mt-8 border border-gray-700 rounded-lg bg-gray-800/70"
-                            >
-                                <h3 class="mb-4 text-lg font-medium text-white">
-                                    SEO Settings
-                                </h3>
-                                <div class="space-y-4">
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <InputLabel
-                                                for="meta_title"
-                                                value="Meta Title"
-                                            />
-                                            <span
-                                                :class="{
-                                                    'text-red-500':
-                                                        metaTitleCount > 60,
-                                                    'text-gray-400':
-                                                        metaTitleCount <= 60,
-                                                }"
-                                                class="text-sm"
-                                            >
-                                                {{ metaTitleCount }}/60
-                                            </span>
-                                        </div>
+                                    <!-- Meta Title -->
+                                    <div>
+                                        <InputLabel for="meta_title" value="Meta Title" />
                                         <TextInput
                                             id="meta_title"
                                             type="text"
-                                            class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="Game Top-Up | Fast & Secure"
+                                            class="mt-1 block w-full"
                                             v-model="generalForm.meta_title"
-                                            maxlength="60"
+                                            required
                                         />
-                                        <InputError
-                                            :message="
-                                                generalForm.errors.meta_title
-                                            "
-                                            class="mt-1"
-                                        />
+                                        <InputError class="mt-2" :message="generalForm.errors.meta_title" />
                                     </div>
 
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <InputLabel
-                                                for="meta_description"
-                                                value="Meta Description"
-                                            />
-                                            <span
-                                                :class="{
-                                                    'text-red-500':
-                                                        metaDescriptionCount >
-                                                        160,
-                                                    'text-gray-400':
-                                                        metaDescriptionCount <=
-                                                        160,
-                                                }"
-                                                class="text-sm"
-                                            >
-                                                {{ metaDescriptionCount }}/160
-                                            </span>
-                                        </div>
+                                    <!-- Meta Description -->
+                                    <div class="md:col-span-2">
+                                        <InputLabel for="meta_description" value="Meta Description" />
                                         <textarea
                                             id="meta_description"
-                                            class="block w-full mt-1 text-white border-gray-600 rounded-md shadow-sm bg-gray-700/70"
+                                            class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                            v-model="generalForm.meta_description"
+                                            required
                                             rows="3"
-                                            placeholder="The best place to buy game credits and top-ups at affordable prices."
-                                            v-model="
-                                                generalForm.meta_description
-                                            "
-                                            maxlength="160"
                                         ></textarea>
-                                        <InputError
-                                            :message="
-                                                generalForm.errors
-                                                    .meta_description
-                                            "
-                                            class="mt-1"
-                                        />
+                                        <InputError class="mt-2" :message="generalForm.errors.meta_description" />
                                     </div>
 
-                                    <div class="space-y-2">
-                                        <InputLabel
-                                            for="meta_keywords"
-                                            value="Meta Keywords"
-                                        />
+                                    <!-- Meta Keywords -->
+                                    <div class="md:col-span-2">
+                                        <InputLabel for="meta_keywords" value="Meta Keywords" />
                                         <TextInput
                                             id="meta_keywords"
                                             type="text"
-                                            class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="game top-up, mobile legends, free fire, pubg mobile"
+                                            class="mt-1 block w-full"
                                             v-model="generalForm.meta_keywords"
+                                            required
                                         />
-                                        <InputError
-                                            :message="
-                                                generalForm.errors.meta_keywords
-                                            "
-                                            class="mt-1"
-                                        />
+                                        <InputError class="mt-2" :message="generalForm.errors.meta_keywords" />
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="flex justify-end pt-6">
-                                <PrimaryButton
-                                    type="submit"
-                                    :disabled="generalForm.processing"
-                                    class="transition-colors duration-300 bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    <span v-if="generalForm.processing"
-                                        >Saving...</span
-                                    >
-                                    <span v-else>Save General Settings</span>
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 md:col-span-2 mt-4">
+                                        Support Links
+                                    </h3>
 
-                <!-- Appearance Tab -->
-                <div
-                    v-if="activeTab === 'appearance'"
-                    class="space-y-8 transition-all duration-300 animate-fade-in"
-                >
-                    <div
-                        v-if="Object.keys(errors).length > 0"
-                        class="px-4 py-3 mb-4 text-sm text-white rounded-lg bg-red-500/80"
-                    >
-                        <ul v-for="error in errors">
-                            <li>{{ error }}</li>
-                        </ul>
-                    </div>
-                    <div
-                        class="p-6 border border-gray-700 rounded-lg shadow-lg bg-gray-800/70 backdrop-blur-sm"
-                    >
-                        <h3 class="mb-4 text-lg font-medium text-white">
-                            Color Management
-                        </h3>
-                        <form @submit.prevent="submitAppearanceSettings">
-                            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="primary_color"
-                                        value="Primary Color"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="primary_color"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.primary_color
-                                            "
-                                        />
+                                    <!-- Instagram -->
+                                    <div>
+                                        <InputLabel for="support_instagram" value="Instagram URL" />
                                         <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#6366F1"
-                                            v-model="
-                                                appearanceForm.primary_color
-                                            "
+                                            id="support_instagram"
+                                            type="url"
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.support_instagram"
+                                            required
                                         />
+                                        <InputError class="mt-2" :message="generalForm.errors.support_instagram" />
                                     </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.primary_color
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="primary_hover"
-                                        value="Primary Hover"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="primary_hover"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.primary_hover
-                                            "
-                                        />
+
+                                    <!-- WhatsApp -->
+                                    <div>
+                                        <InputLabel for="support_whatsapp" value="WhatsApp Number" />
                                         <TextInput
+                                            id="support_whatsapp"
                                             type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#6366F1"
-                                            v-model="
-                                                appearanceForm.primary_hover
-                                            "
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.support_whatsapp"
+                                            required
                                         />
+                                        <InputError class="mt-2" :message="generalForm.errors.support_whatsapp" />
                                     </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.primary_hover
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="secondary_color"
-                                        value="Secondary Color"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="secondary_color"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.secondary_color
-                                            "
-                                        />
+                                    <!-- Email -->
+                                    <div>
+                                        <InputLabel for="support_email" value="Support Email" />
                                         <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#8B5CF6"
-                                            v-model="
-                                                appearanceForm.secondary_color
-                                            "
+                                            id="support_email"
+                                            type="email"
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.support_email"
+                                            required
                                         />
+                                        <InputError class="mt-2" :message="generalForm.errors.support_email" />
                                     </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors
-                                                .secondary_color
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="secondary_hover"
-                                        value="Secondary Hover"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="secondary_hover"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.secondary_hover
-                                            "
-                                        />
+                                    <!-- YouTube -->
+                                    <div>
+                                        <InputLabel for="support_youtube" value="YouTube URL" />
                                         <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#E5E7EB"
-                                            v-model="
-                                                appearanceForm.secondary_hover
-                                            "
+                                            id="support_youtube"
+                                            type="url"
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.support_youtube"
+                                            required
                                         />
+                                        <InputError class="mt-2" :message="generalForm.errors.support_youtube" />
                                     </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors
-                                                .secondary_hover
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="content_bg"
-                                        value="Content Background"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="content_bg"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="appearanceForm.content_bg"
-                                        />
+                                    <!-- Facebook -->
+                                    <div class="md:col-span-2">
+                                        <InputLabel for="support_facebook" value="Facebook URL" />
                                         <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#1F2937"
-                                            v-model="appearanceForm.content_bg"
+                                            id="support_facebook"
+                                            type="url"
+                                            class="mt-1 block w-full"
+                                            v-model="generalForm.support_facebook"
+                                            required
                                         />
+                                        <InputError class="mt-2" :message="generalForm.errors.support_facebook" />
                                     </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.content_bg
-                                        "
-                                        class="mt-1"
+                                </div>
+
+                                <div class="flex justify-end mt-6">
+                                    <PrimaryButton :class="{ 'opacity-25': generalForm.processing }" :disabled="generalForm.processing">
+                                        Save General Settings
+                                    </PrimaryButton>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Appearance Tab -->
+                        <div v-if="activeTab === 'appearance'" class="space-y-6">
+                            <form @submit.prevent="submitAppearanceForm">
+                                <!-- Color Management Component -->
+                                <div class="mb-8">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                        Color Management
+                                    </h3>
+                                    <ColorManagement 
+                                        :initialColors="appearanceSettings"
+                                        @colorUpdated="handleColorUpdated"
+                                        @applyColors="handleApplyColors"
                                     />
                                 </div>
 
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="header_bg"
-                                        value="Header Background"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="header_bg"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="appearanceForm.header_bg"
-                                        />
-                                        <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#111827"
-                                            v-model="appearanceForm.header_bg"
-                                        />
-                                    </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.header_bg
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="footer_bg"
-                                        value="Footer Background"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="footer_bg"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="appearanceForm.footer_bg"
-                                        />
-                                        <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#111827"
-                                            v-model="appearanceForm.footer_bg"
-                                        />
-                                    </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.footer_bg
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="text_primary"
-                                        value="Primary Text"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="text_primary"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.text_primary
-                                            "
-                                        />
-                                        <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#F9FAFB"
-                                            v-model="
-                                                appearanceForm.text_primary
-                                            "
-                                        />
-                                    </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.text_primary
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <InputLabel
-                                        for="text_secondary"
-                                        value="Secondary Text"
-                                    />
-                                    <div class="flex items-center mt-1">
-                                        <input
-                                            id="text_secondary"
-                                            type="color"
-                                            class="w-10 h-10 bg-transparent border-gray-600 rounded cursor-pointer"
-                                            v-model="
-                                                appearanceForm.text_secondary
-                                            "
-                                        />
-                                        <TextInput
-                                            type="text"
-                                            class="block w-full ml-2 text-white border-gray-600 bg-gray-700/70"
-                                            placeholder="#E5E7EB"
-                                            v-model="
-                                                appearanceForm.text_secondary
-                                            "
-                                        />
-                                    </div>
-                                    <InputError
-                                        :message="
-                                            appearanceForm.errors.text_secondary
-                                        "
-                                        class="mt-1"
-                                    />
-                                </div>
-                            </div>
-
-                            <!-- Color Preview Panel -->
-                            <div
-                                class="p-6 mt-8 border border-gray-700 rounded-lg bg-gray-800/70"
-                            >
-                                <h4 class="mb-4 font-medium text-white text-md">
-                                    Live Preview
-                                </h4>
-                                <div class="grid grid-cols-3 gap-4">
-                                    <div
-                                        v-for="element in previewElements"
-                                        :key="element.name"
-                                        class="p-4 text-center transition-all duration-300 rounded-md"
-                                        :style="{
-                                            backgroundColor:
-                                                appearanceForm[element.color],
-                                            color: appearanceForm[
-                                                element.primaryColor
-                                            ],
-                                        }"
-                                    >
-                                        {{ element.name }}
-                                        <div
-                                            class="mt-1 text-xs"
-                                            :style="{
-                                                color: appearanceForm[
-                                                    element.secondaryColor
-                                                ],
-                                            }"
-                                        >
-                                            {{
-                                                getContrastRatio(
-                                                    appearanceForm[
-                                                        element.color
-                                                    ],
-                                                    appearanceForm[
-                                                        element.textColor
-                                                    ]
-                                                )
-                                            }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="px-4 py-1 text-center transition-all duration-300 rounded-md"
-                                        :style="{
-                                            backgroundColor:
-                                                appearanceForm.primary_hover,
-                                            color: appearanceForm.text_primary,
-                                        }"
-                                    >
-                                        <div
-                                            class="py-2 my-2 text-xs rounded-md"
-                                            :style="{
-                                                color: appearanceForm.text_secondary,
-                                                backgroundColor:
-                                                    appearanceForm.secondary_hover,
-                                            }"
-                                        >
-                                            <p
-                                                :style="{
-                                                    color: appearanceForm.text_primary,
-                                                }"
-                                                class="text-base"
-                                            >
-                                                Hover
-                                            </p>
-                                            Subtext
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                class="p-6 mt-8 border border-gray-700 rounded-lg bg-gray-800/70"
-                            >
-                                <h3 class="mb-4 text-lg font-medium text-white">
-                                    Logo Settings
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 border-t border-gray-200 dark:border-gray-700 pt-6">
+                                    Logo Management
                                 </h3>
-                                <div
-                                    class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                                >
-                                    <div class="space-y-2">
-                                        <InputLabel
-                                            for="logo_header"
-                                            value="Header Logo"
-                                        />
-                                        <div
-                                            class="flex justify-center px-6 pt-5 pb-6 mt-1 transition-colors border-2 border-gray-600 border-dashed rounded-md hover:border-indigo-400"
-                                        >
-                                            <div
-                                                v-if="
-                                                    getImagePreview(
-                                                        'logo_header'
-                                                    ).value
-                                                "
-                                                class="relative mb-2"
-                                            >
-                                                <img
-                                                    :src="
-                                                        getImagePreview(
-                                                            'logo_header'
-                                                        ).value
-                                                    "
-                                                    alt="Preview Logo Header"
-                                                    class="object-cover w-full rounded-lg shadow-md"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="
-                                                        deleteLogo(
-                                                            'logo_header'
-                                                        )
-                                                    "
-                                                    class="absolute z-10 p-1 text-white transition bg-red-600 rounded-full -right-2 -top-2 hover:bg-red-700"
-                                                    title="Hapus Logo"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        class="w-4 h-4"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
 
-                                            <div
-                                                class="space-y-1 text-center"
-                                                v-if="
-                                                    !getImagePreview(
-                                                        'logo_header'
-                                                    ).value
-                                                "
-                                            >
-                                                <svg
-                                                    class="w-12 h-12 mx-auto text-gray-400"
-                                                    stroke="currentColor"
-                                                    fill="none"
-                                                    viewBox="0 0 48 48"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
-                                                <div
-                                                    class="flex justify-center text-sm text-gray-400"
-                                                >
-                                                    <label
-                                                        for="logo_header"
-                                                        class="relative font-medium text-indigo-400 rounded-md cursor-pointer hover:text-indigo-300"
-                                                    >
-                                                        <span>Upload logo</span>
-                                                        <input
-                                                            id="logo_header"
-                                                            name="logo_header"
-                                                            type="file"
-                                                            class="sr-only"
-                                                            @change="
-                                                                handleLogoUpload(
-                                                                    $event,
-                                                                    'logo_header'
-                                                                )
-                                                            "
-                                                            accept="image/*"
-                                                        />
-                                                    </label>
-                                                </div>
-                                                <p
-                                                    class="text-xs text-gray-400"
-                                                >
-                                                    300x100px max
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <InputError
-                                            :message="
-                                                appearanceForm.errors
-                                                    .logo_header
-                                            "
-                                            class="mt-1"
-                                        />
-                                    </div>
-
-                                    <div class="space-y-2">
-                                        <InputLabel
-                                            for="logo_footer"
-                                            value="Footer Logo"
-                                        />
-                                        <div
-                                            class="flex justify-center px-6 pt-5 pb-6 mt-1 transition-colors border-2 border-gray-600 border-dashed rounded-md hover:border-indigo-400"
-                                        >
-                                            <div
-                                                v-if="
-                                                    getImagePreview(
-                                                        'logo_footer'
-                                                    ).value
-                                                "
-                                                class="relative mb-2"
-                                            >
-                                                <img
-                                                    :src="
-                                                        getImagePreview(
-                                                            'logo_footer'
-                                                        ).value
-                                                    "
-                                                    alt="Preview Logo Header"
-                                                    class="object-cover w-full rounded-lg shadow-md"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="
-                                                        deleteLogo(
-                                                            'logo_footer'
-                                                        )
-                                                    "
-                                                    class="absolute z-10 p-1 text-white transition bg-red-600 rounded-full -right-2 -top-2 hover:bg-red-700"
-                                                    title="Hapus Logo"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        class="w-4 h-4"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                            <div
-                                                class="space-y-1 text-center"
-                                                v-if="
-                                                    !getImagePreview(
-                                                        'logo_footer'
-                                                    ).value
-                                                "
-                                            >
-                                                <svg
-                                                    class="w-12 h-12 mx-auto text-gray-400"
-                                                    stroke="currentColor"
-                                                    fill="none"
-                                                    viewBox="0 0 48 48"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
-                                                <div
-                                                    class="flex justify-center text-sm text-gray-400"
-                                                >
-                                                    <label
-                                                        for="logo_footer"
-                                                        class="relative font-medium text-indigo-400 rounded-md cursor-pointer hover:text-indigo-300"
-                                                    >
-                                                        <span>Upload logo</span>
-                                                        <input
-                                                            id="logo_footer"
-                                                            name="logo_footer"
-                                                            type="file"
-                                                            class="sr-only"
-                                                            @change="
-                                                                handleLogoUpload(
-                                                                    $event,
-                                                                    'logo_footer'
-                                                                )
-                                                            "
-                                                            accept="image/*"
-                                                        />
-                                                    </label>
-                                                </div>
-                                                <p
-                                                    class="text-xs text-gray-400"
-                                                >
-                                                    300x100px max
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <InputError
-                                            :message="
-                                                appearanceForm.errors
-                                                    .logo_footer
-                                            "
-                                            class="mt-1"
-                                        />
-                                    </div>
-
-                                    <div class="space-y-2">
-                                        <InputLabel
-                                            for="logo_favicon"
-                                            value="Favicon (32x32px)"
-                                        />
-                                        <div
-                                            class="flex justify-center px-6 pt-5 pb-6 mt-1 transition-colors border-2 border-gray-600 border-dashed rounded-md hover:border-indigo-400"
-                                        >
-                                            <div
-                                                v-if="
-                                                    getImagePreview(
-                                                        'logo_favicon'
-                                                    ).value
-                                                "
-                                                class="relative mb-2"
-                                            >
-                                                <img
-                                                    :src="
-                                                        getImagePreview(
-                                                            'logo_favicon'
-                                                        ).value
-                                                    "
-                                                    alt="Preview Logo Header"
-                                                    class="object-cover w-full rounded-lg shadow-md"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="
-                                                        deleteLogo(
-                                                            'logo_favicon'
-                                                        )
-                                                    "
-                                                    class="absolute z-10 p-1 text-white transition bg-red-600 rounded-full -right-2 -top-2 hover:bg-red-700"
-                                                    title="Hapus Logo"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        class="w-4 h-4"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-
-                                            <div
-                                                class="space-y-1 text-center"
-                                                v-if="
-                                                    !getImagePreview(
-                                                        'logo_favicon'
-                                                    ).value
-                                                "
-                                            >
-                                                <svg
-                                                    class="w-12 h-12 mx-auto text-gray-400"
-                                                    stroke="currentColor"
-                                                    fill="none"
-                                                    viewBox="0 0 48 48"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4h-12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
-                                                <div
-                                                    class="flex justify-center text-sm text-gray-400"
-                                                >
-                                                    <label
-                                                        for="logo_favicon"
-                                                        class="relative font-medium text-indigo-400 rounded-md cursor-pointer hover:text-indigo-300"
-                                                    >
-                                                        <span
-                                                            >Upload
-                                                            favicon</span
-                                                        >
-                                                        <input
-                                                            id="logo_favicon"
-                                                            name="logo_favicon"
-                                                            type="file"
-                                                            class="sr-only"
-                                                            @change="
-                                                                handleLogoUpload(
-                                                                    $event,
-                                                                    'logo_favicon'
-                                                                )
-                                                            "
-                                                            accept="image/*"
-                                                        />
-                                                    </label>
-                                                </div>
-                                                <p
-                                                    class="text-xs text-gray-400"
-                                                >
-                                                    32x32px required
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <InputError
-                                            :message="
-                                                appearanceForm.errors
-                                                    .logo_favicon
-                                            "
-                                            class="mt-1"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end pt-6">
-                                <PrimaryButton
-                                    type="submit"
-                                    :disabled="appearanceForm.processing"
-                                    class="transition-colors duration-300 bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    <span v-if="appearanceForm.processing"
-                                        >Saving...</span
-                                    >
-                                    <span v-else>Save Appearance Settings</span>
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- API Connections Tab -->
-                <div
-                    v-if="activeTab === 'api'"
-                    class="space-y-8 transition-all duration-300 animate-fade-in"
-                >
-                    <div
-                        class="p-6 border border-gray-700 rounded-lg shadow-lg bg-gray-800/70 backdrop-blur-sm"
-                    >
-                        <h3 class="mb-4 text-lg font-medium text-white">
-                            API Provider Credentials
-                        </h3>
-                        <form @submit.prevent="submitApiSettings">
-                            <div class="space-y-6">
-                                <div
-                                    v-for="(provider, id) in apiForm.providers"
-                                    :key="id"
-                                    class="p-5 border border-gray-600 rounded-lg bg-gray-700/50"
-                                >
-                                    <h4
-                                        class="flex items-center font-medium text-white text-md"
-                                    >
-                                        <span
-                                            class="inline-flex items-center justify-center w-8 h-8 mr-3 bg-indigo-500 rounded-full"
-                                        >
-                                            <span
-                                                class="font-bold text-white"
-                                                >{{
-                                                    provider.provider_name.charAt(
-                                                        0
-                                                    )
-                                                }}</span
-                                            >
-                                        </span>
-                                        {{ provider.provider_name }}
-                                        <span
-                                            :class="{
-                                                'bg-green-500':
-                                                    provider.status ===
-                                                    'active',
-                                                'bg-red-500':
-                                                    provider.status ===
-                                                    'inactive',
-                                            }"
-                                            class="px-2 py-1 ml-3 text-xs text-white rounded-full"
-                                        >
-                                            {{ provider.status }}
-                                        </span>
-                                    </h4>
-
-                                    <div
-                                        class="grid grid-cols-1 gap-4 mt-4 md:grid-cols-2"
-                                    >
-                                        <div class="space-y-2">
-                                            <InputLabel
-                                                :for="`api_username_${id}`"
-                                                value="Username/Email"
-                                            />
-                                            <TextInput
-                                                :id="`api_username_${id}`"
-                                                type="text"
-                                                class="block w-full text-white border-gray-600 bg-gray-700/70"
-                                                v-model="
-                                                    apiForm.providers[id]
-                                                        .api_username
-                                                "
-                                            />
-                                            <InputError
-                                                :message="
-                                                    apiForm.errors[
-                                                        `providers.${id}.api_username`
-                                                    ]
-                                                "
-                                                class="mt-1"
-                                            />
-                                        </div>
-
-                                        <div class="space-y-2">
-                                            <InputLabel
-                                                :for="`api_key_${id}`"
-                                                value="API Key"
-                                            />
-                                            <div class="relative">
-                                                <TextInput
-                                                    :id="`api_key_${id}`"
-                                                    :type="
-                                                        isFieldVisible(
-                                                            id,
-                                                            'api_key'
-                                                        )
-                                                            ? 'text'
-                                                            : 'password'
-                                                    "
-                                                    class="block w-full pr-10 text-white border-gray-600 bg-gray-700/70"
-                                                    v-model="
-                                                        apiForm.providers[id]
-                                                            .api_key
-                                                    "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="
-                                                        toggleFieldVisibility(
-                                                            id,
-                                                            'api_key'
-                                                        )
-                                                    "
-                                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
-                                                >
-                                                    <span class="text-sm">{{
-                                                        isFieldVisible(
-                                                            id,
-                                                            "api_key"
-                                                        )
-                                                            ? "Hide"
-                                                            : "Show"
-                                                    }}</span>
-                                                </button>
-                                            </div>
-                                            <InputError
-                                                :message="
-                                                    apiForm.errors[
-                                                        `providers.${id}.api_key`
-                                                    ]
-                                                "
-                                                class="mt-1"
-                                            />
-                                        </div>
-
-                                        <div class="space-y-2">
-                                            <InputLabel
-                                                :for="`api_private_key_${id}`"
-                                                value="Private/Secret Key"
-                                            />
-                                            <div class="relative">
-                                                <TextInput
-                                                    :id="`api_private_key_${id}`"
-                                                    :type="
-                                                        isFieldVisible(
-                                                            id,
-                                                            'private'
-                                                        )
-                                                            ? 'text'
-                                                            : 'password'
-                                                    "
-                                                    class="block w-full pr-10 text-white border-gray-600 bg-gray-700/70"
-                                                    v-model="
-                                                        apiForm.providers[id]
-                                                            .api_private_key
-                                                    "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="
-                                                        toggleFieldVisibility(
-                                                            id,
-                                                            'private'
-                                                        )
-                                                    "
-                                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
-                                                >
-                                                    <span class="text-sm">{{
-                                                        isFieldVisible(
-                                                            id,
-                                                            "private"
-                                                        )
-                                                            ? "Hide"
-                                                            : "Show"
-                                                    }}</span>
-                                                </button>
-                                            </div>
-                                            <InputError
-                                                :message="
-                                                    apiForm.errors[
-                                                        `providers.${id}.api_private_key`
-                                                    ]
-                                                "
-                                                class="mt-1"
-                                            />
-                                        </div>
-
-                                        <div class="space-y-2">
-                                            <InputLabel
-                                                :for="`status_${id}`"
-                                                value="Status"
-                                            />
-                                            <select
-                                                :id="`status_${id}`"
-                                                class="block w-full mt-1 text-white border-gray-600 rounded-md shadow-sm bg-gray-700/70"
-                                                v-model="
-                                                    apiForm.providers[id].status
-                                                "
-                                            >
-                                                <option value="active">
-                                                    Active
-                                                </option>
-                                                <option value="inactive">
-                                                    Inactive
-                                                </option>
-                                            </select>
-                                            <InputError
-                                                :message="
-                                                    apiForm.errors[
-                                                        `providers.${id}.status`
-                                                    ]
-                                                "
-                                                class="mt-1"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end pt-6">
-                                <PrimaryButton
-                                    type="submit"
-                                    :disabled="apiForm.processing"
-                                    class="transition-colors duration-300 bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    <span v-if="apiForm.processing"
-                                        >Saving...</span
-                                    >
-                                    <span v-else>Save API Settings</span>
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Security Tab -->
-                <div
-                    v-if="activeTab === 'security'"
-                    class="space-y-8 transition-all duration-300 animate-fade-in"
-                >
-                    <div
-                        class="p-6 border border-gray-700 rounded-lg shadow-lg bg-gray-800/70 backdrop-blur-sm"
-                    >
-                        <h3 class="mb-4 text-lg font-medium text-white">
-                            Security Settings
-                        </h3>
-                        <form @submit.prevent="submitSecuritySettings">
-                            <div class="space-y-6">
-                                <div
-                                    class="p-5 border border-gray-600 rounded-lg bg-gray-700/50"
-                                >
-                                    <h4
-                                        class="mb-4 font-medium text-white text-md"
-                                    >
-                                        Authentication Security
-                                    </h4>
-
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Header Logo -->
                                     <div class="space-y-4">
-                                        <div class="flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input
-                                                    id="2fa_enabled"
-                                                    type="checkbox"
-                                                    class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
-                                                    v-model="
-                                                        securityForm.enable_2fa
-                                                    "
-                                                />
+                                        <InputLabel for="logo_header" value="Header Logo" />
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-40 h-20 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                                                <img v-if="logoHeaderPreview" :src="logoHeaderPreview" class="max-w-full max-h-full object-contain" />
+                                                <span v-else class="text-gray-400 dark:text-gray-500">No Logo</span>
                                             </div>
-                                            <div class="ml-3 text-sm">
-                                                <label
-                                                    for="2fa_enabled"
-                                                    class="font-medium text-white"
+                                            <div class="flex flex-col space-y-2">
+                                                <input
+                                                    id="logo_header"
+                                                    type="file"
+                                                    class="hidden"
+                                                    ref="logoHeaderInput"
+                                                    @change="(e) => {
+                                                        appearanceForm.logo_header = e.target.files[0];
+                                                        previewLogo(e, 'header');
+                                                    }"
+                                                    accept="image/*"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="$refs.logoHeaderInput.click()"
+                                                    class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
                                                 >
-                                                    Enable 2FA for Admin
-                                                </label>
-                                                <p class="text-gray-400">
-                                                    Require two-factor
-                                                    authentication for all admin
-                                                    accounts
-                                                </p>
+                                                    Choose File
+                                                </button>
+                                                <button
+                                                    v-if="logoHeaderPreview"
+                                                    type="button"
+                                                    @click="deleteLogo('logo_header')"
+                                                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    Delete
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <div class="flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input
-                                                    id="ip_restriction"
-                                                    type="checkbox"
-                                                    class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
-                                                    v-model="
-                                                        securityForm.ip_restriction
-                                                    "
-                                                />
-                                            </div>
-                                            <div class="ml-3 text-sm">
-                                                <label
-                                                    for="ip_restriction"
-                                                    class="font-medium text-white"
-                                                >
-                                                    IP Restriction
-                                                </label>
-                                                <p class="text-gray-400">
-                                                    Only allow admin login from
-                                                    specific IP addresses
-                                                </p>
-                                            </div>
-                                        </div>
+                                        <InputError class="mt-2" :message="appearanceForm.errors.logo_header" />
                                     </div>
-                                </div>
 
-                                <div
-                                    class="p-5 border border-gray-600 rounded-lg bg-gray-700/50"
-                                >
-                                    <h4
-                                        class="mb-4 font-medium text-white text-md"
-                                    >
-                                        Password Policy
-                                    </h4>
-
+                                    <!-- Footer Logo -->
                                     <div class="space-y-4">
-                                        <div class="flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input
-                                                    id="enforce_complex_password"
-                                                    type="checkbox"
-                                                    class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
-                                                    v-model="
-                                                        securityForm.enforce_complex_password
-                                                    "
-                                                />
+                                        <InputLabel for="logo_footer" value="Footer Logo" />
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-40 h-20 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                                                <img v-if="logoFooterPreview" :src="logoFooterPreview" class="max-w-full max-h-full object-contain" />
+                                                <span v-else class="text-gray-400 dark:text-gray-500">No Logo</span>
                                             </div>
-                                            <div class="ml-3 text-sm">
-                                                <label
-                                                    for="enforce_complex_password"
-                                                    class="font-medium text-white"
+                                            <div class="flex flex-col space-y-2">
+                                                <input
+                                                    id="logo_footer"
+                                                    type="file"
+                                                    class="hidden"
+                                                    ref="logoFooterInput"
+                                                    @change="(e) => {
+                                                        appearanceForm.logo_footer = e.target.files[0];
+                                                        previewLogo(e, 'footer');
+                                                    }"
+                                                    accept="image/*"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="$refs.logoFooterInput.click()"
+                                                    class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
                                                 >
-                                                    Enforce Complex Passwords
-                                                </label>
-                                                <p class="text-gray-400">
-                                                    Require numbers, special
-                                                    characters, and mixed case
-                                                </p>
+                                                    Choose File
+                                                </button>
+                                                <button
+                                                    v-if="logoFooterPreview"
+                                                    type="button"
+                                                    @click="deleteLogo('logo_footer')"
+                                                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    Delete
+                                                </button>
                                             </div>
                                         </div>
+                                        <InputError class="mt-2" :message="appearanceForm.errors.logo_footer" />
+                                    </div>
 
-                                        <div class="space-y-2">
-                                            <InputLabel
-                                                for="password_expiry_days"
-                                                value="Password Expiry (days)"
-                                            />
-                                            <TextInput
-                                                id="password_expiry_days"
-                                                type="number"
-                                                class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70"
-                                                placeholder="90"
-                                                v-model="
-                                                    securityForm.password_expiry_days
-                                                "
-                                            />
+                                    <!-- Favicon -->
+                                    <div class="space-y-4">
+                                        <InputLabel for="logo_favicon" value="Favicon (32x32)" />
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                                                <img v-if="logoFaviconPreview" :src="logoFaviconPreview" class="max-w-full max-h-full object-contain" />
+                                                <span v-else class="text-gray-400 dark:text-gray-500">No Favicon</span>
+                                            </div>
+                                            <div class="flex flex-col space-y-2">
+                                                <input
+                                                    id="logo_favicon"
+                                                    type="file"
+                                                    class="hidden"
+                                                    ref="logoFaviconInput"
+                                                    @change="(e) => {
+                                                        appearanceForm.logo_favicon = e.target.files[0];
+                                                        previewLogo(e, 'favicon');
+                                                    }"
+                                                    accept="image/*"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="$refs.logoFaviconInput.click()"
+                                                    class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                                                >
+                                                    Choose File
+                                                </button>
+                                                <button
+                                                    v-if="logoFaviconPreview"
+                                                    type="button"
+                                                    @click="deleteLogo('logo_favicon')"
+                                                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <InputError class="mt-2" :message="appearanceForm.errors.logo_favicon" />
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end mt-6">
+                                    <PrimaryButton :class="{ 'opacity-25': appearanceForm.processing }" :disabled="appearanceForm.processing">
+                                        Save Appearance Settings
+                                    </PrimaryButton>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- API Connections Tab -->
+                        <div v-if="activeTab === 'api'" class="space-y-6">
+                            <form @submit.prevent="submitApiForm">
+                                <div class="space-y-6">
+                                    <div v-for="provider in providers" :key="provider.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            {{ provider.provider_name }}
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <InputLabel :for="`api_username_${provider.id}`" value="API Username" />
+                                                <TextInput
+                                                    :id="`api_username_${provider.id}`"
+                                                    type="text"
+                                                    class="mt-1 block w-full"
+                                                    v-model="apiForm.providers[provider.id].api_username"
+                                                />
+                                            </div>
+                                            
+                                            <div>
+                                                <InputLabel :for="`api_key_${provider.id}`" value="API Key" />
+                                                <TextInput
+                                                    :id="`api_key_${provider.id}`"
+                                                    type="text"
+                                                    class="mt-1 block w-full"
+                                                    v-model="apiForm.providers[provider.id].api_key"
+                                                />
+                                            </div>
+                                            
+                                            <div>
+                                                <InputLabel :for="`api_private_key_${provider.id}`" value="API Private Key" />
+                                                <TextInput
+                                                    :id="`api_private_key_${provider.id}`"
+                                                    type="text"
+                                                    class="mt-1 block w-full"
+                                                    v-model="apiForm.providers[provider.id].api_private_key"
+                                                />
+                                            </div>
+                                            
+                                            <div>
+                                                <InputLabel :for="`status_${provider.id}`" value="Status" />
+                                                <select
+                                                    :id="`status_${provider.id}`"
+                                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                                    v-model="apiForm.providers[provider.id].status"
+                                                >
+                                                    <option value="active">Active</option>
+                                                    <option value="inactive">Inactive</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="flex justify-end pt-6">
-                                <PrimaryButton
-                                    type="submit"
-                                    :disabled="securityForm.processing"
-                                    class="transition-colors duration-300 bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    <span v-if="securityForm.processing"
-                                        >Saving...</span
-                                    >
-                                    <span v-else>Save Security Settings</span>
-                                </PrimaryButton>
-                            </div>
-                        </form>
+                                
+                                <div class="flex justify-end mt-6">
+                                    <PrimaryButton :class="{ 'opacity-25': apiForm.processing }" :disabled="apiForm.processing">
+                                        Save API Settings
+                                    </PrimaryButton>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </AdminLayout>
 </template>
-
-<style scoped>
-/* Fade animations */
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-}
-
-/* Add glassmorphism effect to the panel */
-.backdrop-blur-sm {
-    backdrop-filter: blur(8px);
-}
-</style>

@@ -1,9 +1,11 @@
+
 <?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class WebConfig extends Model
 {
@@ -71,10 +73,93 @@ class WebConfig extends Model
             ]
         );
 
+        // Clear the cache when settings are updated
+        Cache::forget('web_config');
+        Cache::forget('color_scheme');
+
         return $config;
     }
 
-    public static function getColorPaletteAttribute()
+    /**
+     * Get the color scheme for the application
+     * 
+     * @return array
+     */
+    public static function getColorScheme()
+    {
+        return Cache::remember('color_scheme', 86400, function () {
+            $colorScheme = [];
+            
+            foreach (self::ALLOWED_COLORS as $color) {
+                $colorScheme[$color] = self::get($color, self::DEFAULT_VALUES[$color] ?? '#000000');
+            }
+            
+            // Format the colors for Tailwind dynamic colors
+            return [
+                'primary' => [
+                    'DEFAULT' => self::get('primary_color', self::DEFAULT_VALUES['primary_color']),
+                    'hover' => self::get('primary_hover', self::DEFAULT_VALUES['primary_hover']),
+                    'text' => self::get('text_primary', self::DEFAULT_VALUES['text_primary']),
+                ],
+                'secondary' => [
+                    'DEFAULT' => self::get('secondary_color', self::DEFAULT_VALUES['secondary_color']),
+                    'hover' => self::get('secondary_hover', self::DEFAULT_VALUES['secondary_hover']),
+                    'text' => self::get('text_secondary', self::DEFAULT_VALUES['text_secondary']),
+                ],
+                'header_background' => self::get('header_bg', self::DEFAULT_VALUES['header_bg']),
+                'footer_background' => self::get('footer_bg', self::DEFAULT_VALUES['footer_bg']),
+                'content_background' => self::get('content_bg', self::DEFAULT_VALUES['content_bg']),
+                'dark' => [
+                    'DEFAULT' => '#070c16',
+                    'lighter' => '#111927',
+                    'card' => '#101826',
+                    'sidebar' => '#111822'
+                ]
+            ];
+        });
+    }
+
+    /**
+     * Update a color value with validation
+     * 
+     * @param string $key
+     * @param string $value
+     * @return bool|array
+     */
+    public static function updateColor($key, $value)
+    {
+        // Validate the color format (hex, rgb, or rgba)
+        if (!self::isValidColor($value)) {
+            return ['success' => false, 'message' => 'Invalid color format'];
+        }
+
+        // Update the color
+        self::set($key, $value, "Color setting: {$key}", 'color');
+        
+        // Clear color scheme cache
+        Cache::forget('color_scheme');
+        
+        return ['success' => true, 'message' => 'Color updated successfully'];
+    }
+
+    // Method to validate colors (hex, rgb, rgba)
+    public static function isValidColor($color)
+    {
+        // Validate Hex color
+        $hexPattern = '/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/';
+        
+        // Validate RGB color
+        $rgbPattern = '/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/';
+        
+        // Validate RGBA color
+        $rgbaPattern = '/^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d*(?:\.\d+)?)\s*\)$/';
+        
+        return (preg_match($hexPattern, $color) || 
+                preg_match($rgbPattern, $color) || 
+                preg_match($rgbaPattern, $color));
+    }
+
+    public function getColorPaletteAttribute()
     {
         $colorPalette = [];
 
@@ -94,11 +179,5 @@ class WebConfig extends Model
             'youtube' => self::get('support_youtube'),
             'facebook' => self::get('support_facebook'),
         ];
-    }
-
-    // Method to validate hex color
-    public static function isValidHexColor($color)
-    {
-        return preg_match('/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color);
     }
 }

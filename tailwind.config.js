@@ -1,3 +1,4 @@
+
 import defaultTheme from "tailwindcss/defaultTheme";
 import forms from "@tailwindcss/forms";
 
@@ -18,6 +19,27 @@ export default {
                 sans: ["Figtree", ...defaultTheme.fontFamily.sans],
             },
             colors: {
+                // Use CSS variables for dynamic colors
+                primary: {
+                    DEFAULT: "var(--color-primary)",
+                    hover: "var(--color-primary-hover)",
+                    text: "var(--color-primary-text)"
+                },
+                secondary: {
+                    DEFAULT: "var(--color-secondary)",
+                    hover: "var(--color-secondary-hover)",
+                    text: "var(--color-secondary-text)"
+                },
+                header_background: "var(--color-header-bg)",
+                footer_background: "var(--color-footer-bg)",
+                content_background: "var(--color-content-bg)",
+                dark: {
+                    DEFAULT: "var(--color-dark)",
+                    lighter: "var(--color-dark-lighter)",
+                    card: "var(--color-dark-card)",
+                    sidebar: "var(--color-dark-sidebar)"
+                },
+                // Fallback to static colors from dynamicColors
                 ...dynamicColors,
             },
             boxShadow: {

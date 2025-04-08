@@ -1,21 +1,22 @@
+
 module.exports = {
     "primary": {
-        "DEFAULT": "#350de7",
-        "hover": "#818CF8",
-        "text": "#F9FAFB"
+        "DEFAULT": "var(--color-primary, #350de7)",
+        "hover": "var(--color-primary-hover, #818CF8)",
+        "text": "var(--color-primary-text, #F9FAFB)"
     },
     "secondary": {
-        "DEFAULT": "#0c96c0",
-        "hover": "#A78BFA",
-        "text": "#E5E7EB"
+        "DEFAULT": "var(--color-secondary, #0c96c0)",
+        "hover": "var(--color-secondary-hover, #A78BFA)",
+        "text": "var(--color-secondary-text, #E5E7EB)"
     },
-    "header_background": "#111827",
-    "footer_background": "#111827",
-    "content_background": "#1F2937",
+    "header_background": "var(--color-header-bg, #111827)",
+    "footer_background": "var(--color-footer-bg, #111827)",
+    "content_background": "var(--color-content-bg, #1F2937)",
     "dark": {
-        "DEFAULT": "#070c16",
-        "lighter": "#111927",
-        "card": "#101826",
-        "sidebar": "#111822"
+        "DEFAULT": "var(--color-dark, #070c16)",
+        "lighter": "var(--color-dark-lighter, #111927)",
+        "card": "var(--color-dark-card, #101826)",
+        "sidebar": "var(--color-dark-sidebar, #111822)"
     }
 };

@@ -1,3 +1,4 @@
+
 <?php
 
 use Inertia\Inertia;
@@ -50,6 +51,9 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified']);
 
+// API routes for color scheme access
+Route::get('/api/color-scheme', [AdminController::class, 'getColorScheme']);
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -64,6 +68,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::patch('/settings/general', [AdminController::class, 'updateGeneralSettings'])->name('admin.settings.general');
     Route::patch('/settings/appearance', [AdminController::class, 'updateAppearance'])->name('admin.settings.appearance');
+    Route::patch('/settings/colors', [AdminController::class, 'updateSingleColor'])->name('admin.settings.colors');
     Route::patch('/settings/api', [AdminController::class, 'updateApiConnections'])->name('admin.settings.api');
     Route::delete('/settings/logo/{field}', [AdminController::class, 'deleteLogo'])->name('admin.settings.logo.delete');
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -47,8 +48,6 @@ class AdminController extends Controller
             'logo_favicon' => WebConfig::get('logo_favicon'),
         ];
 
-        // $appearanceSettings = WebConfig::getColorPaletteAttribute();
-
         $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'api_private_key', 'status')->get();
 
         return Inertia::render('Admin/WebConfigs', [
@@ -81,16 +80,13 @@ class AdminController extends Controller
         }
 
         try {
-            // Process each setting in a single transaction
             \DB::transaction(function () use ($request) {
                 foreach ($request->all() as $key => $value) {
-                    // Sanitize value
                     $value = filter_var($value, FILTER_SANITIZE_STRING);
                     WebConfig::set($key, $value, "General setting: {$key}");
                 }
             });
 
-            // Clear config cache
             Cache::forget('web_config');
 
             return to_route('admin.settings')->with('status', ['type' => 'success', 'action' => 'Success', 'text' => 'General settings updated successfully!']);
@@ -101,7 +97,6 @@ class AdminController extends Controller
 
     public function updateAppearance(Request $request)
     {
-        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'primary_color' => 'required|string|regex:/^\#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/',
             'primary_hover' => 'required|string|regex:/^\#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/',
@@ -123,14 +118,12 @@ class AdminController extends Controller
 
         try {
             \DB::transaction(function () use ($request) {
-                // Process color settings
                 foreach (WebConfig::ALLOWED_COLORS as $color) {
                     if ($request->has($color)) {
                         WebConfig::set($color, $request->$color, "Color setting: {$color}", 'color');
                     }
                 }
 
-                // Process logo uploads
                 $logoFields = ['logo_header', 'logo_footer', 'logo_favicon'];
                 foreach ($logoFields as $field) {
                     if ($request->hasFile($field)) {
@@ -142,11 +135,12 @@ class AdminController extends Controller
                 }
             });
 
-            // Clear config cache
             Cache::forget('web_config');
+            Cache::forget('color_scheme');
 
             return to_route('admin.settings')->with('status', ['type' => 'success', 'action' => 'Success', 'text' => 'Appearance settings updated successfully!']);
         } catch (\Exception $e) {
+            Log::error('Error updating appearance: ' . $e->getMessage());
             return to_route('admin.settings')->with('status', ['type' => 'error', 'action' => 'Failed', 'text' => 'An error occurred while updating appearance: ' . $e->getMessage()]);
         }
     }
@@ -157,7 +151,6 @@ class AdminController extends Controller
         $rules = [];
         $messages = [];
 
-        // Build dynamic validation rules for each provider
         foreach ($providers as $provider) {
             $providerId = $provider->id;
             $rules["providers.{$providerId}.api_username"] = 'nullable|string|max:255';
@@ -177,7 +170,6 @@ class AdminController extends Controller
                 foreach ($request->providers as $id => $data) {
                     $provider = Provider::find($id);
                     if ($provider) {
-                        // Only update fields that are provided
                         $updateData = [];
                         if (isset($data['api_username'])) {
                             $updateData['api_username'] = $data['api_username'];
@@ -214,16 +206,13 @@ class AdminController extends Controller
         $config = WebConfig::where('key', $field)->first();
 
         if ($config && $config->value) {
-            // Hapus file dari storage jika ada
             $filePath = str_replace('/storage/', '', $config->value);
             if (Storage::disk('public')->exists($filePath)) {
                 Storage::disk('public')->delete($filePath);
             }
 
-            // Hapus dari database
             $config->delete();
 
-            // Clear cache jika perlu
             Cache::forget('web_config');
         }
 
@@ -234,7 +223,6 @@ class AdminController extends Controller
         ]);
     }
 
-
     public function categories()
     {
         return Inertia::render('Admin/Categories');
@@ -243,5 +231,34 @@ class AdminController extends Controller
     public function banners()
     {
         return Inertia::render('Admin/Banners');
+    }
+
+    public function getColorScheme()
+    {
+        return response()->json(WebConfig::getColorScheme());
+    }
+
+    public function updateSingleColor(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'key' => 'required|string|in:' . implode(',', WebConfig::ALLOWED_COLORS),
+            'value' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $result = WebConfig::updateColor($request->key, $request->value);
+        
+        if (!$result['success']) {
+            return response()->json($result, 422);
+        }
+        
+        return response()->json([
+            'success' => true, 
+            'message' => $result['message'],
+            'colorScheme' => WebConfig::getColorScheme()
+        ]);
     }
 }
