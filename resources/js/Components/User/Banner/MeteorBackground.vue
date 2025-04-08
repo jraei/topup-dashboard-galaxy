@@ -12,8 +12,8 @@
                 left: `${meteor.left}px`,
                 width: `${meteor.size}px`,
                 height: `${meteor.size}px`,
-                top: '-20px',
-                transform: 'rotate(215deg)',
+                top: meteor.top,
+                transform: `rotate(${meteor.rotation}deg)`,
                 opacity: meteor.opacity,
                 animationDelay: `${meteor.delay}s`,
                 animationDuration: `${meteor.duration}s`,
@@ -52,42 +52,52 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
-// Enhanced meteor positions with more meteors
+// Enhanced meteor positions with varied entry points
 const positions = [
-    { left: 1130, delay: 0.686975, duration: 8 },
-    { left: -350, delay: 0.670151, duration: 8 },
-    { left: 563, delay: 0.632454, duration: 9 },
-    { left: -969, delay: 0.524996, duration: 5 },
-    { left: -1153, delay: 0.460272, duration: 8 },
-    { left: -560, delay: 0.223791, duration: 6 },
-    { left: -1287, delay: 0.406558, duration: 4 },
-    { left: 211, delay: 0.475533, duration: 6 },
-    { left: -63, delay: 0.394929, duration: 5 },
-    { left: -112, delay: 0.78249, duration: 2 },
-    { left: 946, delay: 0.353787, duration: 5 },
-    { left: 275, delay: 0.309607, duration: 5 },
-    { left: 1216, delay: 0.35162, duration: 8 },
-    { left: -210, delay: 0.413144, duration: 7 },
-    { left: -842, delay: 0.395388, duration: 6 },
-    { left: -323, delay: 0.582248, duration: 4 },
-    { left: 278, delay: 0.710367, duration: 4 },
-    { left: -736, delay: 0.564896, duration: 6 },
-    { left: -800, delay: 0.206357, duration: 7 },
-    { left: -1118, delay: 0.628613, duration: 9 },
-    { left: 1361, delay: 0.529785, duration: 7 },
-    { left: -11, delay: 0.64863, duration: 6 },
-    { left: -678, delay: 0.701722, duration: 3 },
-    { left: -170, delay: 0.366231, duration: 5 },
-    { left: 946, delay: 0.521904, duration: 7 },
-    { left: 1364, delay: 0.484818, duration: 9 },
-    { left: 943, delay: 0.502043, duration: 3 },
-    { left: 1296, delay: 0.577243, duration: 7 },
-    { left: 1273, delay: 0.273317, duration: 5 },
-    { left: -1306, delay: 0.556245, duration: 7 },
+    // Top edge entries
+    { left: 1130, top: '-20px', rotation: 215, delay: 0.686975, duration: 8 },
+    { left: -350, top: '-20px', rotation: 215, delay: 0.670151, duration: 8 },
+    { left: 563, top: '-20px', rotation: 215, delay: 0.632454, duration: 9 },
+    
+    // Left edge entries
+    { left: '-20px', top: '200px', rotation: 305, delay: 0.524996, duration: 5 },
+    { left: '-20px', top: '400px', rotation: 325, delay: 0.460272, duration: 8 },
+    
+    // Right edge entries
+    { left: '105%', top: '150px', rotation: 245, delay: 0.223791, duration: 6 },
+    { left: '110%', top: '300px', rotation: 225, delay: 0.406558, duration: 4 },
+    
+    // Top entries (original style)
+    { left: 211, top: '-20px', rotation: 215, delay: 0.475533, duration: 6 },
+    { left: -63, top: '-20px', rotation: 215, delay: 0.394929, duration: 5 },
+    { left: -112, top: '-20px', rotation: 215, delay: 0.78249, duration: 2 },
+    { left: 946, top: '-20px', rotation: 215, delay: 0.353787, duration: 5 },
+    { left: 275, top: '-20px', rotation: 215, delay: 0.309607, duration: 5 },
+    { left: 1216, top: '-20px', rotation: 215, delay: 0.35162, duration: 8 },
+    { left: -210, top: '-20px', rotation: 215, delay: 0.413144, duration: 7 },
+    { left: -842, top: '-20px', rotation: 215, delay: 0.395388, duration: 6 },
+    
+    // Diagonal entries (more variety)
+    { left: '-20px', top: '100px', rotation: 305, delay: 0.582248, duration: 4 },
+    { left: '102%', top: '50px', rotation: 235, delay: 0.710367, duration: 4 },
+    { left: -736, top: '-20px', rotation: 215, delay: 0.564896, duration: 6 },
+    { left: -800, top: '-20px', rotation: 215, delay: 0.206357, duration: 7 },
+    { left: -1118, top: '-20px', rotation: 215, delay: 0.628613, duration: 9 },
+    { left: '105%', top: '200px', rotation: 245, delay: 0.529785, duration: 7 },
+    { left: -11, top: '-20px', rotation: 215, delay: 0.64863, duration: 6 },
+    { left: '-20px', top: '350px', rotation: 325, delay: 0.701722, duration: 3 },
+    { left: -170, top: '-20px', rotation: 215, delay: 0.366231, duration: 5 },
+    { left: 946, top: '-20px', rotation: 215, delay: 0.521904, duration: 7 },
+    { left: 1364, top: '-20px', rotation: 215, delay: 0.484818, duration: 9 },
+    { left: 943, top: '-20px', rotation: 215, delay: 0.502043, duration: 3 },
+    { left: 1296, top: '-20px', rotation: 215, delay: 0.577243, duration: 7 },
+    { left: 1273, top: '-20px', rotation: 215, delay: 0.273317, duration: 5 },
+    { left: -1306, top: '-20px', rotation: 215, delay: 0.556245, duration: 7 },
 ];
 
 // Calculate responsive meteor count
 const getMeteorCount = () => {
+    if (typeof window === 'undefined') return 20;
     const isMobile = window.innerWidth < 768;
     return isMobile ? 20 : positions.length;
 };
@@ -115,8 +125,8 @@ const meteors = computed(() => {
     return positions.slice(0, count).map((position, index) => {
         const particleCount = Math.floor(Math.random() * 3) + 3; // 3-5 particles
         const baseSize = Math.random() * 3 + 2; // Base size between 2-5px
-        const glowSize = Math.floor(Math.random() * 6 + 6); // Glow radius 6-12px
-        const trailLength = Math.floor(Math.random() * 60 + 60); // Trail length 60-120px
+        const glowSize = Math.floor(Math.random() * 10 + 8); // Enhanced glow radius 8-18px
+        const trailLength = Math.floor(Math.random() * 80 + 80); // Longer trail length 80-160px
 
         // Use tailwind colors directly
         const glowColor = 'rgba(155, 135, 245, 0.8)'; // Primary color with opacity
@@ -129,7 +139,7 @@ const meteors = computed(() => {
             glow: glowSize,
             glowColor,
             trailColor,
-            opacity: Math.random() * 0.3 + 0.7, // Higher base opacity 0.7-1
+            opacity: Math.random() * 0.2 + 0.8, // Higher base opacity 0.8-1
             particles: createParticles(particleCount)
         };
     });
@@ -137,9 +147,11 @@ const meteors = computed(() => {
 
 // Adjust for responsive behavior on mounted
 onMounted(() => {
-    window.addEventListener('resize', () => {
-        meteors.value = meteors.value;
-    });
+    if (typeof window !== 'undefined') {
+        window.addEventListener('resize', () => {
+            meteors.value = meteors.value;
+        });
+    }
 });
 </script>
 
@@ -156,21 +168,21 @@ onMounted(() => {
 @keyframes meteor-effect {
     0% {
         opacity: 0;
-        transform: rotate(215deg) translateX(0);
+        transform: translateX(0);
     }
     5% {
         opacity: 1;
     }
     10% {
         opacity: var(--opacity, 0.8);
-        transform: rotate(215deg) translateX(0);
+        transform: translateX(0);
     }
     70% {
         opacity: var(--opacity, 0.8);
     }
     100% {
         opacity: 0;
-        transform: rotate(215deg) translateX(-500px);
+        transform: translateX(-500px);
     }
 }
 
@@ -188,21 +200,31 @@ onMounted(() => {
 @keyframes meteor-effect-curved {
     0% {
         opacity: 0;
-        transform: rotate(215deg) translateX(0) translateY(0);
+        transform: translateX(0) translateY(0);
     }
     5% {
         opacity: 1;
     }
     10% {
         opacity: var(--opacity, 0.8);
-        transform: rotate(215deg) translateX(-50px) translateY(20px);
+        transform: translateX(-50px) translateY(20px);
     }
     70% {
         opacity: var(--opacity, 0.8);
     }
     100% {
         opacity: 0;
-        transform: rotate(215deg) translateX(-500px) translateY(80px);
+        transform: translateX(-500px) translateY(80px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .meteor {
+        animation-duration: 10s !important;
+    }
+    
+    .meteor:nth-child(even) {
+        display: none;
     }
 }
 </style>
