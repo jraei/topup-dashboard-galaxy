@@ -287,19 +287,21 @@ onMounted(() => {
         <!-- Enhanced Card Footer - Progress Bar -->
         <div class="card-footer">
             <!-- Progress Container with Integrated Text -->
-            <div class="progress-container-wrapper relative">
+            <div class="relative progress-container-wrapper">
                 <!-- Stock text moved above progress bar -->
-                <div class="text-xs absolute inset-x-0 top-[-18px] text-white opacity-90">
+                <div
+                    class="text-xs absolute inset-x-0 top-[-18px] text-white opacity-90"
+                >
                     <span v-if="flashItem.stok_tersedia !== null">
                         Tersisa {{ flashItem.stok_tersedia }}
                     </span>
                     <span v-else>Stok tersedia</span>
                 </div>
-                
+
                 <!-- Progress Bar with enhanced styling -->
                 <div class="progress-container px-1 py-0.5 rounded-full">
                     <div
-                        class="progress-bar h-3 rounded-full"
+                        class="h-3 rounded-full progress-bar"
                         :class="[isStockLow ? 'low-stock' : '']"
                         :style="{ width: `${stockPercentage}%` }"
                     >
@@ -375,7 +377,7 @@ onMounted(() => {
 .image-glow {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
+    /* border-radius: 50%; */
     box-shadow: 0 0 10px rgba(155, 135, 245, 0.7);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -545,7 +547,12 @@ onMounted(() => {
     height: 20%;
     padding: 0.75rem;
     border-top: 1px solid rgba(155, 135, 245, 0.1);
-    background-color: rgba(33, 92, 187, 0.9); /* Darker version of card background */
+    background-color: rgba(
+        33,
+        92,
+        187,
+        0.9
+    ); /* Darker version of card background */
     display: flex;
     flex-direction: column;
     justify-content: flex-end; /* Align to bottom for text above */
@@ -574,7 +581,7 @@ onMounted(() => {
     position: relative;
     box-shadow: 0 0 10px rgba(155, 135, 245, 0.5);
     background-image: linear-gradient(
-        90deg, 
+        90deg,
         rgba(155, 135, 245, 0.8),
         rgba(155, 135, 245, 1) 50%,
         rgba(155, 135, 245, 0.8)
@@ -584,7 +591,7 @@ onMounted(() => {
 .progress-bar.low-stock {
     background-color: #ef4444; /* Red for low stock */
     background-image: linear-gradient(
-        90deg, 
+        90deg,
         rgba(239, 68, 68, 0.8),
         rgba(239, 68, 68, 1) 50%,
         rgba(239, 68, 68, 0.8)
@@ -743,8 +750,8 @@ onMounted(() => {
     backface-visibility: hidden;
 }
 
-.cosmic-planet, 
-.cosmic-pulsar, 
+.cosmic-planet,
+.cosmic-pulsar,
 .quantum-wave {
     transform: translateZ(0);
     will-change: transform, opacity;
@@ -755,7 +762,7 @@ onMounted(() => {
     .progress-bar {
         transition: width 2s linear;
     }
-    
+
     .spark {
         animation: none;
     }

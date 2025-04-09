@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import FlashsaleCard from "./FlashsaleCard.vue";
@@ -40,7 +39,8 @@ const startAutoScroll = () => {
     if (scrollInterval.value) return;
 
     scrollInterval.value = setInterval(() => {
-        if (isHovering.value || isUserScrolling.value || !carouselRef.value) return;
+        if (isHovering.value || isUserScrolling.value || !carouselRef.value)
+            return;
 
         // Increment scroll position based on speed
         carouselRef.value.scrollLeft += getScrollSpeed();
@@ -48,7 +48,7 @@ const startAutoScroll = () => {
         // Check if we need to loop back
         const container = carouselRef.value;
         const scrollRight = container.scrollWidth - container.clientWidth;
-        
+
         // When we reach the end (with 20px buffer), reset seamlessly
         if (container.scrollLeft >= scrollRight - 20) {
             // Using smooth animation to reset
@@ -60,28 +60,28 @@ const startAutoScroll = () => {
 // Handle seamless reset with animation
 const resetScroll = () => {
     if (!carouselRef.value) return;
-    
+
     const container = carouselRef.value;
     isScrolling.value = true;
-    
+
     // Cancel any existing animation
     if (scrollAnimationId.value) {
         cancelAnimationFrame(scrollAnimationId.value);
     }
-    
+
     // Animate scroll to beginning with easing
     const startPosition = container.scrollLeft;
     const startTime = performance.now();
     const duration = 800; // ms
-    
+
     const animateScroll = (timestamp) => {
         const elapsed = timestamp - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Cubic ease out for smooth deceleration
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         container.scrollLeft = startPosition * (1 - easeProgress);
-        
+
         if (progress < 1) {
             scrollAnimationId.value = requestAnimationFrame(animateScroll);
         } else {
@@ -90,21 +90,21 @@ const resetScroll = () => {
             scrollAnimationId.value = null;
         }
     };
-    
+
     scrollAnimationId.value = requestAnimationFrame(animateScroll);
 };
 
 // Handle manual scrolling with improved detection
 const handleScroll = () => {
     if (!carouselRef.value) return;
-    
+
     isUserScrolling.value = true;
-    
+
     // Clear previous timeout
     if (scrollTimeoutId.value) {
         clearTimeout(scrollTimeoutId.value);
     }
-    
+
     // Set new timeout to detect when user stops scrolling
     scrollTimeoutId.value = setTimeout(() => {
         isUserScrolling.value = false;
@@ -114,7 +114,7 @@ const handleScroll = () => {
 // Check if we're on mobile/tablet
 const handleResize = () => {
     isMobile.value = window.innerWidth < 768;
-    
+
     // Stop auto-scroll on mobile
     if (isMobile.value && scrollInterval.value) {
         clearInterval(scrollInterval.value);
@@ -131,12 +131,12 @@ const cleanupAnimations = () => {
         clearInterval(scrollInterval.value);
         scrollInterval.value = null;
     }
-    
+
     if (scrollTimeoutId.value) {
         clearTimeout(scrollTimeoutId.value);
         scrollTimeoutId.value = null;
     }
-    
+
     if (scrollAnimationId.value) {
         cancelAnimationFrame(scrollAnimationId.value);
         scrollAnimationId.value = null;
@@ -148,12 +148,12 @@ onMounted(() => {
     if (!isMobile.value) {
         startAutoScroll();
     }
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 });
 
 onUnmounted(() => {
     cleanupAnimations();
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener("resize", handleResize);
 });
 </script>
 
@@ -171,19 +171,19 @@ onUnmounted(() => {
             />
 
             <!-- Enhanced Cards Carousel with improved scroll behavior -->
-            <div class="flashsale-carousel relative">
+            <div class="relative flashsale-carousel">
                 <!-- Scroll indicators (fade edges) -->
                 <div class="scroll-fade-left"></div>
                 <div class="scroll-fade-right"></div>
-                
+
                 <!-- Main carousel container -->
                 <div
                     ref="carouselRef"
                     @scroll="handleScroll"
                     @mouseenter="isHovering = true"
                     @mouseleave="isHovering = false"
-                    @touchstart="isHovering = true" 
-                    @touchend="setTimeout(() => isHovering = false, 1000)"
+                    @touchstart="isHovering = true"
+                    @touchend="setTimeout(() => (isHovering = false), 1000)"
                     class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none will-change-transform"
                 >
                     <FlashsaleCard
@@ -260,19 +260,10 @@ section::after {
     opacity: 0.7;
 }
 
-.scroll-fade-left {
-    left: 0;
-    background: linear-gradient(to right, rgba(31, 41, 55, 0.9), transparent);
-}
-
-.scroll-fade-right {
-    right: 0;
-    background: linear-gradient(to left, rgba(31, 41, 55, 0.9), transparent);
-}
-
 /* Card breathing effect when carousel is paused */
 @keyframes card-breathing {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
     }
     50% {
@@ -289,7 +280,7 @@ section::after {
     .snap-x {
         scroll-snap-type: x mandatory;
     }
-    
+
     .snap-start {
         scroll-snap-align: start;
     }
