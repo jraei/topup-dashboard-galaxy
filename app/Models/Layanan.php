@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Models;
@@ -45,5 +46,64 @@ class Layanan extends Model
         return $this->belongsToMany(FlashsaleEvent::class, 'flashsale_items')
             ->withPivot('harga_flashsale', 'stok', 'batas_user')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the regular price for this service
+     * 
+     * @param int|null $userRoleId The user role ID to consider for profit calculation
+     * @return float The calculated price
+     */
+    public function getHargaLayanan($userRoleId = null)
+    {
+        $basePrice = $this->harga_beli_idr ?: $this->harga_beli;
+
+        // If no user role specified, return base price
+        if (!$userRoleId) {
+            return $basePrice;
+        }
+
+        // Try to find a product-specific profit rule
+        $profitRule = ProfitProduk::where('produk_id', $this->produk_id)
+            ->where('user_roles_id', $userRoleId)
+            ->first();
+
+        // If no specific rule found, return base price
+        if (!$profitRule) {
+            return $basePrice;
+        }
+
+        // Calculate price based on profit rule
+        return $profitRule->calculatePrice($basePrice);
+    }
+
+    /**
+     * Check if this layanan is currently on flash sale
+     */
+    public function isOnFlashsale()
+    {
+        return $this->flashSaleItem()
+            ->whereHas('flashsaleEvent', function($query) {
+                $query->where('status', 'active')
+                    ->where('event_start_date', '<=', now())
+                    ->where('event_end_date', '>=', now());
+            })
+            ->where('status', 'active')
+            ->exists();
+    }
+
+    /**
+     * Get the active flash sale item for this layanan if available
+     */
+    public function getActiveFlashsaleItem()
+    {
+        return $this->flashSaleItem()
+            ->whereHas('flashsaleEvent', function($query) {
+                $query->where('status', 'active')
+                    ->where('event_start_date', '<=', now())
+                    ->where('event_end_date', '>=', now());
+            })
+            ->where('status', 'active')
+            ->first();
     }
 }

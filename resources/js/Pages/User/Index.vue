@@ -1,3 +1,4 @@
+
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -7,11 +8,20 @@ import NebulasLayer from "@/Components/User/Banner/NebulasLayer.vue";
 import PlanetsLayer from "@/Components/User/Banner/PlanetsLayer.vue";
 import StarfieldLayer from "@/Components/User/Banner/StarfieldLayer.vue";
 import CometLayer from "@/Components/User/Banner/CometLayer.vue";
+import FlashsaleSection from "@/Components/User/Flashsale/FlashsaleSection.vue";
 
-defineProps({
+const props = defineProps({
     banners: {
         type: Array,
         default: () => [],
+    },
+    flashsaleEvent: {
+        type: Object,
+        default: null,
+    },
+    serverTime: {
+        type: String,
+        default: null,
     },
     canLogin: Boolean,
     canRegister: Boolean,
@@ -42,7 +52,12 @@ defineProps({
                 </div>
             </section>
 
-            <!-- Additional content will go here -->
+            <!-- Flash Sale Section -->
+            <FlashsaleSection 
+                v-if="flashsaleEvent" 
+                :event="flashsaleEvent" 
+                :server-time="serverTime" 
+            />
         </div>
     </GuestLayout>
 </template>
