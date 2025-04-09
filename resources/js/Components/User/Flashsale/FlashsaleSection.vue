@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import FlashsaleCard from "./FlashsaleCard.vue";
 import FlashsaleHeader from "./FlashsaleHeader.vue";
 import CosmicParticles from "./CosmicParticles.vue";
@@ -19,31 +20,58 @@ const carouselRef = ref(null);
 const isScrolling = ref(false);
 const isHovering = ref(false);
 const scrollInterval = ref(null);
+const isMobile = ref(window.innerWidth < 768);
 
 // Calculate remaining time based on server time sync
 const endTime = computed(() => {
     return new Date(props.event.event_end_date).getTime();
 });
 
-// Handle automatic scrolling
+// Calculate scroll speed based on device size
+const getScrollSpeed = () => {
+    return isMobile.value ? 3.25 : 2.5; // 30% faster on mobile
+};
+
+// Handle automatic scrolling with improved logic
 const startAutoScroll = () => {
     if (scrollInterval.value) return;
 
     scrollInterval.value = setInterval(() => {
-        if (isHovering.value || isScrolling.value) return;
+        if (isHovering.value || isScrolling.value || !carouselRef.value) return;
 
-        if (carouselRef.value) {
-            carouselRef.value.scrollLeft += 1;
+        carouselRef.value.scrollLeft += getScrollSpeed();
 
-            // Reset scroll position when reaching the end
-            if (
-                carouselRef.value.scrollLeft >=
-                carouselRef.value.scrollWidth -
-                    carouselRef.value.clientWidth -
-                    10
-            ) {
-                carouselRef.value.scrollLeft = 0;
-            }
+        // Implement infinite loop via virtual DOM replication
+        if (
+            carouselRef.value.scrollLeft >=
+            carouselRef.value.scrollWidth - carouselRef.value.clientWidth - 10
+        ) {
+            // Reset smoothly
+            isScrolling.value = true;
+            const firstCardWidth = carouselRef.value.querySelector('.flex-none').offsetWidth;
+            
+            // Animate scroll to beginning
+            const scrollTo = 0;
+            const currentPos = carouselRef.value.scrollLeft;
+            const startTime = performance.now();
+            const duration = 800;
+            
+            const scrollStep = (timestamp) => {
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease out
+                
+                carouselRef.value.scrollLeft = currentPos - (currentPos * easeProgress);
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(scrollStep);
+                } else {
+                    carouselRef.value.scrollLeft = scrollTo;
+                    isScrolling.value = false;
+                }
+            };
+            
+            window.requestAnimationFrame(scrollStep);
         }
     }, 20); // Smoother scrolling with smaller increments
 };
@@ -63,8 +91,14 @@ const handleScroll = () => {
     }, 200);
 };
 
+// Handle window resize for responsive behavior
+const handleResize = () => {
+    isMobile.value = window.innerWidth < 768;
+};
+
 onMounted(() => {
     startAutoScroll();
+    window.addEventListener('resize', handleResize);
 });
 
 onUnmounted(() => {
@@ -75,6 +109,8 @@ onUnmounted(() => {
     if (window.scrollTimeout) {
         clearTimeout(window.scrollTimeout);
     }
+    
+    window.removeEventListener('resize', handleResize);
 });
 </script>
 
@@ -91,7 +127,7 @@ onUnmounted(() => {
                 :server-time="serverTime"
             />
 
-            <!-- Cards Carousel -->
+            <!-- Cards Carousel with improved scroll behavior -->
             <div
                 ref="carouselRef"
                 @scroll="handleScroll"

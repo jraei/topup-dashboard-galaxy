@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Models;
@@ -47,8 +48,20 @@ class Layanan extends Model
             ->withTimestamps();
     }
 
+    public function priceRules()
+    {
+        return $this->hasOneThrough(
+            ProfitProduk::class,
+            Produk::class,
+            'id', // Foreign key on produks table
+            'produk_id', // Foreign key on profit_produks table
+            'produk_id', // Local key on layanans table
+            'id' // Local key on produks table
+        );
+    }
+
     /**
-     * Get the regular price for this service
+     * Get the regular price for this service with enhanced caching
      * 
      * @param int|null $userRoleId The user role ID to consider for profit calculation
      * @return float The calculated price
@@ -62,10 +75,18 @@ class Layanan extends Model
             return $basePrice;
         }
 
-        // Try to find a product-specific profit rule
-        $profitRule = ProfitProduk::where('produk_id', $this->produk_id)
-            ->where('user_roles_id', $userRoleId)
-            ->first();
+        // Use cached query when possible to reduce DB calls
+        static $profitRulesCache = [];
+        $cacheKey = "{$this->produk_id}_{$userRoleId}";
+
+        if (!isset($profitRulesCache[$cacheKey])) {
+            // Try to find a product-specific profit rule
+            $profitRulesCache[$cacheKey] = ProfitProduk::where('produk_id', $this->produk_id)
+                ->where('user_roles_id', $userRoleId)
+                ->first();
+        }
+
+        $profitRule = $profitRulesCache[$cacheKey];
 
         // If no specific rule found, return base price
         if (!$profitRule) {
@@ -74,6 +95,29 @@ class Layanan extends Model
 
         // Calculate price based on profit rule
         return $profitRule->calculatePrice($basePrice);
+    }
+
+    /**
+     * Calculate the final price considering all factors
+     * 
+     * @param int|null $userRoleId The user role ID
+     * @param bool $applyPromotions Whether to apply active promotions
+     * @return float The final calculated price
+     */
+    public function calculateFinalPrice($userRoleId = null, $applyPromotions = true)
+    {
+        // Get the base price with profit margins applied
+        $price = $this->getHargaLayanan($userRoleId);
+        
+        // Apply active promotions if requested
+        if ($applyPromotions) {
+            $activeFlashItem = $this->getActiveFlashsaleItem();
+            if ($activeFlashItem) {
+                return $activeFlashItem->harga_flashsale;
+            }
+        }
+        
+        return $price;
     }
 
     /**
