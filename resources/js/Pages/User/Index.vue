@@ -1,3 +1,4 @@
+
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -8,6 +9,7 @@ import PlanetsLayer from "@/Components/User/Banner/PlanetsLayer.vue";
 import StarfieldLayer from "@/Components/User/Banner/StarfieldLayer.vue";
 import CometLayer from "@/Components/User/Banner/CometLayer.vue";
 import FlashsaleSection from "@/Components/User/Flashsale/FlashsaleSection.vue";
+import TrendingProducts from "@/Components/User/Product/TrendingProducts.vue";
 
 const props = defineProps({
     banners: {
@@ -26,6 +28,10 @@ const props = defineProps({
     canRegister: Boolean,
     laravelVersion: String,
     phpVersion: String,
+    popularProducts: {
+        type: Array,
+        default: () => [],
+    },
 });
 </script>
 
@@ -57,6 +63,9 @@ const props = defineProps({
                 :event="flashsaleEvent"
                 :server-time="serverTime"
             />
+
+            <!-- Trending Products Section -->
+            <TrendingProducts v-if="popularProducts && popularProducts.length > 0" :products="popularProducts" />
         </div>
     </GuestLayout>
 </template>

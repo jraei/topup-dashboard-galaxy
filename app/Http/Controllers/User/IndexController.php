@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\User;
@@ -5,6 +6,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\FlashsaleEvent;
+use App\Models\Produk;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,11 +39,21 @@ class IndexController extends Controller
             }])
             ->first();
 
+        // Fetch popular products
+        $popularProducts = Produk::whereHas('kategori', function($query) {
+                $query->where('kategori_name', 'populer sekarang');
+            })
+            ->where('status', 'active')
+            ->with(['kategori'])
+            ->limit(12)
+            ->get();
+
         return Inertia::render('User/Index', [
             'banners' => $banners,
             'flashsaleEvent' => $activeEvents,
             'serverTime' => Carbon::now()->toISOString(),
             'userRoleId' => $userRoleId,
+            'popularProducts' => $popularProducts,
         ]);
     }
 }
