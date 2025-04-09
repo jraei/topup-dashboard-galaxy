@@ -23,7 +23,7 @@ class FlashsaleItemController extends Controller
         $eventId = $request->input('event_id');
 
         // Validate the sort field to prevent SQL injection
-        $allowedSortFields = ['id', 'harga_flashsale', 'stok', 'batas_user', 'status'];
+        $allowedSortFields = ['id', 'harga_flashsale', 'stok_tersedia', 'batas_user', 'status'];
         if (!in_array($sort, $allowedSortFields)) {
             $sort = 'id';
         }
@@ -82,7 +82,7 @@ class FlashsaleItemController extends Controller
             'flashsale_event_id' => 'required|exists:flashsale_events,id',
             'layanan_id' => 'required|exists:layanans,id',
             'harga_flashsale' => 'required|numeric|min:1',
-            'stok' => 'nullable|numeric|min:1',
+            'stok_tersedia' => 'nullable|numeric|min:1',
             'batas_user' => 'nullable|numeric|min:1',
             'status' => 'required|in:active,inactive',
         ]);
@@ -102,12 +102,12 @@ class FlashsaleItemController extends Controller
         }
 
         // Validate flash sale price must be lower than original price
-        $hargaBeli = $layanan->harga_beli_idr ?: $layanan->harga_beli;
-        if ($validatedData['harga_flashsale'] >= $hargaBeli) {
-            throw ValidationException::withMessages([
-                'harga_flashsale' => ['Flash sale price must be lower than the original price.'],
-            ]);
-        }
+        // $hargaBeli = $layanan->harga_beli_idr ?: $layanan->harga_beli;
+        // if ($validatedData['harga_flashsale'] >= $hargaBeli) {
+        //     throw ValidationException::withMessages([
+        //         'harga_flashsale' => ['Flash sale price must be lower than the original price.'],
+        //     ]);
+        // }
 
         FlashsaleItem::create($validatedData);
 
@@ -150,7 +150,7 @@ class FlashsaleItemController extends Controller
 
         $validatedData = $request->validate([
             'harga_flashsale' => 'required|numeric|min:1',
-            'stok' => 'nullable|numeric|min:1',
+            'stok_tersedia' => 'nullable|numeric|min:1',
             'batas_user' => 'nullable|numeric|min:1',
             'status' => 'required|in:active,inactive',
         ]);
@@ -206,7 +206,7 @@ class FlashsaleItemController extends Controller
             'layanan_ids' => 'required|array',
             'layanan_ids.*' => 'exists:layanans,id',
             'discount_percentage' => 'required|numeric|between:1,100',
-            'stok' => 'nullable|numeric|min:1',
+            'stok_tersedia' => 'nullable|numeric|min:1',
             'batas_user' => 'nullable|numeric|min:1',
             'status' => 'required|in:active,inactive',
         ]);
@@ -243,7 +243,7 @@ class FlashsaleItemController extends Controller
                 'flashsale_event_id' => $eventId,
                 'layanan_id' => $layananId,
                 'harga_flashsale' => $hargaFlashsale,
-                'stok' => $validatedData['stok'],
+                'stok_tersedia' => $validatedData['stok_tersedia'],
                 'batas_user' => $validatedData['batas_user'],
                 'status' => $validatedData['status'],
             ]);
@@ -288,7 +288,8 @@ class FlashsaleItemController extends Controller
      */
     public function availableServices(Request $request)
     {
-        // dd('tes');
+        // dd($request->all());
+
         $eventId = $request->input('event_id');
 
         if (!$eventId) {

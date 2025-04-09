@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -53,10 +52,10 @@ const props = defineProps({
             </section>
 
             <!-- Flash Sale Section -->
-            <FlashsaleSection 
-                v-if="flashsaleEvent" 
-                :event="flashsaleEvent" 
-                :server-time="serverTime" 
+            <FlashsaleSection
+                v-if="flashsaleEvent"
+                :event="flashsaleEvent"
+                :server-time="serverTime"
             />
         </div>
     </GuestLayout>

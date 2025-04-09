@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -11,9 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class FlashsaleItem extends Model
 {
     use HasFactory;
-    
+
     protected $guarded = [];
-    
+
     protected $casts = [
         'harga_flashsale' => 'integer',
         'stok_tersedia' => 'integer',
@@ -30,13 +29,13 @@ class FlashsaleItem extends Model
     {
         return $this->belongsTo(Layanan::class);
     }
-    
+
     // Check if stock is available
     public function isStockAvailable()
     {
         return $this->stok_tersedia > 0 || $this->stok_tersedia === null;
     }
-    
+
     // Check if the item is active
     public function isActive()
     {
@@ -52,7 +51,7 @@ class FlashsaleItem extends Model
         }
 
         $total = $this->stok_tersedia + ($this->stok_terjual ?? 0);
-        
+
         // Prevent division by zero
         if ($total <= 0) {
             return 0;

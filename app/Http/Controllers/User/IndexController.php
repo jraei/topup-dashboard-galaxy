@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\User;
@@ -22,14 +21,15 @@ class IndexController extends Controller
         $activeEvents = FlashsaleEvent::where('status', 'active')
             ->where('event_start_date', '<=', now())
             ->where('event_end_date', '>=', now())
-            ->with(['item' => function($query) {
+            ->with(['item' => function ($query) {
                 $query->where('status', 'active')
-                    ->where(function($q) {
+                    ->where(function ($q) {
                         $q->where('stok_tersedia', '>', 0)
                             ->orWhereNull('stok_tersedia');
                     })
-                    ->with(['layanan' => function($q) {
-                        $q->with('produk.thumbnails');
+                    ->with(['layanan' => function ($q) {
+                        $q->where('status', 'active');
+                        $q->with('produk');
                     }]);
             }])
             ->first();

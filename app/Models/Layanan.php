@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -83,7 +82,7 @@ class Layanan extends Model
     public function isOnFlashsale()
     {
         return $this->flashSaleItem()
-            ->whereHas('flashsaleEvent', function($query) {
+            ->whereHas('flashsaleEvent', function ($query) {
                 $query->where('status', 'active')
                     ->where('event_start_date', '<=', now())
                     ->where('event_end_date', '>=', now());
@@ -98,7 +97,7 @@ class Layanan extends Model
     public function getActiveFlashsaleItem()
     {
         return $this->flashSaleItem()
-            ->whereHas('flashsaleEvent', function($query) {
+            ->whereHas('flashsaleEvent', function ($query) {
                 $query->where('status', 'active')
                     ->where('event_start_date', '<=', now())
                     ->where('event_end_date', '>=', now());

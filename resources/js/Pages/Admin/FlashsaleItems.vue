@@ -33,14 +33,21 @@ const columns = [
     },
     {
         key: "original_price",
-        label: "Original Price",
+        label: "Buy Price",
         format: (_, item) => {
             return item.layanan
-                ? item.layanan.harga_beli_idr || item.layanan.harga_beli
+                ? "Rp " + item.layanan.harga_beli_idr ||
+                      "Rp " + item.layanan.harga_beli
                 : "—";
         },
     },
-    { key: "harga_flashsale", label: "Flash Price" },
+    {
+        key: "harga_flashsale",
+        label: "Flash Price",
+        format: (value) => {
+            return "Rp " + value;
+        },
+    },
     {
         key: "stok_tersedia",
         label: "Stock",
@@ -183,6 +190,7 @@ const loadAvailableServices = async () => {
     if (!selectedEvent.value) return;
 
     isLoadingServices.value = true;
+    // console.log("Loading available services for event:", selectedEvent.value);
 
     try {
         // Make sure this URL matches exactly what's defined in the routes
@@ -200,7 +208,7 @@ const loadAvailableServices = async () => {
         console.error("Error fetching available services:", error);
         proxy.$showSwalConfirm({
             title: "Error",
-            text: "Failed to load available services",
+            text: "Layanan/Event tidak ditemukan!",
             icon: "error",
             showCancelButton: false,
             confirmButtonText: "OK",
@@ -678,7 +686,7 @@ watch(
                         >
                             <label
                                 class="block mb-1 text-sm font-medium text-gray-300"
-                                >Original Price</label
+                                >Buy Price</label
                             >
                             <input
                                 type="text"
