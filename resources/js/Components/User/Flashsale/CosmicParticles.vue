@@ -1,3 +1,4 @@
+
 <script setup>
 import { onMounted, ref } from "vue";
 
@@ -85,11 +86,11 @@ onMounted(() => {
 </script>
 
 <template>
-    <div ref="container" class="cosmic-particles">
+    <div ref="container" class="absolute inset-[-15%] overflow-hidden pointer-events-none z-0 md:inset-0">
         <div
             v-for="particle in particles"
             :key="particle.id"
-            class="cosmic-particle"
+            class="cosmic-particle absolute rounded-full transform -translate-x-1/2 -translate-y-1/2"
             :style="{
                 left: `${particle.x}%`,
                 top: `${particle.y}%`,
@@ -97,116 +98,28 @@ onMounted(() => {
                 height: `${particle.size}px`,
                 backgroundColor: particle.color,
                 opacity: particle.opacity,
-                animationDuration: `${particle.twinkleSpeed}s`,
+                boxShadow: `0 0 8px ${particle.color}`,
+                animation: `twinkle ${particle.twinkleSpeed}s infinite alternate ease-in-out`,
+                '--twinkle-speed': `${particle.twinkleSpeed}s`,
             }"
         ></div>
 
-        <!-- Quantum Field Effect -->
-        <!-- <div class="quantum-field"></div> -->
-
-        <!-- Extended Nebula Effect that goes beyond container -->
-        <div class="extended-nebula"></div>
+        <!-- Extended Nebula Effect -->
+        <div class="absolute w-[130%] h-[130%] left-[-15%] top-[-15%] 
+                    bg-[radial-gradient(ellipse_at_center,rgba(155,135,245,0.1)_0%,rgba(51,195,240,0.05)_40%,transparent_70%)]
+                    blur-xl mix-blend-screen opacity-60 animate-rotate-120s
+                    md:w-full md:h-full md:left-0 md:top-0"></div>
 
         <!-- Hexagonal Grid Pattern -->
-        <div class="hex-grid"></div>
+        <div class="absolute inset-0 opacity-10 
+                    bg-[repeating-linear-gradient(to_right,rgba(155,135,245,0.1),rgba(155,135,245,0.1)_1px,transparent_1px,transparent_20px),repeating-linear-gradient(to_bottom,rgba(155,135,245,0.1),rgba(155,135,245,0.1)_1px,transparent_1px,transparent_20px)]"></div>
     </div>
 </template>
 
 <style scoped>
-.cosmic-particles {
-    position: absolute;
-    inset: -15%; /* Extend beyond container edges */
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
-}
-
-@media (max-width: 768px) {
-    .cosmic-particles {
-        inset: 0; /* Contain within boundaries on mobile */
-    }
-}
-
-.cosmic-particle {
-    position: absolute;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 8px currentColor;
-    animation: twinkle var(--twinkle-speed, 3s) infinite alternate ease-in-out;
-}
-
-/* Quantum Field Effect */
-.quantum-field {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        45deg,
-        rgba(155, 135, 245, 0.03),
-        rgba(51, 195, 240, 0.03) 10px,
-        transparent 10px,
-        transparent 20px
-    );
-    opacity: 0.5;
-    mix-blend-mode: screen;
-}
-
-/* Extended Nebula Effect */
-.extended-nebula {
-    position: absolute;
-    width: 130%;
-    height: 130%;
-    left: -15%;
-    top: -15%;
-    background: radial-gradient(
-        ellipse at center,
-        rgba(155, 135, 245, 0.1) 0%,
-        rgba(51, 195, 240, 0.05) 40%,
-        transparent 70%
-    );
-    filter: blur(20px);
-    mix-blend-mode: screen;
-    opacity: 0.6;
-    animation: rotate 120s linear infinite;
-    transform-origin: center;
-}
-
-@media (max-width: 768px) {
-    .extended-nebula {
-        width: 100%;
-        height: 100%;
-        left: 0;
-        top: 0;
-    }
-}
-
-/* Hexagonal Grid Pattern */
-.hex-grid {
-    position: absolute;
-    inset: 0;
-    opacity: 0.1;
-    background-image: repeating-linear-gradient(
-            to right,
-            rgba(155, 135, 245, 0.1),
-            rgba(155, 135, 245, 0.1) 1px,
-            transparent 1px,
-            transparent 20px
-        ),
-        repeating-linear-gradient(
-            to bottom,
-            rgba(155, 135, 245, 0.1),
-            rgba(155, 135, 245, 0.1) 1px,
-            transparent 1px,
-            transparent 20px
-        );
-}
-
-/* Animations */
+/* Animations that can't be easily represented in Tailwind */
 @keyframes twinkle {
-    0%,
-    100% {
+    0%, 100% {
         opacity: 0.2;
         transform: translate(-50%, -50%) scale(0.8);
     }
@@ -217,12 +130,12 @@ onMounted(() => {
 }
 
 @keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-rotate-120s {
+    animation: rotate 120s linear infinite;
 }
 
 /* Support for reduced motion */
@@ -231,7 +144,7 @@ onMounted(() => {
         animation: twinkle 5s infinite alternate ease-in-out !important;
     }
 
-    .extended-nebula {
+    .animate-rotate-120s {
         animation: none;
     }
 }
