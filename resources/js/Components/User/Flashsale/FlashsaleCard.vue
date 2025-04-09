@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
@@ -149,10 +148,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div 
-        ref="cardRef" 
-        class="relative overflow-hidden transition-all duration-300 border rounded-lg border-opacity-10 border-primary bg-[rgba(33,92,187,0.6)] aspect-[5/3] h-60 max-w-full transform-gpu will-change-transform backface-hidden shadow-lg hover:shadow-glow-primary hover:translate-y-[-5px] hover:scale-[1.02]"
-    >
+    <div ref="cardRef" class="flashsale-card group">
         <!-- User Limit Badge -->
         <div v-if="flashItem.batas_user" class="absolute z-20 top-2 right-2">
             <div
@@ -177,35 +173,34 @@ onMounted(() => {
         </div>
 
         <!-- Card Body - New Layout -->
-        <div class="flex h-4/5 w-full relative overflow-hidden">
+        <div class="card-content">
             <!-- Left Section -->
-            <div class="w-[65%] p-3 flex flex-col z-10">
+            <div class="left-section">
                 <!-- Product Image -->
-                <div class="relative w-20 h-20 mb-3 overflow-hidden bg-transparent">
+                <div class="product-image">
                     <img
                         v-if="thumbnailImage"
                         :src="'/storage/' + thumbnailImage"
                         alt=""
                         loading="lazy"
-                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    <div class="absolute inset-0 opacity-0 transition-opacity duration-300 shadow-[0_0_10px_rgba(155,135,245,0.7)] group-hover:opacity-100"></div>
+                    <div class="image-glow"></div>
                 </div>
 
                 <!-- Product Info -->
-                <div>
-                    <h3 class="text-base font-bold text-secondary transition-all duration-300 group-hover:text-shadow-neon group-hover:scale-[1.02] mb-1">
+                <div class="product-info">
+                    <h3 class="product-name">
                         {{ layanan.nama_layanan }}
                     </h3>
-                    <p class="text-xs text-[#cbd5e1] mb-2">{{ produk.nama }}</p>
+                    <p class="product-category">{{ produk.nama }}</p>
                 </div>
 
                 <!-- Price Section -->
-                <div class="mt-auto">
-                    <div class="flex items-center text-lg font-bold text-secondary animate-price-pulse">
+                <div class="price-section">
+                    <div class="flash-price">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="w-4 h-4 mr-1 text-secondary"
+                            class="flash-icon"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -217,11 +212,11 @@ onMounted(() => {
                         </svg>
                         {{ formatPrice(flashItem.harga_flashsale) }}
                     </div>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="text-sm text-[#94a3b8] line-through opacity-70">{{ formatPrice(layanan.harga_jual) }}</span>
+                    <div class="regular-price">
+                        <span>{{ formatPrice(layanan.harga_jual) }}</span>
                         <span
                             v-if="discountPercentage > 0"
-                            class="bg-primary text-white text-[0.65rem] px-1.5 py-0.5 rounded"
+                            class="discount-badge"
                         >
                             -{{ discountPercentage }}%
                         </span>
@@ -230,8 +225,8 @@ onMounted(() => {
             </div>
 
             <!-- Right Section - Cosmic Elements -->
-            <div class="w-[35%] relative overflow-hidden">
-                <div class="cosmic-layer absolute inset-0 transition-transform duration-300">
+            <div class="right-section">
+                <div class="cosmic-layer">
                     <!-- Dynamic cosmic elements -->
                     <template
                         v-for="(element, index) in cosmicElements"
@@ -240,7 +235,7 @@ onMounted(() => {
                         <!-- Planet -->
                         <div
                             v-if="element.type === 'planet'"
-                            class="absolute rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.4),rgba(51,195,240,0.2)_50%,transparent)] shadow-[inset_-2px_-2px_4px_rgba(0,0,0,0.5)]"
+                            class="cosmic-planet"
                             :style="{
                                 width: `${element.size}px`,
                                 height: `${element.size}px`,
@@ -248,21 +243,18 @@ onMounted(() => {
                                 right: `${element.right}%`,
                                 animationDuration: `${element.orbitSpeed}s`,
                                 animationDelay: `${element.delay}s`,
-                                animation: `orbit-rotation ${element.orbitSpeed}s linear infinite`,
-                                willChange: 'transform',
-                                transform: 'translateZ(0)',
                             }"
                         >
                             <div
+                                class="planet-ring"
                                 v-if="index % 3 === 0"
-                                class="absolute w-[150%] h-[30%] top-[35%] left-[-25%] rounded-full border border-[rgba(155,135,245,0.3)] transform rotate-[-30deg] after:content-[''] after:absolute after:top-[-50%] after:left-[10%] after:w-[80%] after:h-[200%] after:bg-[linear-gradient(90deg,transparent,rgba(51,195,240,0.2),transparent)] after:transform after:rotate-[10deg]"
                             ></div>
                         </div>
 
                         <!-- Pulsar star -->
                         <div
                             v-if="element.type === 'pulsar'"
-                            class="absolute rounded-full bg-secondary shadow-[0_0_10px_#33c3f0,0_0_20px_rgba(51,195,240,0.5)]"
+                            class="cosmic-pulsar"
                             :style="{
                                 width: `${element.size}px`,
                                 height: `${element.size}px`,
@@ -270,38 +262,32 @@ onMounted(() => {
                                 right: `${element.right}%`,
                                 animationDuration: `${element.pulseSpeed}s`,
                                 animationDelay: `${element.delay}s`,
-                                animation: `pulsar-glow ${element.pulseSpeed}s ease-in-out infinite`,
-                                willChange: 'transform, opacity',
-                                transform: 'translateZ(0)',
                             }"
                         ></div>
 
                         <!-- Quantum wave -->
                         <div
                             v-if="element.type === 'quantum'"
-                            class="absolute w-10 bg-[linear-gradient(90deg,transparent,rgba(155,135,245,0.1),rgba(155,135,245,0.3),rgba(155,135,245,0.1),transparent)] origin-center"
+                            class="quantum-wave"
                             :style="{
                                 height: `${element.height}px`,
                                 right: `${element.right}%`,
                                 top: `${element.top}%`,
                                 animationDuration: `${element.waveSpeed}s`,
-                                animation: `quantum-wave ${element.waveSpeed}s ease-in-out infinite`,
-                                willChange: 'transform, opacity',
-                                transform: 'translateZ(0)',
                             }"
                         ></div>
                     </template>
                 </div>
 
                 <!-- Thermal Edge Effect -->
-                <div class="absolute bottom-0 right-0 w-[70%] h-[70%] bg-[radial-gradient(circle_at_bottom_right,rgba(255,100,50,0.15),transparent_70%)] [mask-image:linear-gradient(135deg,transparent,rgba(0,0,0,0.7))] z-1"></div>
+                <div class="thermal-edge"></div>
             </div>
         </div>
 
         <!-- Enhanced Card Footer - Progress Bar -->
-        <div class="h-1/5 px-3 pb-3 pt-1.5 border-t border-[rgba(155,135,245,0.1)] bg-[rgba(33,92,187,0.9)] flex flex-col justify-end">
+        <div class="card-footer">
             <!-- Progress Container with Integrated Text -->
-            <div class="relative mt-[18px]">
+            <div class="relative progress-container-wrapper">
                 <!-- Stock text moved above progress bar -->
                 <div
                     class="text-xs absolute inset-x-0 top-[-18px] text-white opacity-90"
@@ -313,42 +299,375 @@ onMounted(() => {
                 </div>
 
                 <!-- Progress Bar with enhanced styling -->
-                <div class="h-[calc(6px+0.5rem)] bg-[rgba(255,255,255,0.1)] overflow-hidden relative backdrop-blur-[4px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.2)] px-1 py-0.5 rounded-full">
+                <div class="progress-container px-1 py-0.5 rounded-full">
                     <div
-                        class="h-full bg-primary transition-width duration-1000 ease-out relative shadow-[0_0_10px_rgba(155,135,245,0.5)] bg-[linear-gradient(90deg,rgba(155,135,245,0.8),rgba(155,135,245,1)_50%,rgba(155,135,245,0.8))]"
-                        :class="{ 'bg-red-500 bg-[linear-gradient(90deg,rgba(239,68,68,0.8),rgba(239,68,68,1)_50%,rgba(239,68,68,0.8))] shadow-[0_0_10px_rgba(239,68,68,0.5)]': isStockLow }"
+                        class="h-3 rounded-full progress-bar"
+                        :class="[isStockLow ? 'low-stock' : '']"
                         :style="{ width: `${stockPercentage}%` }"
                     >
                         <!-- Animated particle sparks for thermal effect -->
-                        <div class="absolute right-0 top-0 h-full w-[25px] overflow-hidden">
-                            <div 
-                                v-for="i in 5" 
-                                :key="i"
-                                class="absolute w-0.5 h-0.5 bg-[rgba(255,200,50,0.8)] rounded-full shadow-[0_0_4px_rgba(255,200,50,0.6)]"
-                                :style="{
-                                    animation: `spark-float 2s infinite ease-out`,
-                                    animationDelay: `${i * 0.4}s`,
-                                    left: `${i * 5}px`,
-                                    top: `${50 - i * 10}%`,
-                                    transform: 'translateZ(0)'
-                                }"
-                            ></div>
+                        <div class="particle-sparks">
+                            <div class="spark" v-for="i in 5" :key="i"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Hexagonal grid pattern overlay -->
-        <div class="absolute inset-0 opacity-20 pointer-events-none z-0 bg-[radial-gradient(rgba(155,135,245,0.1)_2px,transparent_2px)] bg-[size:16px_16px] bg-[position:-8px_-8px]"></div>
-
-        <!-- CRT scanline effect -->
-        <div class="absolute inset-0 pointer-events-none z-5 opacity-5 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_50%,rgba(0,0,0,0.05)_50%)] bg-[size:100%_4px]"></div>
     </div>
 </template>
 
 <style scoped>
-/* Complex animations that are hard to represent in Tailwind */
+.flashsale-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(155, 135, 245, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(33, 92, 187, 0.6); /* Deep space blue */
+    aspect-ratio: 5/3;
+    height: 240px;
+    max-width: 100%;
+    transform-origin: center bottom;
+}
+
+.flashsale-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 0 25px rgba(155, 135, 245, 0.3);
+}
+
+/* Card content layout */
+.card-content {
+    display: flex;
+    height: 80%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Left section - Product info and pricing */
+.left-section {
+    width: 65%;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+/* Product image styles */
+.product-image {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    background: transparent;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.flashsale-card:hover .product-image img {
+    transform: scale(1.1);
+}
+
+.image-glow {
+    position: absolute;
+    inset: 0;
+    /* border-radius: 50%; */
+    box-shadow: 0 0 10px rgba(155, 135, 245, 0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.flashsale-card:hover .image-glow {
+    opacity: 1;
+}
+
+.product-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #33c3f0; /* secondary color */
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.flashsale-card:hover .product-name {
+    text-shadow: 0 0 8px rgba(155, 135, 245, 0.7);
+    transform: scale(1.02);
+}
+
+.product-category {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+/* Price section */
+.price-section {
+    margin-top: auto;
+}
+
+.flash-price {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #33c3f0;
+    animation: price-pulse 3s infinite alternate;
+}
+
+.flash-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.25rem;
+    color: #33c3f0; /* secondary color */
+}
+
+.regular-price {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.regular-price span:first-child {
+    text-decoration: line-through;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    opacity: 0.7;
+}
+
+.discount-badge {
+    background-color: #9b87f5;
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+}
+
+/* Right section - Cosmic elements */
+.right-section {
+    width: 35%;
+    position: relative;
+    overflow: hidden;
+}
+
+.cosmic-layer {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.3s ease;
+}
+
+/* Cosmic elements */
+.cosmic-planet {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle at 30% 30%,
+        rgba(255, 255, 255, 0.4),
+        rgba(51, 195, 240, 0.2) 50%,
+        transparent
+    );
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5);
+    animation: orbit-rotation linear infinite;
+}
+
+.planet-ring {
+    position: absolute;
+    width: 150%;
+    height: 30%;
+    top: 35%;
+    left: -25%;
+    border-radius: 50%;
+    border: 1px solid rgba(155, 135, 245, 0.3);
+    transform: rotate(-30deg);
+}
+
+.planet-ring::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: 10%;
+    width: 80%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(51, 195, 240, 0.2),
+        transparent
+    );
+    transform: rotate(10deg);
+}
+
+.cosmic-pulsar {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #33c3f0;
+    box-shadow: 0 0 10px #33c3f0, 0 0 20px rgba(51, 195, 240, 0.5);
+    animation: pulsar-glow ease-in-out infinite;
+}
+
+.quantum-wave {
+    position: absolute;
+    width: 40px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(155, 135, 245, 0.1),
+        rgba(155, 135, 245, 0.3),
+        rgba(155, 135, 245, 0.1),
+        transparent
+    );
+    animation: quantum-wave ease-in-out infinite;
+    transform-origin: center center;
+}
+
+/* Thermal edge effect */
+.thermal-edge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(
+        circle at bottom right,
+        rgba(255, 100, 50, 0.15),
+        transparent 70%
+    );
+    mask-image: linear-gradient(135deg, transparent, rgba(0, 0, 0, 0.7));
+    z-index: 1;
+}
+
+/* Card footer */
+.card-footer {
+    height: 20%;
+    padding: 0.75rem;
+    border-top: 1px solid rgba(155, 135, 245, 0.1);
+    background-color: rgba(
+        33,
+        92,
+        187,
+        0.9
+    ); /* Darker version of card background */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align to bottom for text above */
+}
+
+/* Progress container wrapper with positioning context */
+.progress-container-wrapper {
+    margin-top: 18px; /* Make space for the text above */
+}
+
+/* Enhanced progress container */
+.progress-container {
+    height: calc(6px + 0.5rem); /* Base height + padding */
+    background-color: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced progress bar */
+.progress-bar {
+    height: 100%;
+    background-color: #9b87f5; /* primary */
+    transition: width 1s ease-out;
+    position: relative;
+    box-shadow: 0 0 10px rgba(155, 135, 245, 0.5);
+    background-image: linear-gradient(
+        90deg,
+        rgba(155, 135, 245, 0.8),
+        rgba(155, 135, 245, 1) 50%,
+        rgba(155, 135, 245, 0.8)
+    );
+}
+
+.progress-bar.low-stock {
+    background-color: #ef4444; /* Red for low stock */
+    background-image: linear-gradient(
+        90deg,
+        rgba(239, 68, 68, 0.8),
+        rgba(239, 68, 68, 1) 50%,
+        rgba(239, 68, 68, 0.8)
+    );
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* Enhanced particle sparks for thermal effect */
+.particle-sparks {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 25px;
+    overflow: hidden;
+}
+
+.spark {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background-color: rgba(255, 200, 50, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255, 200, 50, 0.6);
+    animation: spark-float 2s infinite ease-out;
+    transform: translateZ(0); /* Hardware acceleration */
+}
+
+/* Hexagonal grid pattern overlay */
+.flashsale-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        rgba(155, 135, 245, 0.1) 2px,
+        transparent 2px
+    );
+    background-size: 16px 16px;
+    background-position: -8px -8px;
+    opacity: 0.2;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* CRT scanline effect */
+.flashsale-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 50%,
+        rgba(0, 0, 0, 0.05) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0.05;
+}
+
+/* Animations */
+@keyframes price-pulse {
+    0% {
+        text-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+    }
+    100% {
+        text-shadow: 0 0 12px rgba(155, 135, 245, 0.7);
+    }
+}
+
 @keyframes orbit-rotation {
     0% {
         transform: rotate(0deg) translateX(5px) rotate(0deg);
@@ -359,7 +678,8 @@ onMounted(() => {
 }
 
 @keyframes pulsar-glow {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(0.8);
         opacity: 0.5;
     }
@@ -399,31 +719,46 @@ onMounted(() => {
     }
 }
 
-@keyframes price-pulse {
-    0% {
-        text-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
-    }
-    100% {
-        text-shadow: 0 0 12px rgba(155, 135, 245, 0.7);
-    }
-}
-
 /* Media queries for responsive design */
 @media (max-width: 768px) {
+    .left-section {
+        width: 70%;
+    }
+
+    .right-section {
+        width: 30%;
+    }
+
+    .product-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    /* Hide some cosmic elements on mobile */
     .cosmic-planet:nth-child(3),
     .cosmic-planet:nth-child(4),
     .cosmic-pulsar:nth-child(3) {
         display: none;
     }
+
+    /* Increase scroll speed by 30% (handled in parent component) */
 }
 
-/* Add text shadow utility for neon effect */
-.text-shadow-neon {
-    text-shadow: 0 0 8px rgba(155, 135, 245, 0.7);
+/* Additional hardware acceleration for smooth animations */
+.flashsale-card {
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-/* For reduced motion preference */
+.cosmic-planet,
+.cosmic-pulsar,
+.quantum-wave {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
+    /* Reduce motion for accessibility */
     .progress-bar {
         transition: width 2s linear;
     }

@@ -1,4 +1,3 @@
-
 import defaultTheme from "tailwindcss/defaultTheme";
 import forms from "@tailwindcss/forms";
 
@@ -16,7 +15,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ["Figtree", ...defaultTheme.fontFamily.fontFamily],
+                sans: ["Figtree", ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 ...dynamicColors,
@@ -36,29 +35,9 @@ export default {
             },
             animation: {
                 "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-                "price-pulse": "price-pulse 3s infinite alternate",
-                "card-breathing": "card-breathing 4s infinite ease-in-out",
-            },
-            keyframes: {
-                "price-pulse": {
-                    "0%": {
-                        textShadow: "0 0 5px rgba(155, 135, 245, 0.3)",
-                    },
-                    "100%": {
-                        textShadow: "0 0 12px rgba(155, 135, 245, 0.7)",
-                    },
-                },
-                "card-breathing": {
-                    "0%, 100%": { transform: "scale(1)" },
-                    "50%": { transform: "scale(1.02)" },
-                },
-            },
-            transitionProperty: {
-                'width': 'width',
             },
         },
     },
 
     plugins: [forms],
 };
-
