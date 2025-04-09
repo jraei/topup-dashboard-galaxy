@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
@@ -15,7 +14,7 @@ const cardRef = ref(null);
 
 // Calculate discount percentage
 const discountPercentage = computed(() => {
-    const original = layanan.value.harga_beli_idr;
+    const original = layanan.value.harga_jual;
     const sale = props.flashItem.harga_flashsale;
 
     if (!original || !sale || original <= 0) return 0;
@@ -26,8 +25,16 @@ const discountPercentage = computed(() => {
 
 // Format price with IDR
 const formatPrice = (price) => {
-    if (!price) return "0";
-    const formatted = price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (!price) return "Rp 0";
+
+    // Bulatkan ke angka terdekat
+    const roundedPrice = Math.round(price);
+
+    // Format dengan titik sebagai pemisah ribuan
+    const formatted = roundedPrice
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
     return "Rp " + formatted;
 };
 
@@ -43,6 +50,7 @@ const stockPercentage = computed(() => {
     if (total <= 0) return 0;
 
     const percentage = (props.flashItem.stok_tersedia / total) * 100;
+
     return Math.max(0, Math.min(100, percentage)); // Clamp between 0-100
 });
 
@@ -70,7 +78,7 @@ const generateCosmicElements = () => {
     // Generate 3-5 planets
     for (let i = 0; i < 3 + Math.floor(Math.random() * 3); i++) {
         elements.push({
-            type: 'planet',
+            type: "planet",
             size: 8 + Math.floor(Math.random() * 12), // 8px to 20px
             top: Math.random() * 70 + 10,
             right: Math.random() * 60 + 5,
@@ -79,11 +87,11 @@ const generateCosmicElements = () => {
             delay: Math.random() * 3,
         });
     }
-    
+
     // Generate 2-3 stars
     for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
         elements.push({
-            type: 'pulsar',
+            type: "pulsar",
             size: 3 + Math.floor(Math.random() * 5), // 3px to 8px
             top: Math.random() * 80 + 5,
             right: Math.random() * 80 + 10,
@@ -91,48 +99,48 @@ const generateCosmicElements = () => {
             delay: Math.random() * 2,
         });
     }
-    
+
     // Generate quantum waves
     elements.push({
-        type: 'quantum',
+        type: "quantum",
         height: 50 + Math.random() * 30,
         right: 5 + Math.random() * 15,
         top: 50 + Math.random() * 30,
         waveSpeed: 4 + Math.random() * 8,
     });
-    
+
     return elements;
 };
 
 onMounted(() => {
     cosmicElements.value = generateCosmicElements();
-    
+
     // Apply parallax effect on desktop
     if (window.innerWidth >= 768) {
         const handleMouseMove = (e) => {
             if (!cardRef.value) return;
-            
+
             const rect = cardRef.value.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            
+
             const moveX = (x - centerX) / 20;
             const moveY = (y - centerY) / 20;
-            
-            const cosmicLayer = cardRef.value.querySelector('.cosmic-layer');
+
+            const cosmicLayer = cardRef.value.querySelector(".cosmic-layer");
             if (cosmicLayer) {
                 cosmicLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
             }
         };
-        
-        cardRef.value.addEventListener('mousemove', handleMouseMove);
-        cardRef.value.addEventListener('mouseleave', () => {
-            const cosmicLayer = cardRef.value.querySelector('.cosmic-layer');
+
+        cardRef.value.addEventListener("mousemove", handleMouseMove);
+        cardRef.value.addEventListener("mouseleave", () => {
+            const cosmicLayer = cardRef.value.querySelector(".cosmic-layer");
             if (cosmicLayer) {
-                cosmicLayer.style.transform = 'translate(0, 0)';
+                cosmicLayer.style.transform = "translate(0, 0)";
             }
         });
     }
@@ -143,7 +151,9 @@ onMounted(() => {
     <div ref="cardRef" class="flashsale-card group">
         <!-- User Limit Badge -->
         <div v-if="flashItem.batas_user" class="absolute z-20 top-2 right-2">
-            <div class="px-2 py-1 text-xs text-white border rounded-full bg-black/70 border-primary">
+            <div
+                class="px-2 py-1 text-xs text-white border rounded-full bg-primary border-primary"
+            >
                 <span class="flex items-center">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -203,8 +213,11 @@ onMounted(() => {
                         {{ formatPrice(flashItem.harga_flashsale) }}
                     </div>
                     <div class="regular-price">
-                        <span>{{ formatPrice(layanan.harga_beli_idr) }}</span>
-                        <span v-if="discountPercentage > 0" class="discount-badge">
+                        <span>{{ formatPrice(layanan.harga_jual) }}</span>
+                        <span
+                            v-if="discountPercentage > 0"
+                            class="discount-badge"
+                        >
                             -{{ discountPercentage }}%
                         </span>
                     </div>
@@ -215,46 +228,52 @@ onMounted(() => {
             <div class="right-section">
                 <div class="cosmic-layer">
                     <!-- Dynamic cosmic elements -->
-                    <template v-for="(element, index) in cosmicElements" :key="index">
+                    <template
+                        v-for="(element, index) in cosmicElements"
+                        :key="index"
+                    >
                         <!-- Planet -->
-                        <div 
-                            v-if="element.type === 'planet'" 
+                        <div
+                            v-if="element.type === 'planet'"
                             class="cosmic-planet"
                             :style="{
-                                width: `${element.size}px`, 
+                                width: `${element.size}px`,
                                 height: `${element.size}px`,
-                                top: `${element.top}%`, 
+                                top: `${element.top}%`,
                                 right: `${element.right}%`,
                                 animationDuration: `${element.orbitSpeed}s`,
-                                animationDelay: `${element.delay}s`
+                                animationDelay: `${element.delay}s`,
                             }"
                         >
-                            <div class="planet-ring" v-if="index % 3 === 0"></div>
+                            <div
+                                class="planet-ring"
+                                v-if="index % 3 === 0"
+                            ></div>
                         </div>
-                        
+
                         <!-- Pulsar star -->
-                        <div 
-                            v-if="element.type === 'pulsar'" 
+                        <div
+                            v-if="element.type === 'pulsar'"
                             class="cosmic-pulsar"
                             :style="{
-                                width: `${element.size}px`, 
+                                width: `${element.size}px`,
                                 height: `${element.size}px`,
-                                top: `${element.top}%`, 
+                                top: `${element.top}%`,
                                 right: `${element.right}%`,
                                 animationDuration: `${element.pulseSpeed}s`,
-                                animationDelay: `${element.delay}s`
+                                animationDelay: `${element.delay}s`,
                             }"
                         ></div>
-                        
+
                         <!-- Quantum wave -->
-                        <div 
-                            v-if="element.type === 'quantum'" 
+                        <div
+                            v-if="element.type === 'quantum'"
                             class="quantum-wave"
                             :style="{
                                 height: `${element.height}px`,
                                 right: `${element.right}%`,
                                 top: `${element.top}%`,
-                                animationDuration: `${element.waveSpeed}s`
+                                animationDuration: `${element.waveSpeed}s`,
                             }"
                         ></div>
                     </template>
@@ -299,7 +318,7 @@ onMounted(() => {
     transition: all 0.3s ease;
     border: 1px solid rgba(155, 135, 245, 0.1);
     border-radius: 0.5rem;
-    background: #1A2236; /* Deep space blue */
+    background: rgba(33, 92, 187, 0.6); /* Deep space blue */
     aspect-ratio: 5/3;
     height: 240px;
     max-width: 100%;
@@ -335,9 +354,8 @@ onMounted(() => {
     height: 80px;
     position: relative;
     margin-bottom: 0.75rem;
-    border-radius: 50%;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.2);
+    background: transparent;
 }
 
 .product-image img {
@@ -364,15 +382,10 @@ onMounted(() => {
     opacity: 1;
 }
 
-/* Product info */
-.product-info {
-    margin-bottom: 0.5rem;
-}
-
 .product-name {
     font-size: 1rem;
     font-weight: bold;
-    color: #9b87f5; /* primary color */
+    color: #33c3f0; /* secondary color */
     margin-bottom: 0.25rem;
     transition: all 0.3s ease;
 }
@@ -398,7 +411,7 @@ onMounted(() => {
     align-items: center;
     font-size: 1.1rem;
     font-weight: bold;
-    color: #9b87f5;
+    color: #33c3f0;
     animation: price-pulse 3s infinite alternate;
 }
 
@@ -448,7 +461,12 @@ onMounted(() => {
 .cosmic-planet {
     position: absolute;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(51, 195, 240, 0.2) 50%, transparent);
+    background: radial-gradient(
+        circle at 30% 30%,
+        rgba(255, 255, 255, 0.4),
+        rgba(51, 195, 240, 0.2) 50%,
+        transparent
+    );
     box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5);
     animation: orbit-rotation linear infinite;
 }
@@ -465,13 +483,18 @@ onMounted(() => {
 }
 
 .planet-ring::after {
-    content: '';
+    content: "";
     position: absolute;
     top: -50%;
     left: 10%;
     width: 80%;
     height: 200%;
-    background: linear-gradient(90deg, transparent, rgba(51, 195, 240, 0.2), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(51, 195, 240, 0.2),
+        transparent
+    );
     transform: rotate(10deg);
 }
 
@@ -486,7 +509,14 @@ onMounted(() => {
 .quantum-wave {
     position: absolute;
     width: 40px;
-    background: linear-gradient(90deg, transparent, rgba(155, 135, 245, 0.1), rgba(155, 135, 245, 0.3), rgba(155, 135, 245, 0.1), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(155, 135, 245, 0.1),
+        rgba(155, 135, 245, 0.3),
+        rgba(155, 135, 245, 0.1),
+        transparent
+    );
     animation: quantum-wave ease-in-out infinite;
     transform-origin: center center;
 }
@@ -498,7 +528,11 @@ onMounted(() => {
     right: 0;
     width: 70%;
     height: 70%;
-    background: radial-gradient(circle at bottom right, rgba(255, 100, 50, 0.15), transparent 70%);
+    background: radial-gradient(
+        circle at bottom right,
+        rgba(255, 100, 50, 0.15),
+        transparent 70%
+    );
     mask-image: linear-gradient(135deg, transparent, rgba(0, 0, 0, 0.7));
     z-index: 1;
 }
@@ -508,7 +542,12 @@ onMounted(() => {
     height: 20%;
     padding: 0.75rem;
     border-top: 1px solid rgba(155, 135, 245, 0.1);
-    background-color: rgba(26, 34, 54, 0.8); /* Darker version of card background */
+    background-color: rgba(
+        33,
+        92,
+        187,
+        0.9
+    ); /* Darker version of card background */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -558,11 +597,26 @@ onMounted(() => {
     animation: spark-float 2s infinite ease-out;
 }
 
-.spark:nth-child(1) { right: 5px; animation-delay: 0s; }
-.spark:nth-child(2) { right: 8px; animation-delay: 0.4s; }
-.spark:nth-child(3) { right: 3px; animation-delay: 0.8s; }
-.spark:nth-child(4) { right: 10px; animation-delay: 1.2s; }
-.spark:nth-child(5) { right: 7px; animation-delay: 1.6s; }
+.spark:nth-child(1) {
+    right: 5px;
+    animation-delay: 0s;
+}
+.spark:nth-child(2) {
+    right: 8px;
+    animation-delay: 0.4s;
+}
+.spark:nth-child(3) {
+    right: 3px;
+    animation-delay: 0.8s;
+}
+.spark:nth-child(4) {
+    right: 10px;
+    animation-delay: 1.2s;
+}
+.spark:nth-child(5) {
+    right: 7px;
+    animation-delay: 1.6s;
+}
 
 /* Hexagonal grid pattern overlay */
 .flashsale-card::before {
@@ -572,7 +626,10 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: radial-gradient(rgba(155, 135, 245, 0.1) 2px, transparent 2px);
+    background-image: radial-gradient(
+        rgba(155, 135, 245, 0.1) 2px,
+        transparent 2px
+    );
     background-size: 16px 16px;
     background-position: -8px -8px;
     opacity: 0.2;
@@ -588,7 +645,11 @@ onMounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 50%,
+        rgba(0, 0, 0, 0.05) 50%
+    );
     background-size: 100% 4px;
     pointer-events: none;
     z-index: 5;
@@ -615,7 +676,8 @@ onMounted(() => {
 }
 
 @keyframes pulsar-glow {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(0.8);
         opacity: 0.5;
     }
@@ -660,23 +722,23 @@ onMounted(() => {
     .left-section {
         width: 70%;
     }
-    
+
     .right-section {
         width: 30%;
     }
-    
+
     .product-image {
         width: 60px;
         height: 60px;
     }
-    
+
     /* Hide some cosmic elements on mobile */
     .cosmic-planet:nth-child(3),
     .cosmic-planet:nth-child(4),
     .cosmic-pulsar:nth-child(3) {
         display: none;
     }
-    
+
     /* Increase scroll speed by 30% (handled in parent component) */
 }
 </style>

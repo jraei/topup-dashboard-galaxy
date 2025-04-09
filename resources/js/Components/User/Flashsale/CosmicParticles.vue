@@ -1,6 +1,5 @@
-
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref } from "vue";
 
 const container = ref(null);
 const particles = ref([]);
@@ -10,21 +9,21 @@ const isMobile = ref(window.innerWidth < 768);
 const generateParticles = () => {
     const particleCount = isMobile.value ? 20 : 50; // Reduce by 60% on mobile
     const newParticles = [];
-    
+
     for (let i = 0; i < particleCount; i++) {
         newParticles.push({
             id: i,
             x: Math.random() * 100, // position in percentage
             y: Math.random() * 100,
             size: 1 + Math.random() * 3,
-            color: Math.random() > 0.6 ? '#9b87f5' : '#33C3F0', // primary or secondary
+            color: Math.random() > 0.6 ? "#9b87f5" : "#33C3F0", // primary or secondary
             opacity: 0.3 + Math.random() * 0.7,
             speed: 0.2 + Math.random() * 0.8,
             direction: Math.random() * 360, // degrees
-            twinkleSpeed: 1 + Math.random() * 4 // seconds
+            twinkleSpeed: 1 + Math.random() * 4, // seconds
         });
     }
-    
+
     particles.value = newParticles;
 };
 
@@ -35,42 +34,51 @@ const handleResize = () => {
 
 onMounted(() => {
     generateParticles();
-    window.addEventListener('resize', handleResize);
-    
+    window.addEventListener("resize", handleResize);
+
     // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
+    const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
     if (!prefersReducedMotion) {
         // Animate particles
         const moveParticles = () => {
             const containerElement = container.value;
             if (!containerElement) return;
-            
+
             // Get all particle elements
-            const particleElements = containerElement.querySelectorAll('.cosmic-particle');
-            
+            const particleElements =
+                containerElement.querySelectorAll(".cosmic-particle");
+
             for (let i = 0; i < particleElements.length; i++) {
                 const particle = particles.value[i];
                 if (!particle) continue;
-                
+
                 // Move particle based on its direction and speed
-                particle.x += Math.cos(particle.direction * Math.PI / 180) * particle.speed * 0.02;
-                particle.y += Math.sin(particle.direction * Math.PI / 180) * particle.speed * 0.02;
-                
+                particle.x +=
+                    Math.cos((particle.direction * Math.PI) / 180) *
+                    particle.speed *
+                    0.02;
+                particle.y +=
+                    Math.sin((particle.direction * Math.PI) / 180) *
+                    particle.speed *
+                    0.02;
+
                 // Wrap around edges
                 if (particle.x > 105) particle.x = -5;
                 if (particle.x < -5) particle.x = 105;
                 if (particle.y > 105) particle.y = -5;
                 if (particle.y < -5) particle.y = 105;
-                
+
                 // Update position
                 particleElements[i].style.left = `${particle.x}%`;
                 particleElements[i].style.top = `${particle.y}%`;
             }
-            
+
             requestAnimationFrame(moveParticles);
         };
-        
+
         requestAnimationFrame(moveParticles);
     }
 });
@@ -89,16 +97,16 @@ onMounted(() => {
                 height: `${particle.size}px`,
                 backgroundColor: particle.color,
                 opacity: particle.opacity,
-                animationDuration: `${particle.twinkleSpeed}s`
+                animationDuration: `${particle.twinkleSpeed}s`,
             }"
         ></div>
-        
+
         <!-- Quantum Field Effect -->
-        <div class="quantum-field"></div>
-        
+        <!-- <div class="quantum-field"></div> -->
+
         <!-- Extended Nebula Effect that goes beyond container -->
         <div class="extended-nebula"></div>
-        
+
         <!-- Hexagonal Grid Pattern -->
         <div class="hex-grid"></div>
     </div>
@@ -180,24 +188,25 @@ onMounted(() => {
     inset: 0;
     opacity: 0.1;
     background-image: repeating-linear-gradient(
-        to right,
-        rgba(155, 135, 245, 0.1),
-        rgba(155, 135, 245, 0.1) 1px,
-        transparent 1px,
-        transparent 20px
-    ),
-    repeating-linear-gradient(
-        to bottom,
-        rgba(155, 135, 245, 0.1),
-        rgba(155, 135, 245, 0.1) 1px,
-        transparent 1px,
-        transparent 20px
-    );
+            to right,
+            rgba(155, 135, 245, 0.1),
+            rgba(155, 135, 245, 0.1) 1px,
+            transparent 1px,
+            transparent 20px
+        ),
+        repeating-linear-gradient(
+            to bottom,
+            rgba(155, 135, 245, 0.1),
+            rgba(155, 135, 245, 0.1) 1px,
+            transparent 1px,
+            transparent 20px
+        );
 }
 
 /* Animations */
 @keyframes twinkle {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.2;
         transform: translate(-50%, -50%) scale(0.8);
     }
@@ -221,7 +230,7 @@ onMounted(() => {
     .cosmic-particle {
         animation: twinkle 5s infinite alternate ease-in-out !important;
     }
-    
+
     .extended-nebula {
         animation: none;
     }

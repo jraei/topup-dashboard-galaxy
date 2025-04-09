@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -97,6 +96,30 @@ class Layanan extends Model
         return $profitRule->calculatePrice($basePrice);
     }
 
+    protected $appends = ['harga_jual'];
+
+    /**
+     * Accessor untuk harga_jual
+     */
+    public function getHargaJualAttribute()
+    {
+        $user = auth()->user();
+        $userRoleId = $user->user_role_id ?? null;
+
+        static $guestRoleId = null;
+
+        if (!$userRoleId) {
+            if ($guestRoleId === null) {
+                $guestRoleId = \App\Models\UserRole::where('name', 'guest')->value('id');
+            }
+            $userRoleId = $guestRoleId;
+        }
+
+        return $this->getHargaLayanan($userRoleId);
+    }
+
+
+
     /**
      * Calculate the final price considering all factors
      * 
@@ -108,7 +131,7 @@ class Layanan extends Model
     {
         // Get the base price with profit margins applied
         $price = $this->getHargaLayanan($userRoleId);
-        
+
         // Apply active promotions if requested
         if ($applyPromotions) {
             $activeFlashItem = $this->getActiveFlashsaleItem();
@@ -116,7 +139,7 @@ class Layanan extends Model
                 return $activeFlashItem->harga_flashsale;
             }
         }
-        
+
         return $price;
     }
 

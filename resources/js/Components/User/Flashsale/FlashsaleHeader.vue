@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 
@@ -72,9 +71,7 @@ const updateCountdown = () => {
 
 // Check if less than 1 hour remains (for alert state)
 const isAlmostEnding = computed(() => {
-    return (
-        remainingTime.value.days === 0 && remainingTime.value.hours === 0
-    );
+    return remainingTime.value.days === 0 && remainingTime.value.hours === 0;
 });
 
 // Format numbers with leading zeros
@@ -101,46 +98,69 @@ const formatNumber = (num) => {
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                 </svg>
             </div>
-            <h2 class="text-2xl md:text-3xl font-bold text-primary glow-text">{{ eventName }}</h2>
+            <h2 class="text-2xl font-bold md:text-3xl text-primary glow-text">
+                {{ eventName }}
+            </h2>
         </div>
 
-        <!-- Enhanced Countdown Timer -->
-        <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-            <!-- Segmented Display -->
-            <div 
-                class="countdown-container" 
-                :class="{ 'alert-state': isAlmostEnding }"
-            >
-                <div class="countdown-segments">
-                    <!-- Days -->
-                    <div class="countdown-segment" v-if="remainingTime.days > 0">
-                        <div class="segment-card">{{ formatNumber(remainingTime.days) }}</div>
-                        <div class="segment-label">Hari</div>
+        <!-- Countdown timer -->
+        <div class="flex items-center justify-start mb-2 space-x-3">
+            <div class="timer-container flex space-x-1.5">
+                <!-- Days -->
+                <div class="flex flex-col items-center">
+                    <div
+                        class="timer-card"
+                        :class="{ 'text-red-500': isAlmostEnding }"
+                    >
+                        {{ formatNumber(remainingTime.days) }}
                     </div>
-
-                    <!-- Hours -->
-                    <div class="countdown-segment">
-                        <div class="segment-card">{{ formatNumber(remainingTime.hours) }}</div>
-                        <div class="segment-label">Jam</div>
-                    </div>
-
-                    <!-- Minutes -->
-                    <div class="countdown-segment">
-                        <div class="segment-card">{{ formatNumber(remainingTime.minutes) }}</div>
-                        <div class="segment-label">Menit</div>
-                    </div>
-
-                    <!-- Seconds -->
-                    <div class="countdown-segment">
-                        <div class="segment-card">{{ formatNumber(remainingTime.seconds) }}</div>
-                        <div class="segment-label">Detik</div>
-                    </div>
+                    <span class="text-xs text-gray-300">Hari</span>
                 </div>
-            </div>
 
-            <!-- Pulsing Subtext -->
-            <div class="pulsing-text">
-                Pesan sekarang! Persediaan terbatas.
+                <div class="self-start mt-1 text-lg font-bold text-white">
+                    :
+                </div>
+
+                <!-- Hours -->
+                <div class="flex flex-col items-center">
+                    <div
+                        class="timer-card"
+                        :class="{ 'text-red-500': isAlmostEnding }"
+                    >
+                        {{ formatNumber(remainingTime.hours) }}
+                    </div>
+                    <span class="text-xs text-gray-300">Jam</span>
+                </div>
+
+                <div class="self-start mt-1 text-lg font-bold text-white">
+                    :
+                </div>
+
+                <!-- Minutes -->
+                <div class="flex flex-col items-center">
+                    <div
+                        class="timer-card"
+                        :class="{ 'text-red-500': isAlmostEnding }"
+                    >
+                        {{ formatNumber(remainingTime.minutes) }}
+                    </div>
+                    <span class="text-xs text-gray-300">Menit</span>
+                </div>
+
+                <div class="self-start mt-1 text-lg font-bold text-white">
+                    :
+                </div>
+
+                <!-- Seconds -->
+                <div class="flex flex-col items-center">
+                    <div
+                        class="timer-card"
+                        :class="{ 'text-red-500': isAlmostEnding }"
+                    >
+                        {{ formatNumber(remainingTime.seconds) }}
+                    </div>
+                    <span class="text-xs text-gray-300">Detik</span>
+                </div>
             </div>
         </div>
     </div>
@@ -166,72 +186,8 @@ const formatNumber = (num) => {
 .lightning-icon {
     width: 24px;
     height: 24px;
-    color: #33C3F0; /* secondary color */
+    color: #33c3f0; /* secondary color */
     filter: drop-shadow(0 0 5px rgba(51, 195, 240, 0.7));
-}
-
-.countdown-container {
-    padding: 0.75rem 1rem;
-    background-color: rgba(26, 34, 54, 0.8);
-    border: 1px solid rgba(155, 135, 245, 0.2);
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-}
-
-.countdown-container.alert-state {
-    border-color: rgba(239, 68, 68, 0.5);
-    background-color: rgba(239, 68, 68, 0.1);
-    animation: alert-pulse 1s infinite alternate;
-}
-
-.countdown-segments {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.countdown-segment {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.segment-card {
-    background-color: rgba(155, 135, 245, 0.1);
-    border: 1px solid rgba(155, 135, 245, 0.3);
-    color: white;
-    font-weight: bold;
-    padding: 0.5rem;
-    width: 2.5rem;
-    text-align: center;
-    border-radius: 0.25rem;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-    box-shadow: 0 0 10px rgba(155, 135, 245, 0.2);
-}
-
-.segment-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 1px;
-    top: 50%;
-    background-color: rgba(155, 135, 245, 0.2);
-}
-
-.segment-label {
-    font-size: 0.7rem;
-    color: #cbd5e1;
-    margin-top: 0.25rem;
-}
-
-.pulsing-text {
-    color: #cbd5e1;
-    animation: text-pulse 2s infinite;
-    font-size: 0.875rem;
-    margin-left: 0.5rem;
 }
 
 @keyframes pulse-glow {
@@ -253,7 +209,8 @@ const formatNumber = (num) => {
 }
 
 @keyframes text-pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.8;
     }
     50% {
@@ -262,37 +219,58 @@ const formatNumber = (num) => {
     }
 }
 
-/* Animated flip card effect when numbers change */
-.segment-card {
+.timer-card {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(155, 135, 245, 0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 40px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem;
     position: relative;
-    perspective: 1000px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(155, 135, 245, 0.3);
 }
 
-.segment-card::after {
-    content: '';
+.timer-card::before {
+    content: "";
     position: absolute;
     top: 0;
-    left: 0;
+    left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, 
-        rgba(255, 255, 255, 0.2) 0%, 
-        transparent 50%, 
-        rgba(0, 0, 0, 0.2) 100%
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(155, 135, 245, 0.2),
+        transparent
     );
-    pointer-events: none;
+    animation: shimmer 2s infinite;
+    z-index: 1;
 }
 
-/* Media queries */
-@media (max-width: 640px) {
-    .countdown-segments {
-        gap: 0.5rem;
+@keyframes shimmer {
+    0% {
+        left: -100%;
     }
+    100% {
+        left: 100%;
+    }
+}
 
-    .segment-card {
-        width: 2rem;
-        padding: 0.25rem;
-        font-size: 0.875rem;
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
     }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

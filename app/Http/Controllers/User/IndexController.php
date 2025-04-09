@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\User;
@@ -19,7 +18,7 @@ class IndexController extends Controller
             ->get(['id', 'image_path']);
 
         // Get user role ID for price calculations
-        $userRoleId = auth()->check() ? auth()->user()->user_roles_id : null;
+        $userRoleId = auth()->check() ? auth()->user()->user_role_id : null;
 
         // Fetch active flash sale events with optimized query
         $activeEvents = FlashsaleEvent::where('status', 'active')
@@ -34,15 +33,6 @@ class IndexController extends Controller
                     ->with(['layanan' => function ($q) use ($userRoleId) {
                         $q->where('status', 'active');
                         $q->with(['produk', 'provider']);
-                        
-                        // Include the role-specific price calculation data
-                        $q->withCount(['flashSaleItem as regular_price' => function($price) use ($userRoleId) {
-                            $price->selectRaw('COALESCE(
-                                (SELECT layanans.harga_beli_idr FROM layanans 
-                                WHERE layanans.id = flashsale_items.layanan_id),
-                                0
-                            )');
-                        }]);
                     }]);
             }])
             ->first();
