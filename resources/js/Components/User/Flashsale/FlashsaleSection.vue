@@ -21,6 +21,9 @@ const isScrolling = ref(false);
 const isHovering = ref(false);
 const scrollInterval = ref(null);
 const isMobile = ref(window.innerWidth < 768);
+const isUserScrolling = ref(false);
+const scrollTimeoutId = ref(null);
+const scrollAnimationId = ref(null);
 
 // Calculate remaining time based on server time sync
 const endTime = computed(() => {
@@ -29,87 +32,127 @@ const endTime = computed(() => {
 
 // Calculate scroll speed based on device size
 const getScrollSpeed = () => {
-    return isMobile.value ? 3.25 : 2.5; // 30% faster on mobile
+    return isMobile.value ? 3.25 : 2.8; // 2.8px/sec on desktop (adjustable)
 };
 
-// Handle automatic scrolling with improved logic
+// Start auto-scroll with improved infinite loop logic
 const startAutoScroll = () => {
     if (scrollInterval.value) return;
 
     scrollInterval.value = setInterval(() => {
-        if (isHovering.value || isScrolling.value || !carouselRef.value) return;
+        if (isHovering.value || isUserScrolling.value || !carouselRef.value) return;
 
+        // Increment scroll position based on speed
         carouselRef.value.scrollLeft += getScrollSpeed();
 
-        // Implement infinite loop via virtual DOM replication
-        if (
-            carouselRef.value.scrollLeft >=
-            carouselRef.value.scrollWidth - carouselRef.value.clientWidth - 10
-        ) {
-            // Reset smoothly
-            isScrolling.value = true;
-            const firstCardWidth = carouselRef.value.querySelector('.flex-none').offsetWidth;
-            
-            // Animate scroll to beginning
-            const scrollTo = 0;
-            const currentPos = carouselRef.value.scrollLeft;
-            const startTime = performance.now();
-            const duration = 800;
-            
-            const scrollStep = (timestamp) => {
-                const elapsed = timestamp - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease out
-                
-                carouselRef.value.scrollLeft = currentPos - (currentPos * easeProgress);
-                
-                if (progress < 1) {
-                    window.requestAnimationFrame(scrollStep);
-                } else {
-                    carouselRef.value.scrollLeft = scrollTo;
-                    isScrolling.value = false;
-                }
-            };
-            
-            window.requestAnimationFrame(scrollStep);
+        // Check if we need to loop back
+        const container = carouselRef.value;
+        const scrollRight = container.scrollWidth - container.clientWidth;
+        
+        // When we reach the end (with 20px buffer), reset seamlessly
+        if (container.scrollLeft >= scrollRight - 20) {
+            // Using smooth animation to reset
+            resetScroll();
         }
-    }, 20); // Smoother scrolling with smaller increments
+    }, 16); // ~60fps refresh rate
 };
 
-// Handle manual scrolling
-const handleScroll = () => {
+// Handle seamless reset with animation
+const resetScroll = () => {
+    if (!carouselRef.value) return;
+    
+    const container = carouselRef.value;
     isScrolling.value = true;
-
-    // Clear existing timeout
-    if (window.scrollTimeout) {
-        clearTimeout(window.scrollTimeout);
+    
+    // Cancel any existing animation
+    if (scrollAnimationId.value) {
+        cancelAnimationFrame(scrollAnimationId.value);
     }
-
-    // Set a new timeout to detect when scrolling stops
-    window.scrollTimeout = setTimeout(() => {
-        isScrolling.value = false;
-    }, 200);
+    
+    // Animate scroll to beginning with easing
+    const startPosition = container.scrollLeft;
+    const startTime = performance.now();
+    const duration = 800; // ms
+    
+    const animateScroll = (timestamp) => {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Cubic ease out for smooth deceleration
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        container.scrollLeft = startPosition * (1 - easeProgress);
+        
+        if (progress < 1) {
+            scrollAnimationId.value = requestAnimationFrame(animateScroll);
+        } else {
+            container.scrollLeft = 0;
+            isScrolling.value = false;
+            scrollAnimationId.value = null;
+        }
+    };
+    
+    scrollAnimationId.value = requestAnimationFrame(animateScroll);
 };
 
-// Handle window resize for responsive behavior
+// Handle manual scrolling with improved detection
+const handleScroll = () => {
+    if (!carouselRef.value) return;
+    
+    isUserScrolling.value = true;
+    
+    // Clear previous timeout
+    if (scrollTimeoutId.value) {
+        clearTimeout(scrollTimeoutId.value);
+    }
+    
+    // Set new timeout to detect when user stops scrolling
+    scrollTimeoutId.value = setTimeout(() => {
+        isUserScrolling.value = false;
+    }, 250);
+};
+
+// Check if we're on mobile/tablet
 const handleResize = () => {
     isMobile.value = window.innerWidth < 768;
+    
+    // Stop auto-scroll on mobile
+    if (isMobile.value && scrollInterval.value) {
+        clearInterval(scrollInterval.value);
+        scrollInterval.value = null;
+    } else if (!isMobile.value && !scrollInterval.value) {
+        // Restart on desktop
+        startAutoScroll();
+    }
+};
+
+// Clean up all intervals and animations
+const cleanupAnimations = () => {
+    if (scrollInterval.value) {
+        clearInterval(scrollInterval.value);
+        scrollInterval.value = null;
+    }
+    
+    if (scrollTimeoutId.value) {
+        clearTimeout(scrollTimeoutId.value);
+        scrollTimeoutId.value = null;
+    }
+    
+    if (scrollAnimationId.value) {
+        cancelAnimationFrame(scrollAnimationId.value);
+        scrollAnimationId.value = null;
+    }
 };
 
 onMounted(() => {
-    startAutoScroll();
+    // Only start auto-scroll on desktop
+    if (!isMobile.value) {
+        startAutoScroll();
+    }
     window.addEventListener('resize', handleResize);
 });
 
 onUnmounted(() => {
-    if (scrollInterval.value) {
-        clearInterval(scrollInterval.value);
-    }
-
-    if (window.scrollTimeout) {
-        clearTimeout(window.scrollTimeout);
-    }
-    
+    cleanupAnimations();
     window.removeEventListener('resize', handleResize);
 });
 </script>
@@ -127,27 +170,37 @@ onUnmounted(() => {
                 :server-time="serverTime"
             />
 
-            <!-- Cards Carousel with improved scroll behavior -->
-            <div
-                ref="carouselRef"
-                @scroll="handleScroll"
-                @mouseenter="isHovering = true"
-                @mouseleave="isHovering = false"
-                class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none"
-            >
-                <FlashsaleCard
-                    v-for="item in event.item"
-                    :key="item.id"
-                    :flash-item="item"
-                    class="flex-none snap-start"
-                    :style="{
-                        width: 'calc((100% - 3rem) / 4)',
-                        minWidth: '290px',
-                    }"
-                />
+            <!-- Enhanced Cards Carousel with improved scroll behavior -->
+            <div class="flashsale-carousel relative">
+                <!-- Scroll indicators (fade edges) -->
+                <div class="scroll-fade-left"></div>
+                <div class="scroll-fade-right"></div>
+                
+                <!-- Main carousel container -->
+                <div
+                    ref="carouselRef"
+                    @scroll="handleScroll"
+                    @mouseenter="isHovering = true"
+                    @mouseleave="isHovering = false"
+                    @touchstart="isHovering = true" 
+                    @touchend="setTimeout(() => isHovering = false, 1000)"
+                    class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none will-change-transform"
+                >
+                    <FlashsaleCard
+                        v-for="item in event.item"
+                        :key="item.id"
+                        :flash-item="item"
+                        class="flex-none snap-start transform-gpu"
+                        :class="{ 'card-breathing': isHovering }"
+                        :style="{
+                            width: 'calc((100% - 3rem) / 4)',
+                            minWidth: '290px',
+                        }"
+                    />
 
-                <!-- Spacer element to ensure proper scrolling -->
-                <div class="flex-none w-4"></div>
+                    <!-- Spacer element to ensure proper scrolling -->
+                    <div class="flex-none w-4"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -181,5 +234,64 @@ section::after {
     pointer-events: none;
     z-index: 2;
     opacity: 0.05;
+}
+
+/* Hardware acceleration for smooth scrolling */
+.flashsale-carousel .flex-none {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* Scroll fade indicators */
+.scroll-fade-left,
+.scroll-fade-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.flashsale-carousel:hover .scroll-fade-left,
+.flashsale-carousel:hover .scroll-fade-right {
+    opacity: 0.7;
+}
+
+.scroll-fade-left {
+    left: 0;
+    background: linear-gradient(to right, rgba(31, 41, 55, 0.9), transparent);
+}
+
+.scroll-fade-right {
+    right: 0;
+    background: linear-gradient(to left, rgba(31, 41, 55, 0.9), transparent);
+}
+
+/* Card breathing effect when carousel is paused */
+@keyframes card-breathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+.card-breathing {
+    animation: card-breathing 4s infinite ease-in-out;
+}
+
+/* Snap points for mobile scrolling */
+@media (max-width: 767px) {
+    .snap-x {
+        scroll-snap-type: x mandatory;
+    }
+    
+    .snap-start {
+        scroll-snap-align: start;
+    }
 }
 </style>

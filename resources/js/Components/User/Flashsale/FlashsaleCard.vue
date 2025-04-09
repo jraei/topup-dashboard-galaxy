@@ -284,29 +284,32 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Card Footer - Progress Bar -->
+        <!-- Enhanced Card Footer - Progress Bar -->
         <div class="card-footer">
-            <!-- Progress Bar -->
-            <div class="progress-container">
-                <div
-                    class="progress-bar"
-                    :class="[isStockLow ? 'low-stock' : '']"
-                    :style="{ width: `${stockPercentage}%` }"
-                >
-                    <!-- Animated particle sparks for thermal effect -->
-                    <div class="particle-sparks">
-                        <div class="spark" v-for="i in 5" :key="i"></div>
+            <!-- Progress Container with Integrated Text -->
+            <div class="progress-container-wrapper relative">
+                <!-- Stock text moved above progress bar -->
+                <div class="text-xs absolute inset-x-0 top-[-18px] text-white opacity-90">
+                    <span v-if="flashItem.stok_tersedia !== null">
+                        Tersisa {{ flashItem.stok_tersedia }}
+                    </span>
+                    <span v-else>Stok tersedia</span>
+                </div>
+                
+                <!-- Progress Bar with enhanced styling -->
+                <div class="progress-container px-1 py-0.5 rounded-full">
+                    <div
+                        class="progress-bar h-3 rounded-full"
+                        :class="[isStockLow ? 'low-stock' : '']"
+                        :style="{ width: `${stockPercentage}%` }"
+                    >
+                        <!-- Animated particle sparks for thermal effect -->
+                        <div class="particle-sparks">
+                            <div class="spark" v-for="i in 5" :key="i"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Stock text -->
-            <p class="stock-text">
-                <span v-if="flashItem.stok_tersedia !== null">
-                    Tersisa {{ flashItem.stok_tersedia }}
-                </span>
-                <span v-else>Stok tersedia</span>
-            </p>
         </div>
     </div>
 </template>
@@ -542,49 +545,60 @@ onMounted(() => {
     height: 20%;
     padding: 0.75rem;
     border-top: 1px solid rgba(155, 135, 245, 0.1);
-    background-color: rgba(
-        33,
-        92,
-        187,
-        0.9
-    ); /* Darker version of card background */
+    background-color: rgba(33, 92, 187, 0.9); /* Darker version of card background */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end; /* Align to bottom for text above */
 }
 
+/* Progress container wrapper with positioning context */
+.progress-container-wrapper {
+    margin-top: 18px; /* Make space for the text above */
+}
+
+/* Enhanced progress container */
 .progress-container {
-    height: 6px;
+    height: calc(6px + 0.5rem); /* Base height + padding */
     background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 9999px;
     overflow: hidden;
-    margin-bottom: 0.25rem;
+    position: relative;
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Enhanced progress bar */
 .progress-bar {
     height: 100%;
     background-color: #9b87f5; /* primary */
-    border-radius: 9999px;
     transition: width 1s ease-out;
     position: relative;
+    box-shadow: 0 0 10px rgba(155, 135, 245, 0.5);
+    background-image: linear-gradient(
+        90deg, 
+        rgba(155, 135, 245, 0.8),
+        rgba(155, 135, 245, 1) 50%,
+        rgba(155, 135, 245, 0.8)
+    );
 }
 
 .progress-bar.low-stock {
     background-color: #ef4444; /* Red for low stock */
+    background-image: linear-gradient(
+        90deg, 
+        rgba(239, 68, 68, 0.8),
+        rgba(239, 68, 68, 1) 50%,
+        rgba(239, 68, 68, 0.8)
+    );
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
-.stock-text {
-    font-size: 0.75rem;
-    color: #cbd5e1;
-}
-
-/* Particle sparks for thermal effect */
+/* Enhanced particle sparks for thermal effect */
 .particle-sparks {
     position: absolute;
     right: 0;
     top: 0;
     height: 100%;
-    width: 20px;
+    width: 25px;
     overflow: hidden;
 }
 
@@ -594,28 +608,9 @@ onMounted(() => {
     height: 2px;
     background-color: rgba(255, 200, 50, 0.8);
     border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255, 200, 50, 0.6);
     animation: spark-float 2s infinite ease-out;
-}
-
-.spark:nth-child(1) {
-    right: 5px;
-    animation-delay: 0s;
-}
-.spark:nth-child(2) {
-    right: 8px;
-    animation-delay: 0.4s;
-}
-.spark:nth-child(3) {
-    right: 3px;
-    animation-delay: 0.8s;
-}
-.spark:nth-child(4) {
-    right: 10px;
-    animation-delay: 1.2s;
-}
-.spark:nth-child(5) {
-    right: 7px;
-    animation-delay: 1.6s;
+    transform: translateZ(0); /* Hardware acceleration */
 }
 
 /* Hexagonal grid pattern overlay */
@@ -740,5 +735,29 @@ onMounted(() => {
     }
 
     /* Increase scroll speed by 30% (handled in parent component) */
+}
+
+/* Additional hardware acceleration for smooth animations */
+.flashsale-card {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.cosmic-planet, 
+.cosmic-pulsar, 
+.quantum-wave {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Reduce motion for accessibility */
+    .progress-bar {
+        transition: width 2s linear;
+    }
+    
+    .spark {
+        animation: none;
+    }
 }
 </style>
