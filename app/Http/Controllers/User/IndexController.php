@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\User;
@@ -40,9 +39,9 @@ class IndexController extends Controller
             ->first();
 
         // Fetch popular products
-        $popularProducts = Produk::whereHas('kategori', function($query) {
-                $query->where('kategori_name', 'populer sekarang');
-            })
+        $popularProducts = Produk::whereHas('kategori', function ($query) {
+            $query->where('kategori_name', 'Populer Sekarang');
+        })
             ->where('status', 'active')
             ->with(['kategori'])
             ->limit(12)

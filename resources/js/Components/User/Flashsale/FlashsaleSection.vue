@@ -158,11 +158,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <section class="relative py-8 overflow-hidden bg-content_background">
+    <section class="relative p-4 py-8 overflow-hidden bg-content_background">
         <!-- Cosmic particles overlay -->
         <CosmicParticles class="absolute inset-0 z-0" />
 
-        <div class="relative z-10 max-w-6xl px-4 mx-auto">
+        <div
+            class="relative z-10 p-4 mx-auto max-w-7xl bg-gradient-to-r from-primary/20 to-primary/10 backdrop-blur rounded-2xl"
+        >
             <!-- Flash Sale Header -->
             <FlashsaleHeader
                 :event-name="event.event_name"

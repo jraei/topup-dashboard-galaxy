@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -52,7 +51,7 @@ const props = defineProps({
                 </div>
 
                 <!-- Carousel Content -->
-                <div class="relative z-30 max-w-6xl mx-auto">
+                <div class="relative z-30 mx-auto max-w-7xl">
                     <BannerCarousel :banners="banners" />
                 </div>
             </section>
@@ -65,7 +64,10 @@ const props = defineProps({
             />
 
             <!-- Trending Products Section -->
-            <TrendingProducts v-if="popularProducts && popularProducts.length > 0" :products="popularProducts" />
+            <TrendingProducts
+                v-if="popularProducts && popularProducts.length > 0"
+                :products="popularProducts"
+            />
         </div>
     </GuestLayout>
 </template>

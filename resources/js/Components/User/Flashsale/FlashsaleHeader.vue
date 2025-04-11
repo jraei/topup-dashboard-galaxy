@@ -83,7 +83,7 @@ const formatNumber = (num) => {
 <template>
     <div class="mb-6">
         <!-- Event Title with Lightning Bolt Icon -->
-        <div class="flex items-center mb-2 space-x-2">
+        <div class="flex items-center mb-4 space-x-2">
             <div class="lightning-icon-container">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

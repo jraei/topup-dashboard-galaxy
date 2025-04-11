@@ -321,9 +321,9 @@ onMounted(() => {
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    border: 1px solid rgba(155, 135, 245, 0.1);
-    border-radius: 0.5rem;
-    background: rgba(33, 92, 187, 0.6); /* Deep space blue */
+    border: 1px solid rgba(155, 135, 245, 0.5);
+    border-radius: 1rem;
+    background: rgba(33, 92, 187, 1); /* Deep space blue */
     aspect-ratio: 5/3;
     height: 240px;
     max-width: 100%;
@@ -332,7 +332,8 @@ onMounted(() => {
 
 .flashsale-card:hover {
     transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 0 25px rgba(155, 135, 245, 0.3);
+    /* box-shadow: 0 0 25px rgba(155, 135, 245, 0.3); */
+    border: 2px solid rgba(155, 135, 245, 1);
 }
 
 /* Card content layout */
