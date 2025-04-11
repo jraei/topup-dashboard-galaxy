@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\User;
@@ -48,18 +47,19 @@ class IndexController extends Controller
             ->with(['kategori'])
             ->limit(12)
             ->get();
-            
+
         // Fetch all categories except "Populer Sekarang" with product counts
         $categories = Kategori::where('status', 'active')
             ->where('kategori_name', '!=', 'Populer Sekarang')
-            ->withCount(['produk' => function($query) {
+            ->withCount(['produk' => function ($query) {
                 $query->where('status', 'active');
             }])
             ->having('produk_count', '>', 0)
             ->get();
-            
+
         // Fetch all products for catalog
         $catalogProducts = Produk::where('status', 'active')
+
             ->with(['kategori'])
             ->get(['id', 'nama', 'slug', 'developer', 'thumbnail', 'kategori_id']);
 

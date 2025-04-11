@@ -154,7 +154,7 @@ const nebulaGradient = computed(() => {
 
         <!-- Card Footer -->
         <div
-            class="border-t border-primary/20 bg-primary/10 py-2 px-3 h-[20%] flex items-center justify-end relative z-10"
+            class="border-t border-primary/20 bg-gradient-to-br from-primary/50 to-content_background py-2 px-3 h-[20%] flex items-center justify-end relative z-10"
         >
             <!-- Quantum Fractal Border (visible on hover) -->
             <div class="quantum-fractal"></div>

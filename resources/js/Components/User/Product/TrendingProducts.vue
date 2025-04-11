@@ -24,13 +24,13 @@ const props = defineProps({
                         <span class="fire-icon">🔥</span>
                     </div>
                     <h2
-                        class="text-2xl font-bold md:text-3xl text-primary drop-shadow-glow"
+                        class="text-2xl font-bold md:text-2xl text-primary-text drop-shadow-glow"
                     >
                         Populer Sekarang
                     </h2>
                 </div>
                 <p
-                    class="text-sm md:text-base text-primary-text/80 ml-14 animate-fade-in"
+                    class="text-sm md:text-sm text-primary-text/80 ml-14 animate-fade-in"
                 >
                     Berikut adalah beberapa produk yang paling populer saat ini.
                 </p>
