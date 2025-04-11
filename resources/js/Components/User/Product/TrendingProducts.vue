@@ -1,3 +1,4 @@
+
 <script setup>
 import ProductCard from "./ProductCard.vue";
 import CosmicParticles from "../Flashsale/CosmicParticles.vue";
