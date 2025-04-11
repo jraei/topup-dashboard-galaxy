@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
@@ -9,12 +8,14 @@ const props = defineProps({
     },
     index: {
         type: Number,
-        default: 0
-    }
+        default: 0,
+    },
 });
 
 const productName = computed(() => props.product.nama || "Unnamed Product");
-const developer = computed(() => props.product.developer || "Unknown Developer");
+const developer = computed(
+    () => props.product.developer || "Unknown Developer"
+);
 const thumbnail = computed(() => {
     if (props.product.thumbnail && props.product.thumbnail.startsWith("http")) {
         return props.product.thumbnail;
@@ -39,7 +40,7 @@ const generateStars = () => {
             size: Math.random() * 2 + 1,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            delay: Math.random() * 5
+            delay: Math.random() * 5,
         });
     }
 };
@@ -47,7 +48,9 @@ const generateStars = () => {
 // Check reduced motion preference
 const prefersReducedMotion = ref(false);
 const checkReducedMotion = () => {
-    prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    prefersReducedMotion.value = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
 };
 
 onMounted(() => {
@@ -58,12 +61,12 @@ onMounted(() => {
 // Compute nebula gradients
 const nebulaGradient = computed(() => {
     const gradients = [
-        'radial-gradient(circle at 70% 70%, rgba(155, 135, 245, 0.15) 0%, transparent 60%)',
-        'radial-gradient(circle at 30% 60%, rgba(51, 195, 240, 0.15) 0%, transparent 65%)',
-        'radial-gradient(ellipse at 20% 20%, rgba(155, 135, 245, 0.2) 0%, transparent 70%)',
-        'radial-gradient(circle at 80% 30%, rgba(51, 195, 240, 0.2) 0%, transparent 75%)'
+        "radial-gradient(circle at 70% 70%, rgba(155, 135, 245, 0.15) 0%, transparent 60%)",
+        "radial-gradient(circle at 30% 60%, rgba(51, 195, 240, 0.15) 0%, transparent 65%)",
+        "radial-gradient(ellipse at 20% 20%, rgba(155, 135, 245, 0.2) 0%, transparent 70%)",
+        "radial-gradient(circle at 80% 30%, rgba(51, 195, 240, 0.2) 0%, transparent 75%)",
     ];
-    
+
     return gradients[nebulaType.value];
 });
 </script>
@@ -74,37 +77,43 @@ const nebulaGradient = computed(() => {
         :class="{ 'reduced-motion': prefersReducedMotion }"
     >
         <!-- Nebula Background -->
-        <div class="absolute inset-0 nebula-background" :style="{ backgroundImage: nebulaGradient }"></div>
-        
+        <div
+            class="absolute inset-0 nebula-background"
+            :style="{ backgroundImage: nebulaGradient }"
+        ></div>
+
         <!-- Stars -->
         <div class="absolute inset-0 overflow-hidden stars-layer">
-            <div 
-                v-for="(star, i) in stars" 
+            <div
+                v-for="(star, i) in stars"
                 :key="i"
-                class="absolute rounded-full bg-primary-text twinkle-star" 
+                class="absolute rounded-full bg-primary-text twinkle-star"
                 :style="{
                     width: `${star.size}px`,
                     height: `${star.size}px`,
                     left: star.left,
                     top: star.top,
-                    animationDelay: `${star.delay}s`
+                    animationDelay: `${star.delay}s`,
                 }"
             ></div>
         </div>
-        
+
         <!-- Black Hole Effect (Bottom Right) -->
-        <div 
-            class="absolute bottom-0 right-0 black-hole" 
+        <div
+            class="absolute bottom-0 right-0 black-hole"
             :style="{
-                width: `${blackholeSize.value}px`, 
-                height: `${blackholeSize.value}px`
+                width: `${blackholeSize.value}px`,
+                height: `${blackholeSize.value}px`,
             }"
         >
             <div class="accretion-disk"></div>
         </div>
-        
+
         <!-- Pulsar Beam -->
-        <div class="pulsar-container" :style="{ transform: `rotate(${pulsarAngle}deg)` }">
+        <div
+            class="pulsar-container"
+            :style="{ transform: `rotate(${pulsarAngle}deg)` }"
+        >
             <div class="pulsar-beam"></div>
         </div>
 
@@ -113,7 +122,7 @@ const nebulaGradient = computed(() => {
             <!-- Product Thumbnail -->
             <div class="flex items-center justify-center w-2/5">
                 <div
-                    class="w-16 h-16 overflow-hidden transition-transform duration-500 ease-out border rounded-lg md:w-24 md:h-24 border-primary/30 hover:border-primary/60 product-image-container"
+                    class="w-16 h-16 overflow-hidden transition-transform duration-500 ease-out border rounded-lg md:w-20 md:h-20 border-primary/30 hover:border-primary/60 product-image-container"
                 >
                     <img
                         :src="thumbnail"
@@ -127,14 +136,16 @@ const nebulaGradient = computed(() => {
             </div>
 
             <!-- Product Info -->
-            <div class="flex flex-col justify-center w-3/5">
-                <div class="text-protection p-1 rounded-lg">
+            <div class="flex flex-col justify-center w-3/5 px-2">
+                <div class="p-1 rounded-lg">
                     <h3
                         class="mb-1 text-xs font-bold md:text-lg text-primary-text line-clamp-2 product-title"
                     >
                         {{ productName }}
                     </h3>
-                    <p class="text-xs md:text-sm text-primary-text/80 product-developer">
+                    <p
+                        class="text-xs md:text-sm text-primary-text/80 product-developer"
+                    >
                         {{ developer }}
                     </p>
                 </div>
@@ -181,7 +192,8 @@ const nebulaGradient = computed(() => {
 }
 
 @keyframes twinkle {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.2;
         transform: scale(0.8);
     }
@@ -194,7 +206,11 @@ const nebulaGradient = computed(() => {
 /* Black Hole Effect */
 .black-hole {
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(
+        circle,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0) 70%
+    );
     filter: blur(2px);
     z-index: 2;
     transform: translate(30%, 30%);
@@ -258,7 +274,12 @@ const nebulaGradient = computed(() => {
 
 /* Text Protection */
 .text-protection {
-    background-color: rgba(7, 76, 172, 0.5); /* content_background with 50% opacity */
+    background-color: rgba(
+        7,
+        76,
+        172,
+        0.5
+    ); /* content_background with 50% opacity */
     backdrop-filter: blur(2px);
 }
 
@@ -287,9 +308,18 @@ const nebulaGradient = computed(() => {
 .cosmic-rays {
     position: absolute;
     inset: 0;
-    background-image: 
-        linear-gradient(45deg, transparent 95%, rgba(155, 135, 245, 0.3) 95%, transparent 96%),
-        linear-gradient(135deg, transparent 97%, rgba(51, 195, 240, 0.3) 97%, transparent 98%);
+    background-image: linear-gradient(
+            45deg,
+            transparent 95%,
+            rgba(155, 135, 245, 0.3) 95%,
+            transparent 96%
+        ),
+        linear-gradient(
+            135deg,
+            transparent 97%,
+            rgba(51, 195, 240, 0.3) 97%,
+            transparent 98%
+        );
     opacity: 0.3;
     mix-blend-mode: screen;
     pointer-events: none;
@@ -302,8 +332,9 @@ const nebulaGradient = computed(() => {
     left: 0;
     width: 100%;
     height: 2px;
-    background-image: linear-gradient(90deg, 
-        transparent, 
+    background-image: linear-gradient(
+        90deg,
+        transparent,
         rgba(155, 135, 245, 0.5),
         rgba(51, 195, 240, 0.8),
         rgba(155, 135, 245, 0.5),
@@ -320,8 +351,12 @@ const nebulaGradient = computed(() => {
 
 /* Animation for rotation */
 @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Text Styles */
@@ -349,11 +384,11 @@ const nebulaGradient = computed(() => {
     .pulsar-beam {
         opacity: 0.3;
     }
-    
+
     .black-hole {
         transform: translate(40%, 40%);
     }
-    
+
     .stars-layer .twinkle-star:nth-child(odd) {
         display: none; /* Reduce stars on mobile */
     }

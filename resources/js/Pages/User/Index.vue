@@ -42,7 +42,7 @@ const props = defineProps({
             >
                 <!-- Enhanced Background Layers with Visual Priority System -->
                 <div class="absolute inset-0 z-0">
-                    <CyberpunkGrid class="z-2" />
+                    <!-- <CyberpunkGrid class="z-2" /> -->
                     <StarfieldLayer class="z-5" />
                     <NebulasLayer class="z-10" />
                     <PlanetsLayer class="z-15" />
