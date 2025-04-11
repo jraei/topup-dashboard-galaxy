@@ -1,99 +1,83 @@
+
 <script setup>
-import ProductCard from "./ProductCard.vue";
-import CosmicParticles from "../Flashsale/CosmicParticles.vue";
+import { ref } from 'vue';
+import ProductCard from '@/Components/User/Product/ProductCard.vue';
 
 const props = defineProps({
     products: {
         type: Array,
-        default: () => [],
-    },
+        default: () => []
+    }
 });
+
+const isVisible = ref(false);
+
+// Initialize observer when component is mounted
+const setupIntersectionObserver = () => {
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        isVisible.value = true;
+                        observer.disconnect();
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        const target = document.querySelector('#trending-products-section');
+        if (target) observer.observe(target);
+    } else {
+        // Fallback for browsers without IntersectionObserver
+        isVisible.value = true;
+    }
+};
+
+// Limit visible comets for performance
+const shouldShowComet = (index) => {
+    // On mobile, show comets only on every 3rd card
+    if (window.innerWidth < 768) {
+        return index % 3 === 0;
+    }
+    // On desktop, show on every 2nd card
+    return index % 2 === 0;
+};
 </script>
 
 <template>
-    <section class="relative w-full py-8 overflow-hidden bg-content_background">
-        <div class="absolute inset-0 z-0">
-            <CosmicParticles />
-        </div>
-
-        <div class="relative z-10 px-4 mx-auto max-w-7xl">
+    <section 
+        id="trending-products-section"
+        class="relative w-full py-8 bg-content_background overflow-hidden"
+        v-if="products && products.length > 0"
+    >
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Section Header -->
-            <div class="mb-8">
-                <div class="flex items-center mb-2 space-x-2">
-                    <div class="fire-icon-container">
-                        <span class="fire-icon">🔥</span>
-                    </div>
-                    <h2
-                        class="text-2xl font-bold md:text-3xl text-primary drop-shadow-glow"
-                    >
+            <div class="mb-6 flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 mr-3">
+                    <span class="text-lg animate-pulse">🔥</span>
+                </div>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-primary-text">
                         Populer Sekarang
                     </h2>
+                    <p class="text-sm text-primary-text/80 mt-1">
+                        Berikut adalah beberapa produk yang paling populer saat ini.
+                    </p>
                 </div>
-                <p
-                    class="text-sm md:text-base text-primary-text/80 ml-14 animate-fade-in"
-                >
-                    Berikut adalah beberapa produk yang paling populer saat ini.
-                </p>
             </div>
 
-            <!-- Product Grid -->
-            <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
-                <ProductCard
-                    v-for="product in products"
+            <!-- Products Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+                <div
+                    v-for="(product, index) in products"
                     :key="product.id"
-                    :product="product"
-                    class="h-[100px] md:h-[150px]"
-                />
+                    class="min-h-[150px]"
+                >
+                    <ProductCard :product="product" />
+                </div>
             </div>
         </div>
     </section>
 </template>
-
-<style scoped>
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
-}
-
-.drop-shadow-glow {
-    filter: drop-shadow(0 0 6px rgba(155, 135, 245, 0.6));
-}
-
-.fire-icon-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(155, 135, 245, 0.15);
-    border-radius: 50%;
-    animation: pulse-glow 2s infinite alternate;
-    border: 1px solid rgba(155, 135, 245, 0.3);
-}
-
-.fire-icon {
-    width: 24px;
-    height: 24px;
-    color: #33c3f0; /* secondary color */
-    filter: drop-shadow(0 0 5px rgba(51, 195, 240, 0.7));
-}
-
-@keyframes pulse-glow {
-    0% {
-        box-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 15px rgba(155, 135, 245, 0.7);
-    }
-}
-</style>
