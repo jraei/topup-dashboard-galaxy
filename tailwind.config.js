@@ -1,49 +1,67 @@
 
-import defaultTheme from "tailwindcss/defaultTheme";
-import forms from "@tailwindcss/forms";
-
-const dynamicColors = require("./resources/js/tailwind.dynamic.colors.js");
+const colors = require('./resources/js/tailwind.dynamic.colors.js');
 
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-        "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
-        "./storage/framework/views/*.php",
-        "./resources/views/**/*.blade.php",
-        "./resources/js/**/*.vue",
-    ],
-
-    theme: {
-        extend: {
-            fontFamily: {
-                sans: ["Figtree", ...defaultTheme.fontFamily.sans],
-            },
-            colors: {
-                ...dynamicColors,
-            },
-            boxShadow: {
-                "glow-primary": "0 0 15px rgba(155, 135, 245, 0.5)",
-                "glow-secondary": "0 0 15px rgba(51, 195, 240, 0.5)",
-                "inner-glow": "inset 0 0 10px rgba(155, 135, 245, 0.3)",
-                float: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-            },
-            backgroundImage: {
-                "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-                "gradient-conic":
-                    "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-                "gradient-sidebar":
-                    "linear-gradient(180deg, #131722 0%, #1A1F2C 100%)",
-            },
-            animation: {
-                "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-            },
-            lineClamp: {
-                1: '1',
-                2: '2',
-                3: '3',
-            }
+  content: [
+    "./resources/**/*.blade.php",
+    "./resources/**/*.js",
+    "./resources/**/*.vue",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: colors.primary,
+        secondary: colors.secondary,
+        'header-background': colors.header_background,
+        'footer-background': colors.footer_background,
+        'content-background': colors.content_background,
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0', opacity: '0' },
+          to: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
         },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
+          to: { height: '0', opacity: '0' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-out': {
+          '0%': { opacity: '1', transform: 'translateY(0)' },
+          '100%': { opacity: '0', transform: 'translateY(10px)' },
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'scale-out': {
+          from: { transform: 'scale(1)', opacity: '1' },
+          to: { transform: 'scale(0.95)', opacity: '0' },
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        'slide-out-right': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-out': 'fade-out 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'scale-out': 'scale-out 0.2s ease-out',
+        'slide-in-right': 'slide-in-right 0.3s ease-out',
+        'slide-out-right': 'slide-out-right 0.3s ease-out',
+      },
     },
-
-    plugins: [forms],
-};
+  },
+  plugins: [require('@tailwindcss/forms')],
+}
