@@ -1,3 +1,4 @@
+
 <script setup>
 import ProductCard from "./ProductCard.vue";
 import CosmicParticles from "../Flashsale/CosmicParticles.vue";
@@ -39,9 +40,10 @@ const props = defineProps({
             <!-- Product Grid -->
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
                 <ProductCard
-                    v-for="product in products"
+                    v-for="(product, index) in products"
                     :key="product.id"
                     :product="product"
+                    :index="index"
                     class="h-[100px] md:h-[150px]"
                 />
             </div>
