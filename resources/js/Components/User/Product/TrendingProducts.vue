@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import ProductCard from '@/Components/User/Product/ProductCard.vue';
 
 const props = defineProps({
@@ -34,6 +34,10 @@ const setupIntersectionObserver = () => {
         isVisible.value = true;
     }
 };
+
+onMounted(() => {
+    setupIntersectionObserver();
+});
 
 // Limit visible comets for performance
 const shouldShowComet = (index) => {

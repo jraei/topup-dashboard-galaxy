@@ -86,6 +86,9 @@ onMounted(() => {
         prefersReducedMotion.value = true;
     }
 });
+
+// Create dynamic class names based on the cardId
+const cometClassName = computed(() => `animate-comet-${cardId.value}`);
 </script>
 
 <template>
@@ -101,7 +104,7 @@ onMounted(() => {
                 :class="[
                     'absolute w-20 h-1 rounded-full z-10',
                     'bg-primary',
-                    prefersReducedMotion ? '' : `animate-comet-${cardId}`,
+                    prefersReducedMotion ? '' : cometClassName,
                     'shadow-glow-primary'
                 ]"
                 style="top: 20%; right: -20%;"
@@ -228,8 +231,8 @@ onMounted(() => {
         }
     }
 
-    /* Custom comet animation for this card */
-    @keyframes {{ `comet-${cardId}` }} {
+    /* Custom comet animation keyframe - dynamically generated for each card instance */
+    @keyframes comet-flight {
         0% {
             transform: translateX(0) translateY(0);
             opacity: 0;
@@ -263,8 +266,9 @@ onMounted(() => {
         animation: twinkle 3s ease-in-out infinite;
     }
 
-    .animate-comet-{{ cardId }} {
-        animation: {{ `comet-${cardId}` }} 4s linear infinite;
+    /* Use the same animation for all comets */
+    .animate-comet-card-* {
+        animation: comet-flight 4s linear infinite;
     }
 
     .animate-planet-rotate {
@@ -274,7 +278,7 @@ onMounted(() => {
     /* Support for reduced motion */
     @media (prefers-reduced-motion: reduce) {
         .animate-twinkle,
-        .animate-comet-{{ cardId }},
+        .animate-comet-card-*,
         .animate-planet-rotate {
             animation: none;
         }
