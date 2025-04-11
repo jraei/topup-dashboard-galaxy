@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\User;
@@ -6,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\FlashsaleEvent;
 use App\Models\Produk;
+use App\Models\Kategori;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -46,6 +48,20 @@ class IndexController extends Controller
             ->with(['kategori'])
             ->limit(12)
             ->get();
+            
+        // Fetch all categories except "Populer Sekarang" with product counts
+        $categories = Kategori::where('status', 'active')
+            ->where('kategori_name', '!=', 'Populer Sekarang')
+            ->withCount(['produk' => function($query) {
+                $query->where('status', 'active');
+            }])
+            ->having('produk_count', '>', 0)
+            ->get();
+            
+        // Fetch all products for catalog
+        $catalogProducts = Produk::where('status', 'active')
+            ->with(['kategori'])
+            ->get(['id', 'nama', 'slug', 'developer', 'thumbnail', 'kategori_id']);
 
         return Inertia::render('User/Index', [
             'banners' => $banners,
@@ -53,6 +69,8 @@ class IndexController extends Controller
             'serverTime' => Carbon::now()->toISOString(),
             'userRoleId' => $userRoleId,
             'popularProducts' => $popularProducts,
+            'categories' => $categories,
+            'catalogProducts' => $catalogProducts,
         ]);
     }
 }

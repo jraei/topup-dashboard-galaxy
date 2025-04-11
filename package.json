@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "lodash": "^4.17.21",
+        "lucide-vue-next": "^0.487.0",
         "sweetalert2": "^11.6.13"
     }
 }
