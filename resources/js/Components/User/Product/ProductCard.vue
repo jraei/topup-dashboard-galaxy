@@ -73,7 +73,7 @@ const nebulaGradient = computed(() => {
 
 <template>
     <div
-        class="relative overflow-hidden transition-all duration-300 ease-out border rounded-lg bg-gradient-to-br from-secondary/5 to-content_background border-primary/20 group hover:border-primary hover:scale-105 hover:shadow-glow-primary cosmic-card"
+        class="relative overflow-hidden transition-all duration-300 ease-out border rounded-2xl bg-gradient-to-br from-secondary/5 to-content_background border-primary/20 group hover:border-primary hover:scale-105 hover:shadow-glow-primary cosmic-card"
         :class="{ 'reduced-motion': prefersReducedMotion }"
     >
         <!-- Nebula Background -->

@@ -53,7 +53,7 @@ watch(
 
 <template>
     <section
-        class="relative w-full py-12 overflow-hidden bg-content_background"
+        class="relative w-full pt-12 pb-48 overflow-hidden bg-content_background"
     >
         <!-- Cosmic Background -->
         <div class="absolute inset-0 z-0">
