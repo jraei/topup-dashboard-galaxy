@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
 import NavLink from "@/Components/NavLink.vue";
 import CosmicIcon from "./CosmicIcon.vue";
@@ -12,6 +13,7 @@ const props = defineProps({
 });
 
 const activeDropdown = ref(null);
+const dropdownRefs = ref([]);
 
 const toggleDropdown = (index) => {
     if (activeDropdown.value === index) {
@@ -24,6 +26,23 @@ const toggleDropdown = (index) => {
 const closeDropdown = () => {
     activeDropdown.value = null;
 };
+
+// Handle clicks outside the dropdown to close it
+const handleClickOutside = (event) => {
+    if (activeDropdown.value !== null && 
+        dropdownRefs.value[activeDropdown.value] && 
+        !dropdownRefs.value[activeDropdown.value].contains(event.target)) {
+        closeDropdown();
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('mousedown', handleClickOutside);
+});
 
 // Function to get icon name from emoji
 const getIconName = (emojiName) => {
@@ -50,6 +69,7 @@ const getIconName = (emojiName) => {
                     v-for="(link, index) in navLinks"
                     :key="index"
                     class="relative"
+                    :ref="el => { if (el) dropdownRefs[index] = el }"
                     @mouseleave="closeDropdown"
                 >
                     <button
@@ -121,10 +141,14 @@ const getIconName = (emojiName) => {
                         </div>
                     </NavLink>
 
-                    <!-- Enhanced Dropdown menu -->
+                    <!-- Enhanced Dropdown menu with fixed position -->
                     <div
                         v-if="link.dropdown && activeDropdown === index"
-                        class="absolute z-50 w-64 mt-1 transition-all duration-300 origin-top-right top-full"
+                        class="fixed z-50 w-64 mt-1 transition-all duration-300 origin-top-right"
+                        :style="{
+                            top: `${dropdownRefs[index]?.getBoundingClientRect().bottom + window.scrollY}px`,
+                            left: `${dropdownRefs[index]?.getBoundingClientRect().left}px`,
+                        }"
                     >
                         <div
                             class="overflow-hidden border rounded-md bg-gradient-to-b from-content_background to-content_background/90 backdrop-blur-sm shadow-glow-primary border-primary/30"
