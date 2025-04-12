@@ -76,10 +76,10 @@ const cosmicElements = ref([]);
 const generateCosmicElements = () => {
     const elements = [];
     // Generate 3-5 planets
-    for (let i = 0; i < 3 + Math.floor(Math.random() * 3); i++) {
+    for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
         elements.push({
             type: "planet",
-            size: 8 + Math.floor(Math.random() * 12), // 8px to 20px
+            size: 15 + Math.floor(Math.random() * 15), // 8px to 20px
             top: Math.random() * 70 + 10,
             right: Math.random() * 60 + 5,
             rotation: Math.random() * 360,
@@ -89,7 +89,7 @@ const generateCosmicElements = () => {
     }
 
     // Generate 2-3 stars
-    for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+    for (let i = 0; i < 3 + Math.floor(Math.random() * 2); i++) {
         elements.push({
             type: "pulsar",
             size: 3 + Math.floor(Math.random() * 5), // 3px to 8px
@@ -347,7 +347,7 @@ onMounted(() => {
 
 /* Left section - Product info and pricing */
 .left-section {
-    width: 65%;
+    width: 50%;
     padding: 0.75rem;
     display: flex;
     flex-direction: column;
@@ -452,7 +452,7 @@ onMounted(() => {
 
 /* Right section - Cosmic elements */
 .right-section {
-    width: 35%;
+    width: 50%;
     position: relative;
     overflow: hidden;
 }
