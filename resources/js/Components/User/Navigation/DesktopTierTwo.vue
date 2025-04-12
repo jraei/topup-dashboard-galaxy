@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import { Link } from "@inertiajs/vue3";
@@ -29,16 +28,16 @@ const closeDropdown = () => {
 // Function to get icon name from emoji
 const getIconName = (emojiName) => {
     const iconMappings = {
-        '🌌': 'topup',
-        '📊': 'transaction',
-        '🏆': 'leaderboard',
-        '🧮': 'calculator',
-        '🌠': 'winrate',
-        '🎡': 'magicwheel',
-        '♈️': 'zodiac'
+        "🌌": "topup",
+        "📊": "transaction",
+        "🏆": "leaderboard",
+        "🧮": "calculator",
+        "🌠": "winrate",
+        "🎡": "magicwheel",
+        "♈️": "zodiac",
     };
-    
-    return iconMappings[emojiName] || 'default';
+
+    return iconMappings[emojiName] || "default";
 };
 </script>
 
@@ -63,10 +62,10 @@ const getIconName = (emojiName) => {
                                 link.active || activeDropdown === index,
                         }"
                     >
-                        <CosmicIcon 
-                            :name="getIconName(link.icon)" 
-                            size="md" 
-                            className="mr-1.5" 
+                        <CosmicIcon
+                            :name="getIconName(link.icon)"
+                            size="md"
+                            className="mr-1.5"
                         />
                         <span>{{ link.name }}</span>
                         <svg
@@ -102,10 +101,10 @@ const getIconName = (emojiName) => {
                         :active="link.active"
                         class="relative flex items-center px-3 py-2 space-x-1 text-sm text-gray-200 transition-all rounded-md group hover:bg-primary/10 hover:text-primary"
                     >
-                        <CosmicIcon 
-                            :name="getIconName(link.icon)" 
-                            size="md" 
-                            className="mr-1.5" 
+                        <CosmicIcon
+                            :name="getIconName(link.icon)"
+                            size="md"
+                            className="mr-1.5"
                         />
                         <span>{{ link.name }}</span>
 
@@ -128,20 +127,38 @@ const getIconName = (emojiName) => {
                         class="absolute z-50 w-64 mt-1 transition-all duration-300 origin-top-right top-full"
                     >
                         <div
-                            class="overflow-hidden bg-gradient-to-b from-content_background to-content_background/90 backdrop-blur-sm border rounded-md shadow-glow-primary border-primary/30"
+                            class="overflow-hidden border rounded-md bg-gradient-to-b from-content_background to-content_background/90 backdrop-blur-sm shadow-glow-primary border-primary/30"
                         >
                             <!-- Constellation Background (Cosmetic Enhancement) -->
-                            <div class="absolute inset-0 overflow-hidden opacity-5 pointer-events-none">
-                                <div class="absolute w-1 h-1 rounded-full top-[10%] left-[20%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[15%] left-[22%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[20%] left-[25%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[30%] left-[40%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[70%] left-[80%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[60%] left-[70%] bg-white"></div>
-                                <div class="absolute w-1 h-1 rounded-full top-[50%] left-[60%] bg-white"></div>
-                                <div class="absolute w-1.5 h-1.5 rounded-full top-[40%] left-[30%] bg-white"></div>
+                            <div
+                                class="absolute inset-0 overflow-hidden pointer-events-none opacity-5"
+                            >
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[10%] left-[20%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[15%] left-[22%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[20%] left-[25%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[30%] left-[40%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[70%] left-[80%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[60%] left-[70%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1 h-1 rounded-full top-[50%] left-[60%] bg-white"
+                                ></div>
+                                <div
+                                    class="absolute w-1.5 h-1.5 rounded-full top-[40%] left-[30%] bg-white"
+                                ></div>
                             </div>
-                            
+
                             <div class="py-2">
                                 <Link
                                     v-for="(item, itemIndex) in link.dropdown"
@@ -150,27 +167,42 @@ const getIconName = (emojiName) => {
                                     class="block p-3 transition-all hover:bg-primary/10 group"
                                 >
                                     <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0 p-1.5 bg-primary/10 rounded-full transition-colors group-hover:bg-primary/20">
-                                            <CosmicIcon 
-                                                :name="getIconName(item.icon)" 
-                                                size="md" 
-                                                className="text-primary" 
+                                        <div
+                                            class="flex-shrink-0 p-1.5 bg-primary/10 rounded-full transition-colors group-hover:bg-primary/20"
+                                        >
+                                            <CosmicIcon
+                                                :name="getIconName(item.icon)"
+                                                size="md"
+                                                className="text-primary"
                                             />
                                         </div>
                                         <div class="flex-1">
-                                            <p class="font-medium text-primary-text">{{ item.name }}</p>
-                                            <p class="mt-0.5 text-xs text-primary-text/60">
-                                                {{ 
-                                                    item.name === 'Winrate' ? 'Calculate matches needed' :
-                                                    item.name === 'Magic Wheel' ? 'Estimate diamond cost' :
-                                                    'Calculate skin probability'
+                                            <p
+                                                class="font-medium text-primary-text"
+                                            >
+                                                {{ item.name }}
+                                            </p>
+                                            <p
+                                                class="mt-0.5 text-xs text-primary-text/60"
+                                            >
+                                                {{
+                                                    item.name === "Winrate"
+                                                        ? "Calculate matches needed"
+                                                        : item.name ===
+                                                          "Magic Wheel"
+                                                        ? "Estimate diamond cost"
+                                                        : "Calculate skin probability"
                                                 }}
                                             </p>
                                         </div>
-                                        
+
                                         <!-- Orbiting Planet (Cosmetic Enhancement) -->
-                                        <div class="relative w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div class="absolute inset-0 w-1.5 h-1.5 bg-secondary rounded-full animate-ping"></div>
+                                        <div
+                                            class="relative w-6 h-6 transition-opacity opacity-0 group-hover:opacity-100"
+                                        >
+                                            <div
+                                                class="absolute inset-0 w-1.5 h-1.5 bg-secondary rounded-full animate-ping"
+                                            ></div>
                                         </div>
                                     </div>
                                 </Link>
