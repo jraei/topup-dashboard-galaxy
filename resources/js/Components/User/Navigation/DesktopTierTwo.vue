@@ -1,265 +1,139 @@
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { Link } from "@inertiajs/vue3";
-import NavLink from "@/Components/NavLink.vue";
-import CosmicIcon from "./CosmicIcon.vue";
+import { Link } from '@inertiajs/vue3';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
 const props = defineProps({
-    navLinks: {
-        type: Array,
-        required: true,
-    },
+  navLinks: {
+    type: Array,
+    default: () => [],
+  },
 });
 
-const activeDropdown = ref(null);
+// State for dropdown
+const openDropdown = ref(null);
+const dropdownRef = ref(null);
 
-const toggleDropdown = (index) => {
-    if (activeDropdown.value === index) {
-        activeDropdown.value = null;
-    } else {
-        activeDropdown.value = index;
-    }
+// Determine if a link has dropdown content
+const hasDropdown = (link) => {
+  return link.dropdown && link.dropdown.length > 0;
 };
 
-const closeDropdown = () => {
-    activeDropdown.value = null;
+// Open/close dropdown
+const toggleDropdown = (linkName) => {
+  if (openDropdown.value === linkName) {
+    openDropdown.value = null;
+  } else {
+    openDropdown.value = linkName;
+  }
 };
 
-// Function to get icon name from emoji
-const getIconName = (emojiName) => {
-    const iconMappings = {
-        "🌌": "topup",
-        "📊": "transaction",
-        "🏆": "leaderboard",
-        "🧮": "calculator",
-        "🌠": "winrate",
-        "🎡": "magicwheel",
-        "♈️": "zodiac",
-    };
-
-    return iconMappings[emojiName] || "default";
-};
-
-// Handle click outside to close dropdown
+// Close dropdown when clicking outside
 const handleClickOutside = (event) => {
-    const dropdowns = document.querySelectorAll('.dropdown-container');
-    let clickedOutside = true;
-    
-    dropdowns.forEach(dropdown => {
-        if (dropdown.contains(event.target)) {
-            clickedOutside = false;
-        }
-    });
-    
-    if (clickedOutside && activeDropdown.value !== null) {
-        activeDropdown.value = null;
-    }
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    openDropdown.value = null;
+  }
 };
 
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
+  document.addEventListener('click', handleClickOutside);
 });
 
-onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
 });
+
+// Compute nav link classes based on active state
+const getLinkClasses = (link) => {
+  return {
+    'px-3 py-2 rounded-md flex items-center text-sm font-medium transition-colors duration-200 relative': true,
+    'text-primary bg-primary/10': link.active,
+    'text-gray-300 hover:text-primary-text hover:bg-primary/10': !link.active,
+    'group': true,
+  };
+};
 </script>
 
 <template>
+  <div class="bg-dark-lighter py-2 border-b border-primary/20">
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-14">
-            <!-- Left: Navigation Links -->
-            <div class="flex space-x-4">
-                <div
-                    v-for="(link, index) in navLinks"
-                    :key="index"
-                    class="relative dropdown-container"
-                    @mouseleave="closeDropdown"
-                >
-                    <button
-                        v-if="link.dropdown"
-                        @click="toggleDropdown(index)"
-                        @mouseenter="toggleDropdown(index)"
-                        class="flex items-center px-3 py-2 space-x-1 text-sm text-gray-200 transition-all rounded-md group hover:bg-primary/10 hover:text-primary"
-                        :class="{
-                            'text-primary bg-primary/5':
-                                link.active || activeDropdown === index,
-                        }"
-                    >
-                        <CosmicIcon
-                            :name="getIconName(link.icon)"
-                            size="md"
-                            className="mr-1.5"
-                        />
-                        <span>{{ link.name }}</span>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-4 h-4 transition-transform duration-200"
-                            :class="{ 'rotate-180': activeDropdown === index }"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
+      <div class="flex items-center justify-between">
+        <!-- Navigation Links -->
+        <div class="flex space-x-1">
+          <div v-for="link in navLinks" :key="link.name" class="relative" ref="dropdownRef">
+            <Link
+              v-if="!hasDropdown(link)"
+              :href="route(link.route)"
+              :class="getLinkClasses(link)"
+            >
+              <span class="mr-1">{{ link.icon }}</span>
+              <span>{{ link.name }}</span>
+            </Link>
 
-                        <!-- Hover effect: orbiting planets -->
-                        <div
-                            class="absolute inset-0 transition-opacity duration-300 opacity-0 -z-10 group-hover:opacity-100"
-                        >
-                            <div
-                                class="absolute w-1 h-1 rounded-full top-1 right-1 bg-primary animate-pulse-slow"
-                            ></div>
-                            <div
-                                class="absolute bottom-1 left-2 w-1.5 h-1.5 bg-secondary rounded-full animate-ping"
-                            ></div>
-                        </div>
-                    </button>
+            <button
+              v-else
+              @click="toggleDropdown(link.name)"
+              :class="getLinkClasses(link)"
+              aria-haspopup="true"
+              :aria-expanded="openDropdown === link.name"
+            >
+              <span class="mr-1">{{ link.icon }}</span>
+              <span>{{ link.name }}</span>
+              <!-- Dropdown indicator -->
+              <svg
+                class="w-4 h-4 ml-1 transition-transform duration-200"
+                :class="{ 'rotate-180': openDropdown === link.name }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
 
-                    <NavLink
-                        v-else
-                        :href="route(link.route)"
-                        :active="link.active"
-                        class="relative flex items-center px-3 py-2 space-x-1 text-sm text-gray-200 transition-all rounded-md group hover:bg-primary/10 hover:text-primary"
-                    >
-                        <CosmicIcon
-                            :name="getIconName(link.icon)"
-                            size="md"
-                            className="mr-1.5"
-                        />
-                        <span>{{ link.name }}</span>
-
-                        <!-- Hover effect: orbiting planets -->
-                        <div
-                            class="absolute inset-0 transition-opacity duration-300 opacity-0 -z-10 group-hover:opacity-100"
-                        >
-                            <div
-                                class="absolute w-1 h-1 rounded-full top-1 right-1 bg-primary animate-pulse-slow"
-                            ></div>
-                            <div
-                                class="absolute bottom-1 left-2 w-1.5 h-1.5 bg-secondary rounded-full animate-ping"
-                            ></div>
-                        </div>
-                    </NavLink>
-
-                    <!-- Enhanced Dropdown menu -->
-                    <div
-                        v-if="link.dropdown && activeDropdown === index"
-                        class="absolute z-50 w-64 mt-1 transition-all duration-300 origin-top-right top-full"
-                        style="z-index: 999;"
-                    >
-                        <div
-                            class="overflow-hidden border rounded-md bg-gradient-to-b from-content_background to-content_background/90 backdrop-blur-sm shadow-glow-primary border-primary/30"
-                        >
-                            <!-- Constellation Background (Cosmetic Enhancement) -->
-                            <div
-                                class="absolute inset-0 overflow-hidden pointer-events-none opacity-5"
-                            >
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[10%] left-[20%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[15%] left-[22%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[20%] left-[25%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[30%] left-[40%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[70%] left-[80%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[60%] left-[70%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1 h-1 rounded-full top-[50%] left-[60%] bg-white"
-                                ></div>
-                                <div
-                                    class="absolute w-1.5 h-1.5 rounded-full top-[40%] left-[30%] bg-white"
-                                ></div>
-                            </div>
-
-                            <div class="py-2">
-                                <Link
-                                    v-for="(item, itemIndex) in link.dropdown"
-                                    :key="itemIndex"
-                                    :href="route(item.route)"
-                                    class="block p-3 transition-all hover:bg-primary/10 group"
-                                >
-                                    <div class="flex items-start gap-3">
-                                        <div
-                                            class="flex-shrink-0 p-1.5 bg-primary/10 rounded-full transition-colors group-hover:bg-primary/20"
-                                        >
-                                            <CosmicIcon
-                                                :name="getIconName(item.icon)"
-                                                size="md"
-                                                className="text-primary"
-                                            />
-                                        </div>
-                                        <div class="flex-1">
-                                            <p
-                                                class="font-medium text-primary-text"
-                                            >
-                                                {{ item.name }}
-                                            </p>
-                                            <p
-                                                class="mt-0.5 text-xs text-primary-text/60"
-                                            >
-                                                {{
-                                                    item.name === "Winrate"
-                                                        ? "Calculate matches needed"
-                                                        : item.name ===
-                                                          "Magic Wheel"
-                                                        ? "Estimate diamond cost"
-                                                        : "Calculate skin probability"
-                                                }}
-                                            </p>
-                                        </div>
-
-                                        <!-- Orbiting Planet (Cosmetic Enhancement) -->
-                                        <div
-                                            class="relative w-6 h-6 transition-opacity opacity-0 group-hover:opacity-100"
-                                        >
-                                            <div
-                                                class="absolute inset-0 w-1.5 h-1.5 bg-secondary rounded-full animate-ping"
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
+              <!-- Dropdown Menu for Kalkulator -->
+              <div
+                v-if="openDropdown === link.name && link.dropdown"
+                class="absolute left-0 mt-2 w-56 bg-dark-card border border-primary/20 rounded-md shadow-lg z-50 overflow-hidden"
+                style="top: 100%"
+              >
+                <div class="py-2 px-1">
+                  <Link
+                    v-for="item in link.dropdown"
+                    :key="item.name"
+                    :href="route(item.route)"
+                    class="block px-3 py-2 text-sm text-gray-300 hover:text-primary-text hover:bg-primary/10 rounded-md flex items-center transition-colors duration-200 mx-1"
+                  >
+                    <span class="w-6 h-6 flex items-center justify-center mr-2">
+                      {{ item.icon }}
+                    </span>
+                    <span>{{ item.name }}</span>
+                  </Link>
                 </div>
-            </div>
-
-            <!-- Right: Auth Buttons -->
-            <div class="flex items-center space-x-3">
-                <Link
-                    :href="route('login')"
-                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-200 transition-all rounded-full bg-dark/card hover:bg-primary-hover/50 hover:text-white"
-                >
-                    <span class="mr-1.5">
-                        <CosmicIcon name="login" size="md" />
-                    </span>
-                    <span>Login</span>
-                </Link>
-
-                <Link
-                    :href="route('register')"
-                    class="flex items-center px-4 py-2 text-sm font-medium text-white transition-all bg-transparent rounded-full hover:bg-primary-hover/50"
-                >
-                    <span class="mr-1.5">
-                        <CosmicIcon name="register" size="md" />
-                    </span>
-                    <span>Register</span>
-                </Link>
-            </div>
+              </div>
+            </button>
+          </div>
         </div>
+
+        <!-- Login/Register Buttons -->
+        <div class="hidden md:flex space-x-2">
+          <Link
+            :href="route('login')"
+            class="px-4 py-2 text-sm font-medium text-primary-text hover:text-white transition-colors duration-200"
+          >
+            Login 👤
+          </Link>
+          <Link
+            :href="route('register')"
+            class="px-4 py-2 bg-primary text-primary-text rounded-md text-sm font-medium hover:bg-primary/90 transition-colors duration-200"
+          >
+            Register 🚀
+          </Link>
+        </div>
+      </div>
     </div>
+  </div>
 </template>

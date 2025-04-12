@@ -1,133 +1,76 @@
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import EarthSystem from './EarthSystem.vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import CosmicTransition from './CosmicTransition.vue';
+import RocketAnimation from './RocketAnimation.vue';
 import FooterContent from './FooterContent.vue';
+import FooterCopyright from './FooterCopyright.vue';
 import { Link } from '@inertiajs/vue3';
-import CosmicIcon from '@/Components/User/Navigation/CosmicIcon.vue';
 
-// Footer visibility state
-const isVisible = ref(false);
-const observer = ref(null);
-const footerRef = ref(null);
+// Footer link configuration
+const quickLinks = [
+  { name: 'Home', icon: 'home', route: 'dashboard' },
+  { name: 'Products', icon: 'package', route: 'dashboard' },
+  { name: 'About', icon: 'info', route: 'dashboard' },
+];
 
-// Handle intersection observer for triggering animations
+const supportLinks = [
+  { name: 'Contact', icon: 'mail', route: 'dashboard' },
+  { name: 'FAQ', icon: 'help-circle', route: 'dashboard' },
+  { name: 'Terms', icon: 'file-text', route: 'dashboard' },
+];
+
+const socialLinks = [
+  { name: 'Facebook', icon: 'facebook', url: '#' },
+  { name: 'Instagram', icon: 'instagram', url: '#' },
+  { name: 'Twitter', icon: 'twitter', url: '#' },
+];
+
+// Transition visibility state
+const isTransitionVisible = ref(false);
+
+// Scroll handler for the transition effect
+const handleScroll = () => {
+  const footer = document.getElementById('cosmic-footer');
+  if (!footer) return;
+  
+  const footerPosition = footer.getBoundingClientRect().top;
+  const triggerPoint = window.innerHeight - 200;
+  
+  isTransitionVisible.value = footerPosition < triggerPoint;
+};
+
 onMounted(() => {
-    observer.value = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                isVisible.value = true;
-            } else {
-                isVisible.value = false;
-            }
-        });
-    }, {
-        rootMargin: '200px 0px 0px 0px', // Start observing 200px before footer
-        threshold: 0.1
-    });
-    
-    if (footerRef.value) {
-        observer.value.observe(footerRef.value);
-    }
+  window.addEventListener('scroll', handleScroll);
+  // Initial check
+  handleScroll();
 });
 
-onUnmounted(() => {
-    if (observer.value && footerRef.value) {
-        observer.value.unobserve(footerRef.value);
-    }
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
 <template>
-    <footer ref="footerRef" class="relative mt-24 overflow-hidden">
-        <!-- Cosmic Transition (Atmosphere) -->
-        <CosmicTransition :is-visible="isVisible" />
-        
-        <!-- Earth System with Rocket -->
-        <div class="absolute right-8 -top-32 lg:-top-40 z-10 pointer-events-none">
-            <EarthSystem :is-animated="isVisible" />
-        </div>
-        
-        <!-- Main Footer Content -->
-        <div class="relative z-20 bg-gradient-to-b from-dark-lighter to-dark pt-16 pb-6">
-            <!-- Cosmic Divider (Nebula Pattern) -->
-            <div class="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent mb-12"></div>
-            
-            <!-- Footer Content -->
-            <FooterContent />
-            
-            <!-- Copyright Bar -->
-            <div class="relative mt-12 pt-6 border-t border-primary/10 text-center">
-                <div class="container mx-auto px-4">
-                    <p class="text-sm text-gray-400 flex items-center justify-center">
-                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 mr-2">
-                            <CosmicIcon name="copyright" size="sm" className="text-primary" />
-                        </span>
-                        <span>2025 NaelStore. All rights across the cosmos reserved.</span>
-                    </p>
-                </div>
-                
-                <!-- Shooting Stars (Random Decorative) -->
-                <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-                    <div class="shooting-star delay-3"></div>
-                    <div class="shooting-star delay-7"></div>
-                </div>
-            </div>
-        </div>
-    </footer>
+  <footer class="relative mt-16" id="cosmic-footer">
+    <!-- Cosmic transition effect -->
+    <CosmicTransition :is-visible="isTransitionVisible" />
+    
+    <!-- Rocket animation -->
+    <RocketAnimation />
+    
+    <!-- Main footer content -->
+    <div class="relative bg-gradient-to-b from-dark-lighter to-dark pt-16 pb-8 overflow-hidden">
+      <div class="container px-4 mx-auto max-w-7xl">
+        <FooterContent 
+          :quick-links="quickLinks" 
+          :support-links="supportLinks"
+          :social-links="socialLinks"
+        />
+      </div>
+      
+      <!-- Copyright bar -->
+      <FooterCopyright />
+    </div>
+  </footer>
 </template>
-
-<style scoped>
-@keyframes shootingstar {
-    0% {
-        transform: translateX(0) translateY(0) rotate(45deg);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(-200px) translateY(200px) rotate(45deg);
-        opacity: 0;
-    }
-}
-
-.shooting-star {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: linear-gradient(45deg, #fff, transparent);
-    border-radius: 50%;
-    filter: drop-shadow(0 0 6px #fff);
-    animation: shootingstar 3s ease-in-out infinite;
-}
-
-.shooting-star::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 1px;
-    background: linear-gradient(90deg, #fff, transparent);
-}
-
-.shooting-star:nth-child(1) {
-    top: 30%;
-    right: 10%;
-}
-
-.shooting-star:nth-child(2) {
-    top: 60%;
-    right: 30%;
-}
-
-.delay-3 {
-    animation-delay: 3s;
-}
-
-.delay-7 {
-    animation-delay: 7s;
-}
-</style>

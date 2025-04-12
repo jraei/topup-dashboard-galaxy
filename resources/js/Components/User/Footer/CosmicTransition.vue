@@ -1,118 +1,149 @@
 
 <script setup>
-defineProps({
-    isVisible: {
-        type: Boolean,
-        default: false
-    }
+import { ref, watch, onMounted } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
+
+const props = defineProps({
+  isVisible: {
+    type: Boolean,
+    default: false
+  }
 });
+
+const transitionRef = ref(null);
+const stars = ref([]);
+const starCount = 50;
+
+// Generate random stars
+const generateStars = () => {
+  if (!transitionRef.value) return;
+  
+  const width = transitionRef.value.clientWidth;
+  const height = transitionRef.value.clientHeight;
+  
+  stars.value = Array.from({ length: starCount }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: 0.5 + Math.random() * 1.5,
+    opacity: 0.1 + Math.random() * 0.7,
+    speed: 0.2 + Math.random() * 0.5
+  }));
+};
+
+// Resize handler for stars
+const handleResize = () => {
+  generateStars();
+};
+
+onMounted(() => {
+  generateStars();
+  if (transitionRef.value) {
+    useResizeObserver(transitionRef, handleResize);
+  }
+});
+
+// Add shooting stars when the transition becomes visible
+watch(() => props.isVisible, (newVal) => {
+  if (newVal) {
+    // Trigger shooting stars when becoming visible
+    addShootingStar();
+  }
+});
+
+// Function to add a shooting star with random timing
+const addShootingStar = () => {
+  if (!props.isVisible) return;
+  
+  // Create a shooting star at a random position
+  const star = document.createElement('div');
+  star.className = 'absolute w-0.5 h-0.5 bg-primary rounded-full shooting-star';
+  
+  // Random position and angle
+  const startX = Math.random() * 80 + 10; // 10-90% width
+  const startY = Math.random() * 30; // Top 30%
+  const angle = 30 + Math.random() * 60; // 30-90 degrees
+  const speed = 0.5 + Math.random() * 1.5;
+  
+  star.style.left = `${startX}%`;
+  star.style.top = `${startY}%`;
+  star.style.setProperty('--angle', `${angle}deg`);
+  star.style.setProperty('--speed', `${speed}s`);
+  
+  if (transitionRef.value) {
+    transitionRef.value.appendChild(star);
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      if (star.parentNode) {
+        star.parentNode.removeChild(star);
+      }
+    }, speed * 1000 + 200);
+    
+    // Schedule next shooting star
+    setTimeout(addShootingStar, 2000 + Math.random() * 5000);
+  }
+};
 </script>
 
 <template>
-    <div class="absolute inset-0 w-full pointer-events-none">
-        <!-- Atmospheric Transition Effect -->
-        <div class="absolute left-0 right-0 bottom-0 h-96 bg-gradient-to-b from-transparent via-content_background/80 to-dark/90"></div>
-        
-        <!-- Parallax Stars (Three Layers) -->
-        <div class="absolute inset-0 overflow-hidden">
-            <!-- Distant Stars (Slowest) -->
-            <div class="absolute inset-0" :class="{ 'star-field-slow': isVisible }">
-                <div v-for="i in 50" :key="`star-slow-${i}`" 
-                    class="absolute rounded-full bg-white"
-                    :style="{
-                        width: `${1 + Math.random()}px`,
-                        height: `${1 + Math.random()}px`,
-                        top: `${Math.random() * 100}%`,
-                        left: `${Math.random() * 100}%`,
-                        opacity: 0.3 + Math.random() * 0.7,
-                        animationDelay: `${Math.random() * 5}s`
-                    }">
-                </div>
-            </div>
-            
-            <!-- Mid-distance Stars (Medium Speed) -->
-            <div class="absolute inset-0" :class="{ 'star-field-medium': isVisible }">
-                <div v-for="i in 30" :key="`star-medium-${i}`" 
-                    class="absolute rounded-full bg-white"
-                    :style="{
-                        width: `${1 + Math.random() * 1.5}px`,
-                        height: `${1 + Math.random() * 1.5}px`,
-                        top: `${Math.random() * 100}%`,
-                        left: `${Math.random() * 100}%`,
-                        opacity: 0.4 + Math.random() * 0.6,
-                        animationDelay: `${Math.random() * 3}s`
-                    }">
-                </div>
-            </div>
-            
-            <!-- Near Stars (Fastest) -->
-            <div class="absolute inset-0" :class="{ 'star-field-fast': isVisible }">
-                <div v-for="i in 20" :key="`star-fast-${i}`" 
-                    class="absolute rounded-full bg-white"
-                    :style="{
-                        width: `${1.5 + Math.random() * 2}px`,
-                        height: `${1.5 + Math.random() * 2}px`,
-                        top: `${Math.random() * 100}%`,
-                        left: `${Math.random() * 100}%`,
-                        opacity: 0.5 + Math.random() * 0.5,
-                        animationDelay: `${Math.random() * 2}s`
-                    }">
-                </div>
-            </div>
-        </div>
-        
-        <!-- Space Dust -->
-        <div class="absolute inset-0 overflow-hidden">
-            <div v-for="i in 80" :key="`dust-${i}`" 
-                class="absolute rounded-full bg-white"
-                :style="{
-                    width: `${0.5 + Math.random()}px`,
-                    height: `${0.5 + Math.random()}px`,
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
-                    opacity: 0.05 + Math.random() * 0.15
-                }">
-            </div>
-        </div>
-    </div>
+  <div 
+    ref="transitionRef"
+    class="absolute bottom-full left-0 w-full h-[20vh] pointer-events-none transition-opacity duration-700"
+    :class="{ 'opacity-100': isVisible, 'opacity-0': !isVisible }"
+  >
+    <!-- Radial gradient for space entry effect -->
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-content_background/50 to-dark-lighter"></div>
+    
+    <!-- Stars layer -->
+    <div 
+      v-for="(star, index) in stars" 
+      :key="index"
+      class="absolute rounded-full bg-white"
+      :style="{
+        left: `${star.x}px`,
+        top: `${star.y}px`,
+        width: `${star.size}px`,
+        height: `${star.size}px`,
+        opacity: star.opacity,
+        transform: 'translateY(0)',
+        animation: `twinkle ${1 + star.speed}s infinite alternate`
+      }"
+    ></div>
+  </div>
 </template>
 
-<style scoped>
+<style>
 @keyframes twinkle {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 1; }
+  0% { opacity: 0.1; }
+  100% { opacity: 0.7; }
 }
 
-@keyframes parallax-slow {
-    from { transform: translateY(0); }
-    to { transform: translateY(20px); }
+.shooting-star {
+  position: absolute;
+  opacity: 0;
+  transform-origin: center;
+  animation: shootingStar var(--speed) ease-out forwards;
+  box-shadow: 0 0 6px 2px rgba(155, 135, 245, 0.6);
 }
 
-@keyframes parallax-medium {
-    from { transform: translateY(0); }
-    to { transform: translateY(40px); }
-}
-
-@keyframes parallax-fast {
-    from { transform: translateY(0); }
-    to { transform: translateY(60px); }
-}
-
-.star-field-slow {
-    animation: parallax-slow 15s linear infinite alternate;
-}
-
-.star-field-medium {
-    animation: parallax-medium 10s linear infinite alternate;
-}
-
-.star-field-fast {
-    animation: parallax-fast 8s linear infinite alternate;
-}
-
-.star-field-slow > div,
-.star-field-medium > div,
-.star-field-fast > div {
-    animation: twinkle 5s infinite ease-in-out;
+@keyframes shootingStar {
+  0% {
+    opacity: 0;
+    width: 0;
+    transform: rotate(var(--angle)) translateX(0) scale(0);
+  }
+  5% {
+    opacity: 1;
+    width: 50px;
+    transform: rotate(var(--angle)) translateX(10px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateX(calc(100vw - 100px)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(100vw) scale(0.5);
+  }
 }
 </style>
