@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, onMounted } from "vue";
+import CosmicParticles from "./CosmicParticles.vue";
 
 const props = defineProps({
     flashItem: {
@@ -11,6 +12,12 @@ const props = defineProps({
 const layanan = computed(() => props.flashItem.layanan);
 const produk = computed(() => layanan.value.produk);
 const cardRef = ref(null);
+
+// Detect device capabilities
+const isMobile = computed(() => window?.innerWidth < 768);
+const isLowPowerDevice = computed(() => {
+    return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
+});
 
 // Calculate discount percentage
 const discountPercentage = computed(() => {
@@ -71,52 +78,18 @@ const isStockLow = computed(() => {
     return stockPercentage.value < 20;
 });
 
-// Generate random parameters for cosmic elements
-const cosmicElements = ref([]);
-const generateCosmicElements = () => {
-    const elements = [];
-    // Generate 3-5 planets
-    for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
-        elements.push({
-            type: "planet",
-            size: 15 + Math.floor(Math.random() * 15), // 8px to 20px
-            top: Math.random() * 70 + 10,
-            right: Math.random() * 60 + 5,
-            rotation: Math.random() * 360,
-            orbitSpeed: 5 + Math.random() * 15, // 5s to 20s
-            delay: Math.random() * 3,
-        });
-    }
+// Instead of generating cosmic elements as DOM nodes, use a unique ID for canvas
+const cardId = ref(`flashcard-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
 
-    // Generate 2-3 stars
-    for (let i = 0; i < 3 + Math.floor(Math.random() * 2); i++) {
-        elements.push({
-            type: "pulsar",
-            size: 3 + Math.floor(Math.random() * 5), // 3px to 8px
-            top: Math.random() * 80 + 5,
-            right: Math.random() * 80 + 10,
-            pulseSpeed: 1.5 + Math.random() * 2, // 1.5s to 3.5s
-            delay: Math.random() * 2,
-        });
-    }
-
-    // Generate quantum waves
-    elements.push({
-        type: "quantum",
-        height: 50 + Math.random() * 30,
-        right: 5 + Math.random() * 15,
-        top: 50 + Math.random() * 30,
-        waveSpeed: 4 + Math.random() * 8,
-    });
-
-    return elements;
-};
+// Set particle density based on device
+const particleDensity = computed(() => {
+    if (isLowPowerDevice.value) return 0.5;
+    return 1;
+});
 
 onMounted(() => {
-    cosmicElements.value = generateCosmicElements();
-
-    // Apply parallax effect on desktop
-    if (window.innerWidth >= 768) {
+    // Apply parallax effect on desktop (simplified and optimized)
+    if (window.innerWidth >= 768 && !isLowPowerDevice.value) {
         const handleMouseMove = (e) => {
             if (!cardRef.value) return;
 
@@ -132,6 +105,7 @@ onMounted(() => {
 
             const cosmicLayer = cardRef.value.querySelector(".cosmic-layer");
             if (cosmicLayer) {
+                // Use transform with will-change for better performance
                 cosmicLayer.style.transform = `translate(${moveX}px, ${moveY}px)`;
             }
         };
@@ -148,7 +122,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div ref="cardRef" class="flashsale-card group">
+    <div ref="cardRef" class="flashsale-card group" :id="cardId">
         <!-- User Limit Badge -->
         <div v-if="flashItem.batas_user" class="absolute z-20 top-2 right-2">
             <div
@@ -224,62 +198,18 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- Right Section - Cosmic Elements -->
+            <!-- Right Section - Cosmic Elements (Optimized) -->
             <div class="right-section">
-                <div class="cosmic-layer">
-                    <!-- Dynamic cosmic elements -->
-                    <template
-                        v-for="(element, index) in cosmicElements"
-                        :key="index"
-                    >
-                        <!-- Planet -->
-                        <div
-                            v-if="element.type === 'planet'"
-                            class="cosmic-planet"
-                            :style="{
-                                width: `${element.size}px`,
-                                height: `${element.size}px`,
-                                top: `${element.top}%`,
-                                right: `${element.right}%`,
-                                animationDuration: `${element.orbitSpeed}s`,
-                                animationDelay: `${element.delay}s`,
-                            }"
-                        >
-                            <div
-                                class="planet-ring"
-                                v-if="index % 3 === 0"
-                            ></div>
-                        </div>
-
-                        <!-- Pulsar star -->
-                        <div
-                            v-if="element.type === 'pulsar'"
-                            class="cosmic-pulsar"
-                            :style="{
-                                width: `${element.size}px`,
-                                height: `${element.size}px`,
-                                top: `${element.top}%`,
-                                right: `${element.right}%`,
-                                animationDuration: `${element.pulseSpeed}s`,
-                                animationDelay: `${element.delay}s`,
-                            }"
-                        ></div>
-
-                        <!-- Quantum wave -->
-                        <div
-                            v-if="element.type === 'quantum'"
-                            class="quantum-wave"
-                            :style="{
-                                height: `${element.height}px`,
-                                right: `${element.right}%`,
-                                top: `${element.top}%`,
-                                animationDuration: `${element.waveSpeed}s`,
-                            }"
-                        ></div>
-                    </template>
+                <div class="cosmic-layer" style="will-change: transform">
+                    <!-- Replace static elements with canvas-based particles -->
+                    <CosmicParticles
+                        :item-id="cardId"
+                        :density="particleDensity"
+                        theme="primary"
+                    />
                 </div>
 
-                <!-- Thermal Edge Effect -->
+                <!-- Thermal Edge Effect (static gradient) -->
                 <div class="thermal-edge"></div>
             </div>
         </div>
@@ -305,9 +235,9 @@ onMounted(() => {
                         :class="[isStockLow ? 'low-stock' : '']"
                         :style="{ width: `${stockPercentage}%` }"
                     >
-                        <!-- Animated particle sparks for thermal effect -->
-                        <div class="particle-sparks">
-                            <div class="spark" v-for="i in 5" :key="i"></div>
+                        <!-- Simplified particle sparks (low count for performance) -->
+                        <div class="particle-sparks" v-if="!isLowPowerDevice">
+                            <div class="spark" v-for="i in 3" :key="i"></div>
                         </div>
                     </div>
                 </div>
@@ -765,6 +695,76 @@ onMounted(() => {
     }
 
     .spark {
+        animation: none;
+    }
+    
+    .price-section {
+        animation: none;
+    }
+}
+
+/* Optimized animations with low impact */
+@keyframes price-pulse {
+    0% {
+        text-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+    }
+    100% {
+        text-shadow: 0 0 12px rgba(155, 135, 245, 0.7);
+    }
+}
+
+@keyframes spark-float {
+    0% {
+        transform: translateY(0) scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-10px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Hardware acceleration hints */
+.flashsale-card {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.cosmic-layer {
+    will-change: transform;
+}
+
+.progress-bar {
+    will-change: width;
+}
+
+/* Additional hardware acceleration for smooth animations */
+.progress-container {
+    transform: translateZ(0);
+}
+
+/* Media optimizations */
+@media (max-width: 768px) {
+    .spark:nth-child(even) {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Reduce motion for accessibility */
+    .progress-bar {
+        transition: width 2s linear;
+    }
+
+    .spark {
+        animation: none;
+    }
+    
+    .price-section {
         animation: none;
     }
 }

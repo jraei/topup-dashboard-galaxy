@@ -1,113 +1,193 @@
+
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
-        <div
-            v-for="(star, index) in stars"
-            :key="`star-${index}`"
-            class="absolute rounded-full star"
-            :style="{
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                left: `${star.x}%`,
-                top: `${star.y}%`,
-                backgroundColor: star.color,
-                boxShadow: star.glow,
-                animationDuration: `${star.duration}s`,
-                animationDelay: `${star.delay}s`,
-                opacity: star.baseOpacity,
-            }"
-        ></div>
+        <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 
-const isReducedMotion =
-    window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches || false;
-const isMobile = computed(() => window?.innerWidth < 768);
+const canvasRef = ref(null);
+let animationFrameId = null;
+let ctx = null;
+let stars = [];
+let lastTime = 0;
+const targetFPS = 60;
+const frameDuration = 1000 / targetFPS;
 
-const stars = ref([]);
-
-onMounted(() => {
-    generateStars();
-    window.addEventListener("resize", generateStars);
+const isReducedMotion = computed(() => {
+    return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches || false;
 });
 
-const generateStars = () => {
-    const starCount = isMobile.value ? 5 : 10; // Reduced on mobile
-    const starData = [];
+const isMobile = computed(() => window?.innerWidth < 768);
+const isTablet = computed(() => window?.innerWidth >= 768 && window?.innerWidth < 1024);
+const isLowPower = computed(() => {
+    return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
+});
 
-    // Generate stars with higher density near center
-    for (let i = 0; i < starCount; i++) {
-        // Create bias toward center for x and y
-        const edgeBiasX =
-            (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
-        const edgeBiasY =
-            (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
+// Determine star count based on device capability
+const getStarCount = computed(() => {
+    if (isLowPower.value || isMobile.value) return 150;
+    if (isTablet.value) return 300;
+    return 500;
+});
 
+function initCanvas() {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    
+    ctx = canvas.getContext('2d', { alpha: true });
+    resizeCanvas();
+    
+    // Create stars with optimized properties
+    generateStars();
+    
+    // Start animation loop with timing control
+    lastTime = performance.now();
+    animate();
+}
+
+function generateStars() {
+    stars = [];
+    const count = getStarCount.value;
+    
+    for (let i = 0; i < count; i++) {
+        // Use bias for center density as in original
+        const edgeBiasX = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
+        const edgeBiasY = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
+        
         // Convert to percentage (40% to 60% for more center density)
         const x = 50 + edgeBiasX * 50; // 25% to 75% with center bias
         const y = 50 + edgeBiasY * 50; // 25% to 75% with center bias
-
+        
         const size = Math.random() * 2 + 2; // 2-4px
         const useSecondary = Math.random() > 0.3;
         const color = useSecondary ? "#33C3F0" : "#ffffff"; // secondary or white
-        const glowSize = size * 2;
-        const glowColor = useSecondary
-            ? "rgba(51, 195, 240, 0.8)"
-            : "rgba(255, 255, 255, 0.6)";
-        const glow = `0 0 ${glowSize}px ${glowSize / 2}px ${glowColor}`;
-        const duration = Math.random() * 2 + 2; // 2-4s
-        const delay = Math.random() * 2; // 0-2s
-
-        starData.push({
+        
+        stars.push({
+            x: (x / 100) * (canvasRef.value?.width || 1000),
+            y: (y / 100) * (canvasRef.value?.height || 500),
             size,
-            x,
-            y,
             color,
-            glow,
-            duration,
-            delay,
+            glowSize: size * 2,
+            glowColor: useSecondary ? "rgba(51, 195, 240, 0.8)" : "rgba(255, 255, 255, 0.6)",
             baseOpacity: Math.random() * 0.4 + 0.6, // 0.6-1.0
+            currentOpacity: 0,
+            pulseDirection: 1,
+            pulseSpeed: Math.random() * 0.01 + 0.005,
         });
     }
+}
 
-    stars.value = starData;
-};
+function resizeCanvas() {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    
+    // Use devicePixelRatio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // Scale context for high DPI displays
+    ctx.scale(dpr, dpr);
+    
+    // Regenerate stars for new canvas size
+    if (stars.length > 0) {
+        generateStars();
+    }
+}
+
+function drawStar(star) {
+    // Skip if off-screen
+    if (star.x < 0 || star.x > canvasRef.value.width || 
+        star.y < 0 || star.y > canvasRef.value.height) {
+        return;
+    }
+    
+    // Update opacity for pulsing effect
+    if (star.pulseDirection > 0) {
+        star.currentOpacity += star.pulseSpeed;
+        if (star.currentOpacity >= 1) {
+            star.pulseDirection = -1;
+        }
+    } else {
+        star.currentOpacity -= star.pulseSpeed;
+        if (star.currentOpacity <= 0.6) {
+            star.pulseDirection = 1;
+        }
+    }
+    
+    // Clamp opacity
+    star.currentOpacity = Math.max(0.6, Math.min(1, star.currentOpacity));
+    
+    // Draw glow effect first (underneath)
+    ctx.globalAlpha = star.currentOpacity * 0.7;
+    ctx.fillStyle = star.glowColor;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.glowSize, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw star
+    ctx.globalAlpha = star.currentOpacity;
+    ctx.fillStyle = star.color;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Reset global alpha
+    ctx.globalAlpha = 1;
+}
+
+function animate(timestamp = 0) {
+    // Throttle frame rate for performance
+    const elapsed = timestamp - lastTime;
+    
+    if (elapsed > frameDuration) {
+        lastTime = timestamp - (elapsed % frameDuration);
+        
+        // Clear with proper alpha handling
+        ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+        
+        // Draw all stars
+        stars.forEach(drawStar);
+    }
+    
+    // Use reduced framerate when tab is not visible
+    const frameRate = document.hidden ? 30 : targetFPS;
+    
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+// Lifecycle hooks
+onMounted(() => {
+    initCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Reduce animation load when tab is not visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            cancelAnimationFrame(animationFrameId);
+        } else {
+            lastTime = performance.now();
+            animate();
+        }
+    });
+});
+
+onUnmounted(() => {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    window.removeEventListener('resize', resizeCanvas);
+});
 </script>
 
 <style scoped>
 .starfield-container {
     z-index: 5;
-}
-
-.star {
-    animation: star-pulse infinite alternate ease-in-out;
-}
-
-@keyframes star-pulse {
-    0% {
-        opacity: var(--opacity, 0.3);
-        transform: scale(0.95);
-    }
-    100% {
-        opacity: calc(var(--opacity, 0.3) * 2);
-        transform: scale(1.1);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .star {
-        animation: star-twinkle 3s infinite alternate ease-in-out;
-    }
-
-    @keyframes star-twinkle {
-        0% {
-            opacity: var(--opacity, 0.6);
-        }
-        100% {
-            opacity: calc(var(--opacity, 0.6) * 1.3);
-        }
-    }
+    transform: translateZ(0); /* Hardware acceleration */
 }
 </style>

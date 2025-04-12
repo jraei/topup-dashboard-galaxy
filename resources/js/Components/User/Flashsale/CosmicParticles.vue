@@ -1,238 +1,205 @@
-<script setup>
-import { onMounted, ref } from "vue";
-
-const container = ref(null);
-const particles = ref([]);
-const isMobile = ref(window.innerWidth < 768);
-
-// Generate random particles
-const generateParticles = () => {
-    const particleCount = isMobile.value ? 20 : 50; // Reduce by 60% on mobile
-    const newParticles = [];
-
-    for (let i = 0; i < particleCount; i++) {
-        newParticles.push({
-            id: i,
-            x: Math.random() * 100, // position in percentage
-            y: Math.random() * 100,
-            size: 1 + Math.random() * 3,
-            color: Math.random() > 0.6 ? "#9b87f5" : "#33C3F0", // primary or secondary
-            opacity: 0.3 + Math.random() * 0.7,
-            speed: 0.2 + Math.random() * 0.8,
-            direction: Math.random() * 360, // degrees
-            twinkleSpeed: 1 + Math.random() * 4, // seconds
-        });
-    }
-
-    particles.value = newParticles;
-};
-
-const handleResize = () => {
-    isMobile.value = window.innerWidth < 768;
-    generateParticles();
-};
-
-onMounted(() => {
-    generateParticles();
-    window.addEventListener("resize", handleResize);
-
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (!prefersReducedMotion) {
-        // Animate particles
-        const moveParticles = () => {
-            const containerElement = container.value;
-            if (!containerElement) return;
-
-            // Get all particle elements
-            const particleElements =
-                containerElement.querySelectorAll(".cosmic-particle");
-
-            for (let i = 0; i < particleElements.length; i++) {
-                const particle = particles.value[i];
-                if (!particle) continue;
-
-                // Move particle based on its direction and speed
-                particle.x +=
-                    Math.cos((particle.direction * Math.PI) / 180) *
-                    particle.speed *
-                    0.02;
-                particle.y +=
-                    Math.sin((particle.direction * Math.PI) / 180) *
-                    particle.speed *
-                    0.02;
-
-                // Wrap around edges
-                if (particle.x > 105) particle.x = -5;
-                if (particle.x < -5) particle.x = 105;
-                if (particle.y > 105) particle.y = -5;
-                if (particle.y < -5) particle.y = 105;
-
-                // Update position
-                particleElements[i].style.left = `${particle.x}%`;
-                particleElements[i].style.top = `${particle.y}%`;
-            }
-
-            requestAnimationFrame(moveParticles);
-        };
-
-        requestAnimationFrame(moveParticles);
-    }
-});
-</script>
 
 <template>
-    <div ref="container" class="cosmic-particles">
-        <div
-            v-for="particle in particles"
-            :key="particle.id"
-            class="cosmic-particle"
-            :style="{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                backgroundColor: particle.color,
-                opacity: particle.opacity,
-                animationDuration: `${particle.twinkleSpeed}s`,
-            }"
-        ></div>
-
-        <!-- Quantum Field Effect -->
-        <!-- <div class="quantum-field"></div> -->
-
-        <!-- Extended Nebula Effect that goes beyond container -->
-        <div class="extended-nebula"></div>
-
-        <!-- Hexagonal Grid Pattern -->
-        <div class="hex-grid"></div>
-    </div>
+    <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
 </template>
 
-<style scoped>
-.cosmic-particles {
-    position: absolute;
-    inset: -15%; /* Extend beyond container edges */
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
+<script setup>
+import { ref, onMounted, onUnmounted, computed } from "vue";
+
+const props = defineProps({
+    itemId: {
+        type: [Number, String],
+        required: true
+    },
+    density: {
+        type: Number,
+        default: 1 // 1 = normal, 0.5 = reduced, etc.
+    },
+    theme: {
+        type: String,
+        default: 'primary' // 'primary' or 'secondary'
+    }
+});
+
+const canvasRef = ref(null);
+let ctx = null;
+let animationFrameId = null;
+let particles = [];
+let lastTime = 0;
+let frameCount = 0;
+let isVisible = false;
+let isActive = true;
+
+const isMobile = computed(() => window.innerWidth < 768);
+const isLowPowerDevice = computed(() => {
+    return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
+});
+
+// Determine particle count based on device capability
+const getParticleCount = computed(() => {
+    const base = isMobile.value ? 10 : (isLowPowerDevice.value ? 15 : 25);
+    return Math.floor(base * props.density);
+});
+
+// Colors based on theme
+const getColors = computed(() => {
+    if (props.theme === 'secondary') {
+        return {
+            main: '#33C3F0',
+            glow: 'rgba(51, 195, 240, 0.6)',
+            faint: 'rgba(51, 195, 240, 0.3)'
+        };
+    }
+    // Default primary theme
+    return {
+        main: '#9b87f5',
+        glow: 'rgba(155, 135, 245, 0.6)',
+        faint: 'rgba(155, 135, 245, 0.3)'
+    };
+});
+
+function initCanvas() {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    
+    ctx = canvas.getContext('2d', { alpha: true });
+    resizeCanvas();
+    
+    // Create particles
+    generateParticles();
+    
+    // Start animation loop
+    lastTime = performance.now();
+    animate();
 }
 
-@media (max-width: 768px) {
-    .cosmic-particles {
-        inset: 0; /* Contain within boundaries on mobile */
+function resizeCanvas() {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    ctx.scale(dpr, dpr);
+}
+
+function generateParticles() {
+    particles = [];
+    const count = getParticleCount.value;
+    const colors = getColors.value;
+    
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: Math.random() * canvasRef.value.width,
+            y: Math.random() * canvasRef.value.height,
+            size: Math.random() * 2 + 1,
+            color: i % 3 === 0 ? colors.main : colors.faint,
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: (Math.random() - 0.5) * 0.2,
+            opacity: Math.random() * 0.5 + 0.3,
+            pulse: Math.random() * 0.02 + 0.01,
+            pulseDirection: Math.random() > 0.5 ? 1 : -1
+        });
     }
 }
 
-.cosmic-particle {
-    position: absolute;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 8px currentColor;
-    animation: twinkle var(--twinkle-speed, 3s) infinite alternate ease-in-out;
+function drawParticle(particle) {
+    // Pulse opacity
+    particle.opacity += particle.pulse * particle.pulseDirection;
+    if (particle.opacity > 0.8) {
+        particle.pulseDirection = -1;
+    } else if (particle.opacity < 0.3) {
+        particle.pulseDirection = 1;
+    }
+    
+    // Move position with slight random variation
+    particle.x += particle.vx + (Math.random() - 0.5) * 0.1;
+    particle.y += particle.vy + (Math.random() - 0.5) * 0.1;
+    
+    // Wrap around screen edges
+    if (particle.x < 0) particle.x = canvasRef.value.width;
+    if (particle.x > canvasRef.value.width) particle.x = 0;
+    if (particle.y < 0) particle.y = canvasRef.value.height;
+    if (particle.y > canvasRef.value.height) particle.y = 0;
+    
+    // Draw the particle
+    ctx.beginPath();
+    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    ctx.fillStyle = particle.color;
+    ctx.globalAlpha = particle.opacity;
+    ctx.fill();
 }
 
-/* Quantum Field Effect */
-.quantum-field {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        45deg,
-        rgba(155, 135, 245, 0.03),
-        rgba(51, 195, 240, 0.03) 10px,
-        transparent 10px,
-        transparent 20px
-    );
-    opacity: 0.5;
-    mix-blend-mode: screen;
+function animate(timestamp = 0) {
+    if (!isActive || !isVisible) return;
+    
+    // Throttle to 30fps for low power devices
+    const frameRate = isLowPowerDevice.value ? 33.3 : 16.6; // 30fps or 60fps
+    const elapsed = timestamp - lastTime;
+    
+    if (elapsed > frameRate) {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+        
+        // Draw all particles
+        for (const particle of particles) {
+            drawParticle(particle);
+        }
+        
+        lastTime = timestamp - (elapsed % frameRate);
+    }
+    
+    // Request next frame only if active and visible
+    animationFrameId = requestAnimationFrame(animate);
 }
 
-/* Extended Nebula Effect */
-.extended-nebula {
-    position: absolute;
-    width: 130%;
-    height: 130%;
-    left: -15%;
-    top: -15%;
-    background: radial-gradient(
-        ellipse at center,
-        rgba(155, 135, 245, 0.1) 0%,
-        rgba(51, 195, 240, 0.05) 40%,
-        transparent 70%
-    );
-    filter: blur(20px);
-    mix-blend-mode: screen;
-    opacity: 0.6;
-    animation: rotate 120s linear infinite;
-    transform-origin: center;
-}
-
-@media (max-width: 768px) {
-    .extended-nebula {
-        width: 100%;
-        height: 100%;
-        left: 0;
-        top: 0;
+function checkVisibility() {
+    if (!canvasRef.value) return;
+    
+    const rect = canvasRef.value.getBoundingClientRect();
+    const wasVisible = isVisible;
+    
+    isVisible = 
+        rect.top < window.innerHeight &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.right > 0;
+    
+    // Toggle animation based on visibility
+    if (!wasVisible && isVisible && isActive) {
+        lastTime = performance.now();
+        animate();
     }
 }
 
-/* Hexagonal Grid Pattern */
-.hex-grid {
-    position: absolute;
-    inset: 0;
-    opacity: 0.1;
-    background-image: repeating-linear-gradient(
-            to right,
-            rgba(155, 135, 245, 0.1),
-            rgba(155, 135, 245, 0.1) 1px,
-            transparent 1px,
-            transparent 20px
-        ),
-        repeating-linear-gradient(
-            to bottom,
-            rgba(155, 135, 245, 0.1),
-            rgba(155, 135, 245, 0.1) 1px,
-            transparent 1px,
-            transparent 20px
-        );
-}
+onMounted(() => {
+    initCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('scroll', checkVisibility, { passive: true });
+    
+    // Check initial visibility
+    checkVisibility();
+    
+    // Pause when tab is inactive
+    document.addEventListener('visibilitychange', () => {
+        isActive = !document.hidden;
+        
+        if (isActive && isVisible) {
+            lastTime = performance.now();
+            animate();
+        }
+    });
+});
 
-/* Animations */
-@keyframes twinkle {
-    0%,
-    100% {
-        opacity: 0.2;
-        transform: translate(-50%, -50%) scale(0.8);
+onUnmounted(() => {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
     }
-    50% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.2);
-    }
-}
-
-@keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Support for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .cosmic-particle {
-        animation: twinkle 5s infinite alternate ease-in-out !important;
-    }
-
-    .extended-nebula {
-        animation: none;
-    }
-}
-</style>
+    window.removeEventListener('resize', resizeCanvas);
+    window.removeEventListener('scroll', checkVisibility);
+    isActive = false;
+});
+</script>
