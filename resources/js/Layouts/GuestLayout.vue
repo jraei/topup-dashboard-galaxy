@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref } from "vue";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
@@ -33,7 +32,7 @@ const showingNavigationDropdown = ref(false);
             <main>
                 <slot />
             </main>
-            
+
             <!-- Cosmic Footer System -->
             <CosmicFooter />
         </div>

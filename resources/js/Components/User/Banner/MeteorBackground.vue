@@ -87,13 +87,13 @@ const positions = [
     { left: "55%", top: "-20px", rotation: 10, delay: 0.309607, duration: 5 },
     { left: "65%", top: "-20px", rotation: 30, delay: 0.35162, duration: 8 },
     { left: "75%", top: "-20px", rotation: 10, delay: 0.413144, duration: 7 },
-    { left: "85%", top: "-20px", rotation: 30, delay: 0.395388, duration: 6 },
-    { left: "15%", top: "-20px", rotation: 10, delay: 0.582248, duration: 4 },
-    { left: "27%", top: "-20px", rotation: 30, delay: 0.710367, duration: 4 },
-    { left: "37%", top: "-20px", rotation: 10, delay: 0.564896, duration: 6 },
-    { left: "47%", top: "-20px", rotation: 30, delay: 0.206357, duration: 7 },
-    { left: "57%", top: "-20px", rotation: 10, delay: 0.628613, duration: 9 },
-    { left: "67%", top: "-20px", rotation: 30, delay: 0.529785, duration: 7 },
+    // { left: "85%", top: "-20px", rotation: 30, delay: 0.395388, duration: 6 },
+    // { left: "15%", top: "-20px", rotation: 10, delay: 0.582248, duration: 4 },
+    // { left: "27%", top: "-20px", rotation: 30, delay: 0.710367, duration: 4 },
+    // { left: "37%", top: "-20px", rotation: 10, delay: 0.564896, duration: 6 },
+    // { left: "47%", top: "-20px", rotation: 30, delay: 0.206357, duration: 7 },
+    // { left: "57%", top: "-20px", rotation: 10, delay: 0.628613, duration: 9 },
+    // { left: "67%", top: "-20px", rotation: 30, delay: 0.529785, duration: 7 },
     // { left: "77%", top: "-20px", rotation: 10, delay: 0.64863, duration: 6 },
     // { left: "87%", top: "-20px", rotation: 30, delay: 0.701722, duration: 3 },
     // { left: "5%", top: "-20px", rotation: 10, delay: 0.366231, duration: 5 },
@@ -112,7 +112,7 @@ const getMeteorCount = () => {
     const isReducedMotion =
         window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches ||
         false;
-    return isMobile || isReducedMotion ? 15 : positions.length;
+    return isMobile || isReducedMotion ? 10 : positions.length;
 };
 
 // Generate debris particles for meteor movement

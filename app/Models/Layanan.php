@@ -110,7 +110,7 @@ class Layanan extends Model
 
         if (!$userRoleId) {
             if ($guestRoleId === null) {
-                $guestRoleId = \App\Models\UserRole::where('name', 'guest')->value('id');
+                $guestRoleId = \App\Models\UserRole::where('role_name', 'guest')->value('id');
             }
             $userRoleId = $guestRoleId;
         }

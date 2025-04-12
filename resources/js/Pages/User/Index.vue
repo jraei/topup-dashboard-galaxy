@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -52,12 +51,9 @@ const props = defineProps({
             >
                 <!-- Enhanced Background Layers with Visual Priority System -->
                 <div class="absolute inset-0 z-0">
-                    <!-- <CyberpunkGrid class="z-2" /> -->
                     <StarfieldLayer class="z-5" />
-                    <NebulasLayer class="z-10" />
                     <PlanetsLayer class="z-15" />
                     <MeteorBackground class="z-20" />
-                    <CometLayer class="z-25" />
                 </div>
 
                 <!-- Carousel Content -->
@@ -78,13 +74,13 @@ const props = defineProps({
                 v-if="popularProducts && popularProducts.length > 0"
                 :products="popularProducts"
             />
-            
+
             <!-- Product Catalog Section -->
-            <ProductCatalogSection 
+            <!-- <ProductCatalogSection
                 v-if="categories && categories.length > 0"
                 :categories="categories"
                 :products="catalogProducts"
-            />
+            /> -->
         </div>
     </GuestLayout>
 </template>

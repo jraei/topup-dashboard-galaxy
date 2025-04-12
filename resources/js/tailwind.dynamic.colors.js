@@ -1,4 +1,3 @@
-
 module.exports = {
     primary: {
         DEFAULT: "#9b87f5",
