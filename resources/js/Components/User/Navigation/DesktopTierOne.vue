@@ -1,8 +1,10 @@
+
 <script setup>
 import { ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
-import CosmicSearch from "./CosmicSearch.vue";
+import ProductSearch from "./ProductSearch.vue";
+import CosmicIcon from "./CosmicIcon.vue";
 
 defineProps({
     isScrolled: {
@@ -30,7 +32,7 @@ const isSearchFocused = ref(false);
 
                 <!-- Center: Search -->
                 <div class="flex-1 max-w-3xl mx-6">
-                    <CosmicSearch
+                    <ProductSearch
                         @focus="isSearchFocused = true"
                         @blur="isSearchFocused = false"
                         :is-focused="isSearchFocused"

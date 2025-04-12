@@ -1,8 +1,10 @@
+
 <script setup>
 import { ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
-import CosmicSearch from "./CosmicSearch.vue";
+import ProductSearch from "./ProductSearch.vue";
+import CosmicIcon from "./CosmicIcon.vue";
 
 const props = defineProps({
     isOpen: {
@@ -25,9 +27,33 @@ const props = defineProps({
 
 const showSearch = ref(false);
 const isSearchFocused = ref(false);
+const expandedItems = ref([]);
 
 const toggleSearch = () => {
     showSearch.value = !showSearch.value;
+};
+
+const toggleExpand = (index) => {
+    if (expandedItems.value.includes(index)) {
+        expandedItems.value = expandedItems.value.filter(i => i !== index);
+    } else {
+        expandedItems.value.push(index);
+    }
+};
+
+// Function to get icon name from emoji
+const getIconName = (emojiName) => {
+    const iconMappings = {
+        '🌌': 'topup',
+        '📊': 'transaction',
+        '🏆': 'leaderboard',
+        '🧮': 'calculator',
+        '🌠': 'winrate',
+        '🎡': 'magicwheel',
+        '♈️': 'zodiac'
+    };
+    
+    return iconMappings[emojiName] || 'default';
 };
 </script>
 
@@ -50,20 +76,7 @@ const toggleSearch = () => {
                         class="flex items-center justify-center w-10 h-10 text-gray-300 transition-all rounded-full hover:bg-primary/10"
                         @click="toggleSearch"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                        </svg>
+                        <CosmicIcon name="search" size="md" />
                     </button>
 
                     <!-- Language -->
@@ -139,7 +152,7 @@ const toggleSearch = () => {
                     </svg>
                 </button>
                 <div class="flex-1">
-                    <CosmicSearch
+                    <ProductSearch
                         @focus="isSearchFocused = true"
                         @blur="isSearchFocused = false"
                         :is-focused="isSearchFocused"
@@ -191,7 +204,74 @@ const toggleSearch = () => {
                 <!-- Navigation Links -->
                 <div class="flex-1 px-2 py-4 space-y-1">
                     <template v-for="(link, index) in navLinks" :key="index">
+                        <!-- Regular Link or Dropdown Trigger -->
+                        <div v-if="link.dropdown" class="relative" :key="`dropdown-${index}`">
+                            <button
+                                class="flex items-center justify-between w-full px-4 py-3 text-gray-200 transition-all rounded-md hover:bg-primary/10 hover:text-primary"
+                                :class="{
+                                    'bg-primary/5 text-primary': link.active,
+                                }"
+                                @click="toggleExpand(index)"
+                            >
+                                <div class="flex items-center">
+                                    <CosmicIcon 
+                                        :name="getIconName(link.icon)" 
+                                        size="md" 
+                                        className="mr-3" 
+                                    />
+                                    <span class="font-medium">{{ link.name }}</span>
+                                </div>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="w-5 h-5 transition-transform duration-300"
+                                    :class="{ 'rotate-180': expandedItems.includes(index) }"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 9l-7 7-7-7"
+                                    />
+                                </svg>
+                            </button>
+                            
+                            <!-- Dropdown Items (Accordion) -->
+                            <div
+                                v-if="expandedItems.includes(index)"
+                                class="overflow-hidden transition-all duration-300 bg-primary/5 rounded-md mt-1 mb-1"
+                            >
+                                <Link
+                                    v-for="(item, itemIndex) in link.dropdown"
+                                    :key="`${index}-${itemIndex}`"
+                                    :href="route(item.route)"
+                                    class="flex items-center py-3 pl-12 pr-4 text-gray-200 transition-all hover:bg-primary/10 hover:text-primary"
+                                    @click="closeMenu"
+                                >
+                                    <CosmicIcon 
+                                        :name="getIconName(item.icon)" 
+                                        size="md" 
+                                        className="mr-2 text-primary-text/70" 
+                                    />
+                                    <div>
+                                        <p class="font-medium">{{ item.name }}</p>
+                                        <p class="text-xs text-primary-text/60">
+                                            {{ 
+                                                item.name === 'Winrate' ? 'Calculate matches needed' :
+                                                item.name === 'Magic Wheel' ? 'Estimate diamond cost' :
+                                                'Calculate skin probability'
+                                            }}
+                                        </p>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+                        
+                        <!-- Regular Link (No Dropdown) -->
                         <Link
+                            v-else
                             :href="route(link.route)"
                             class="flex items-center px-4 py-3 text-gray-200 transition-all rounded-md hover:bg-primary/10 hover:text-primary"
                             :class="{
@@ -199,25 +279,13 @@ const toggleSearch = () => {
                             }"
                             @click="closeMenu"
                         >
-                            <span class="mr-3 text-xl">{{ link.icon }}</span>
+                            <CosmicIcon 
+                                :name="getIconName(link.icon)" 
+                                size="md" 
+                                className="mr-3" 
+                            />
                             <span class="font-medium">{{ link.name }}</span>
                         </Link>
-
-                        <!-- Dropdown items if any -->
-                        <template v-if="link.dropdown">
-                            <Link
-                                v-for="(item, itemIndex) in link.dropdown"
-                                :key="`${index}-${itemIndex}`"
-                                :href="route(item.route)"
-                                class="flex items-center py-2 pl-12 pr-4 text-gray-200 transition-all rounded-md hover:bg-primary/10 hover:text-primary"
-                                @click="closeMenu"
-                            >
-                                <span class="mr-2 text-lg">{{
-                                    item.icon
-                                }}</span>
-                                <span>{{ item.name }}</span>
-                            </Link>
-                        </template>
                     </template>
                 </div>
 
@@ -229,21 +297,9 @@ const toggleSearch = () => {
                             class="flex items-center justify-center px-4 py-2 text-sm font-medium text-center text-gray-200 transition-all rounded-md bg-dark/card hover:bg-primary/20 hover:text-white"
                             @click="closeMenu"
                         >
-                            <span class="mr-1.5"
-                                ><svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="w-6 h-6"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                                    /></svg
-                            ></span>
+                            <span class="mr-1.5">
+                                <CosmicIcon name="login" size="md" />
+                            </span>
                             <span>Login</span>
                         </Link>
 
@@ -252,7 +308,9 @@ const toggleSearch = () => {
                             class="flex items-center justify-center px-4 py-2 text-sm font-medium text-center text-white transition-all rounded-md bg-primary hover:bg-primary-hover"
                             @click="closeMenu"
                         >
-                            <span class="mr-1.5">🚀</span>
+                            <span class="mr-1.5">
+                                <CosmicIcon name="register" size="md" />
+                            </span>
                             <span>Register</span>
                         </Link>
                     </div>

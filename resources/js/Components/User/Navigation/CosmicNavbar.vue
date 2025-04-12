@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import DesktopTierOne from "./DesktopTierOne.vue";
@@ -89,7 +90,6 @@ const navLinks = [
                 <!-- Desktop Two-Tier Navigation (md and above) -->
                 <div class="hidden md:block">
                     <DesktopTierOne :is-scrolled="isScrolled" />
-                    <div class="border-b border-primary/20"></div>
                     <DesktopTierTwo :nav-links="navLinks" />
                 </div>
 
