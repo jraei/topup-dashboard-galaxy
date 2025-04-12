@@ -7,6 +7,7 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import CosmicNavbar from "@/Components/User/Navigation/CosmicNavbar.vue";
+import CosmicFooter from "@/Components/User/Footer/CosmicFooter.vue";
 import { Link } from "@inertiajs/vue3";
 
 const showingNavigationDropdown = ref(false);
@@ -32,6 +33,9 @@ const showingNavigationDropdown = ref(false);
             <main>
                 <slot />
             </main>
+            
+            <!-- Cosmic Footer -->
+            <CosmicFooter />
         </div>
     </div>
 </template>

@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
 import NavLink from "@/Components/NavLink.vue";
 import CosmicIcon from "./CosmicIcon.vue";
@@ -39,6 +40,30 @@ const getIconName = (emojiName) => {
 
     return iconMappings[emojiName] || "default";
 };
+
+// Handle click outside to close dropdown
+const handleClickOutside = (event) => {
+    const dropdowns = document.querySelectorAll('.dropdown-container');
+    let clickedOutside = true;
+    
+    dropdowns.forEach(dropdown => {
+        if (dropdown.contains(event.target)) {
+            clickedOutside = false;
+        }
+    });
+    
+    if (clickedOutside && activeDropdown.value !== null) {
+        activeDropdown.value = null;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
@@ -49,7 +74,7 @@ const getIconName = (emojiName) => {
                 <div
                     v-for="(link, index) in navLinks"
                     :key="index"
-                    class="relative"
+                    class="relative dropdown-container"
                     @mouseleave="closeDropdown"
                 >
                     <button
@@ -125,6 +150,7 @@ const getIconName = (emojiName) => {
                     <div
                         v-if="link.dropdown && activeDropdown === index"
                         class="absolute z-50 w-64 mt-1 transition-all duration-300 origin-top-right top-full"
+                        style="z-index: 999;"
                     >
                         <div
                             class="overflow-hidden border rounded-md bg-gradient-to-b from-content_background to-content_background/90 backdrop-blur-sm shadow-glow-primary border-primary/30"
