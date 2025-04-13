@@ -1,4 +1,3 @@
-
 <template>
     <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
 </template>
@@ -161,7 +160,7 @@ function animate(timestamp = 0) {
     if (elapsed > frameRate) {
         // Clear canvas with opacity adjustment for better performance
         if (!ctx || !canvasRef.value) return;
-        
+
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
         // Draw all particles - this is the most intensive part
@@ -170,16 +169,20 @@ function animate(timestamp = 0) {
         }
 
         lastTime = timestamp - (elapsed % frameRate);
-        
+
         // Performance monitoring
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
             frameCount++;
-            if (frameCount % 60 === 0) {
-                const elapsedTime = performance.now() - timestamp;
-                if (elapsedTime > 4) {
-                    console.warn(`CosmicParticles render time: ${elapsedTime.toFixed(2)}ms - Consider reducing particle count`);
-                }
-            }
+            // if (frameCount % 60 === 0) {
+            //     const elapsedTime = performance.now() - timestamp;
+            //     if (elapsedTime > 4) {
+            //         console.warn(
+            //             `CosmicParticles render time: ${elapsedTime.toFixed(
+            //                 2
+            //             )}ms - Consider reducing particle count`
+            //         );
+            //     }
+            // }
         }
     }
 

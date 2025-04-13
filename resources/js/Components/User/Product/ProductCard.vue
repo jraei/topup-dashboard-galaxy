@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
@@ -29,7 +28,9 @@ const thumbnail = computed(() => {
 // Cosmos effects configuration
 const prefersReducedMotion = ref(false);
 const cardVariant = ref(Math.floor(Math.random() * 4));
-const starCount = ref(prefersReducedMotion.value ? 3 : Math.floor(Math.random() * 3) + 5);
+const starCount = ref(
+    prefersReducedMotion.value ? 3 : Math.floor(Math.random() * 3) + 5
+);
 const galaxyRotation = ref(Math.floor(Math.random() * 360));
 const planetType = ref(Math.floor(Math.random() * 4));
 
@@ -39,14 +40,14 @@ const stars = ref([]);
 const generateStars = () => {
     stars.value = [];
     const count = prefersReducedMotion.value ? 3 : starCount.value;
-    
+
     for (let i = 0; i < count; i++) {
         stars.value.push({
             size: Math.random() * 1.5 + 0.5,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             delay: Math.random() * 3,
-            opacity: Math.random() * 0.5 + 0.5
+            opacity: Math.random() * 0.5 + 0.5,
         });
     }
 };
@@ -57,12 +58,12 @@ const checkDevicePreferences = () => {
     prefersReducedMotion.value = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     ).matches;
-    
+
     // Check for low-power device
-    const isLowPower = window.navigator.hardwareConcurrency 
-        ? window.navigator.hardwareConcurrency < 4 
+    const isLowPower = window.navigator.hardwareConcurrency
+        ? window.navigator.hardwareConcurrency < 4
         : window.innerWidth < 768;
-        
+
     if (isLowPower) {
         starCount.value = 3;
     }
@@ -91,7 +92,7 @@ const planetStyle = computed(() => {
         "radial-gradient(circle, #6b7280 30%, #4b5563 100%)", // Gray planet
         "radial-gradient(circle, #da8ee7 20%, #8946a6 100%)", // Pink planet
     ];
-    
+
     return {
         background: variants[planetType.value % variants.length],
     };
@@ -112,7 +113,7 @@ const hasRing = computed(() => {
             class="absolute inset-0 nebula-background"
             :style="{ backgroundImage: nebulaGradient }"
         ></div>
-        
+
         <!-- Starfield Pattern -->
         <div class="absolute inset-0 overflow-hidden stars-layer">
             <div
@@ -130,22 +131,15 @@ const hasRing = computed(() => {
             ></div>
         </div>
 
-        <!-- Planetary Badge (Bottom Left) -->
-        <div class="absolute bottom-2 left-2 planet-badge z-20">
-            <div 
-                class="planet-body" 
-                :style="planetStyle"
-            ></div>
-            <div 
-                v-if="hasRing" 
-                class="planet-ring"
-            ></div>
-        </div>
-        
         <!-- Card Body -->
-        <div class="flex p-1 h-[80%] relative z-10">
+        <div class="flex p-1 h-[90%] relative z-10">
+            <!-- Planetary Badge (Bottom Left) -->
+            <div class="absolute z-20 top-1 left-2 planet-badge">
+                <div class="planet-body" :style="planetStyle"></div>
+                <div v-if="hasRing" class="planet-ring"></div>
+            </div>
             <!-- Product Thumbnail -->
-            <div class="flex items-center justify-center w-2/5">
+            <div class="flex items-center justify-center w-2/5 xl:w-1/5">
                 <div
                     class="w-16 h-16 overflow-hidden transition-transform duration-500 ease-out border rounded-lg md:w-20 md:h-20 border-primary/30 hover:border-primary/60 product-image-container"
                 >
@@ -156,20 +150,22 @@ const hasRing = computed(() => {
                         class="object-cover w-full h-full product-image"
                     />
                     <!-- Cosmic Ray Overlay -->
-                    <div class="cosmic-rays"></div>
+                    <!-- <div class="cosmic-rays"></div> -->
                 </div>
             </div>
 
             <!-- Product Info -->
-            <div class="flex flex-col justify-center w-3/5 px-2">
-                <div class="p-1 rounded-lg backdrop-blur-sm bg-primary/5 info-panel">
+            <div class="flex flex-col justify-center w-3/5 px-2 xl:w-4/5">
+                <div
+                    class="p-1 rounded-lg md:rounded-xl md:py-4 backdrop-blur-sm"
+                >
                     <h3
-                        class="mb-1 text-xs font-bold md:text-sm text-primary-text line-clamp-2 product-title"
+                        class="mb-1 text-xs font-bold md:text-base text-primary-text line-clamp-2 product-title"
                     >
                         {{ productName }}
                     </h3>
                     <p
-                        class="text-xs md:text-xs text-primary-text/80 product-developer"
+                        class="text-xs md:text-sm text-primary-text/80 product-developer"
                     >
                         {{ developer }}
                     </p>
@@ -179,10 +175,10 @@ const hasRing = computed(() => {
 
         <!-- Card Footer -->
         <div
-            class="border-t border-primary/20 bg-gradient-to-br from-primary/20 to-content_background py-2 px-3 h-[20%] flex items-center justify-end relative z-10"
+            class="border-t border-primary/20 bg-gradient-to-br from-primary/20 to-content_background py-2 px-3 h-[10%] flex items-center justify-end relative z-10"
         >
             <!-- Galaxy Swirl (decorative element in footer) -->
-            <div 
+            <div
                 class="galaxy-swirl"
                 :style="{ transform: `rotate(${galaxyRotation}deg)` }"
             ></div>
@@ -197,12 +193,14 @@ const hasRing = computed(() => {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     will-change: transform, opacity;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .cosmic-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Nebula Background */
@@ -231,7 +229,8 @@ const hasRing = computed(() => {
 }
 
 @keyframes twinkle {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.2;
         transform: scale(0.8);
     }
@@ -396,19 +395,19 @@ const hasRing = computed(() => {
         height: 20px;
         opacity: 0.3;
     }
-    
+
     .planet-badge {
         width: 15px;
         height: 15px;
     }
-    
+
     .planet-ring {
         width: 18px;
         height: 6px;
         margin-left: -9px;
         margin-top: -3px;
     }
-    
+
     .nebula-background {
         /* Use static background on mobile for better performance */
         animation: none;
