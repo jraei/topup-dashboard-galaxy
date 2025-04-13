@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
