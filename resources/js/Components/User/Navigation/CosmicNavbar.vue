@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import DesktopTierOne from "./DesktopTierOne.vue";

@@ -1,4 +1,3 @@
-
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
         <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
@@ -17,32 +16,38 @@ const targetFPS = 60;
 const frameDuration = 1000 / targetFPS;
 
 const isReducedMotion = computed(() => {
-    return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches || false;
+    return (
+        window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches || false
+    );
 });
 
 const isMobile = computed(() => window?.innerWidth < 768);
-const isTablet = computed(() => window?.innerWidth >= 768 && window?.innerWidth < 1024);
+const isTablet = computed(
+    () => window?.innerWidth >= 768 && window?.innerWidth < 1024
+);
 const isLowPower = computed(() => {
-    return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
+    return navigator.hardwareConcurrency
+        ? navigator.hardwareConcurrency < 4
+        : isMobile.value;
 });
 
 // Determine star count based on device capability
 const getStarCount = computed(() => {
-    if (isLowPower.value || isMobile.value) return 150;
-    if (isTablet.value) return 300;
-    return 500;
+    if (isLowPower.value || isMobile.value) return 50;
+    if (isTablet.value) return 30;
+    return 50;
 });
 
 function initCanvas() {
     const canvas = canvasRef.value;
     if (!canvas) return;
-    
-    ctx = canvas.getContext('2d', { alpha: true });
+
+    ctx = canvas.getContext("2d", { alpha: true });
     resizeCanvas();
-    
+
     // Create stars with optimized properties
     generateStars();
-    
+
     // Start animation loop with timing control
     lastTime = performance.now();
     animate();
@@ -51,27 +56,31 @@ function initCanvas() {
 function generateStars() {
     stars = [];
     const count = getStarCount.value;
-    
+
     for (let i = 0; i < count; i++) {
         // Use bias for center density as in original
-        const edgeBiasX = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
-        const edgeBiasY = (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
-        
+        const edgeBiasX =
+            (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
+        const edgeBiasY =
+            (Math.random() < 0.5 ? -1 : 1) * Math.pow(Math.random(), 1.5);
+
         // Convert to percentage (40% to 60% for more center density)
         const x = 50 + edgeBiasX * 50; // 25% to 75% with center bias
         const y = 50 + edgeBiasY * 50; // 25% to 75% with center bias
-        
+
         const size = Math.random() * 2 + 2; // 2-4px
         const useSecondary = Math.random() > 0.3;
         const color = useSecondary ? "#33C3F0" : "#ffffff"; // secondary or white
-        
+
         stars.push({
             x: (x / 100) * (canvasRef.value?.width || 1000),
             y: (y / 100) * (canvasRef.value?.height || 500),
             size,
             color,
             glowSize: size * 2,
-            glowColor: useSecondary ? "rgba(51, 195, 240, 0.8)" : "rgba(255, 255, 255, 0.6)",
+            glowColor: useSecondary
+                ? "rgba(51, 195, 240, 0.8)"
+                : "rgba(255, 255, 255, 0.6)",
             baseOpacity: Math.random() * 0.4 + 0.6, // 0.6-1.0
             currentOpacity: 0,
             pulseDirection: 1,
@@ -83,17 +92,17 @@ function generateStars() {
 function resizeCanvas() {
     const canvas = canvasRef.value;
     if (!canvas) return;
-    
+
     // Use devicePixelRatio for crisp rendering
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    
+
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    
+
     // Scale context for high DPI displays
     ctx.scale(dpr, dpr);
-    
+
     // Regenerate stars for new canvas size
     if (stars.length > 0) {
         generateStars();
@@ -102,11 +111,15 @@ function resizeCanvas() {
 
 function drawStar(star) {
     // Skip if off-screen
-    if (star.x < 0 || star.x > canvasRef.value.width || 
-        star.y < 0 || star.y > canvasRef.value.height) {
+    if (
+        star.x < 0 ||
+        star.x > canvasRef.value.width ||
+        star.y < 0 ||
+        star.y > canvasRef.value.height
+    ) {
         return;
     }
-    
+
     // Update opacity for pulsing effect
     if (star.pulseDirection > 0) {
         star.currentOpacity += star.pulseSpeed;
@@ -119,24 +132,24 @@ function drawStar(star) {
             star.pulseDirection = 1;
         }
     }
-    
+
     // Clamp opacity
     star.currentOpacity = Math.max(0.6, Math.min(1, star.currentOpacity));
-    
+
     // Draw glow effect first (underneath)
     ctx.globalAlpha = star.currentOpacity * 0.7;
     ctx.fillStyle = star.glowColor;
     ctx.beginPath();
     ctx.arc(star.x, star.y, star.glowSize, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Draw star
     ctx.globalAlpha = star.currentOpacity;
     ctx.fillStyle = star.color;
     ctx.beginPath();
     ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Reset global alpha
     ctx.globalAlpha = 1;
 }
@@ -144,30 +157,30 @@ function drawStar(star) {
 function animate(timestamp = 0) {
     // Throttle frame rate for performance
     const elapsed = timestamp - lastTime;
-    
+
     if (elapsed > frameDuration) {
         lastTime = timestamp - (elapsed % frameDuration);
-        
+
         // Clear with proper alpha handling
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
-        
+
         // Draw all stars
         stars.forEach(drawStar);
     }
-    
+
     // Use reduced framerate when tab is not visible
     const frameRate = document.hidden ? 30 : targetFPS;
-    
+
     animationFrameId = requestAnimationFrame(animate);
 }
 
 // Lifecycle hooks
 onMounted(() => {
     initCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
+    window.addEventListener("resize", resizeCanvas);
+
     // Reduce animation load when tab is not visible
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             cancelAnimationFrame(animationFrameId);
         } else {
@@ -181,7 +194,7 @@ onUnmounted(() => {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
-    window.removeEventListener('resize', resizeCanvas);
+    window.removeEventListener("resize", resizeCanvas);
 });
 </script>
 
