@@ -16,7 +16,9 @@ const cardRef = ref(null);
 // Detect device capabilities
 const isMobile = computed(() => window?.innerWidth < 768);
 const isLowPowerDevice = computed(() => {
-    return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
+    return navigator.hardwareConcurrency
+        ? navigator.hardwareConcurrency < 4
+        : isMobile.value;
 });
 
 // Calculate discount percentage
@@ -79,7 +81,9 @@ const isStockLow = computed(() => {
 });
 
 // Instead of generating cosmic elements as DOM nodes, use a unique ID for canvas
-const cardId = ref(`flashcard-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+const cardId = ref(
+    `flashcard-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+);
 
 // Set particle density based on device
 const particleDensity = computed(() => {
@@ -697,7 +701,7 @@ onMounted(() => {
     .spark {
         animation: none;
     }
-    
+
     .price-section {
         animation: none;
     }
@@ -763,7 +767,7 @@ onMounted(() => {
     .spark {
         animation: none;
     }
-    
+
     .price-section {
         animation: none;
     }

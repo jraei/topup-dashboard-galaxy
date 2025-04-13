@@ -128,7 +128,7 @@ onMounted(() => {
         :class="{ 'reduced-motion': prefersReducedMotion }"
     >
         <!-- Lazy-loaded Product Image -->
-        <div class="absolute inset-0 bg-dark-card/50 animate-pulse"></div>
+        <div class="absolute inset-0 bg-dark-card/10"></div>
         <img
             :src="thumbnail"
             :alt="productName"

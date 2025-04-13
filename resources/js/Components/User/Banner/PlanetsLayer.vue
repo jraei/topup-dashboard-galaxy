@@ -1,4 +1,3 @@
-
 <template>
     <div class="absolute inset-0 pointer-events-none planets-container z-15">
         <!-- SVG definitions for Saturn -->
@@ -56,7 +55,7 @@
                 :height="saturnSize"
                 viewBox="0 0 100 100"
                 class="absolute inset-0"
-                style="will-change: transform;"
+                style="will-change: transform"
             >
                 <!-- Saturn body -->
                 <circle
@@ -104,18 +103,20 @@ const isReducedMotion = computed(() => {
 });
 
 // Saturn planet properties with responsive sizing
-const saturnSize = computed(() => isMobile.value ? 80 : 120);
+const saturnSize = computed(() => (isMobile.value ? 80 : 100));
 
 // Saturn styles
 const saturnStyle = computed(() => ({
     width: `${saturnSize.value}px`,
     height: `${saturnSize.value}px`,
-    right: '20px',
-    top: isMobile.value ? '50px' : '120px',
+    right: isMobile.value ? "1px" : "3%",
+    top: isMobile.value ? "50px" : "120px",
     opacity: 0.7,
-    transform: 'translateZ(0)',
-    willChange: 'transform',
-    animation: isReducedMotion.value ? 'none' : 'saturn-rotate 120s linear infinite'
+    transform: "translateZ(0)",
+    willChange: "transform",
+    animation: isReducedMotion.value
+        ? "none"
+        : "saturn-rotate 120s linear infinite",
 }));
 
 // Visibility observer for performance
@@ -130,24 +131,24 @@ const handleResize = () => {
 onMounted(() => {
     handleResize();
     window.addEventListener("resize", handleResize);
-    
+
     // Setup intersection observer to pause animation when not visible
     observer = new IntersectionObserver((entries) => {
         const [entry] = entries;
         isVisible.value = entry.isIntersecting;
-        
+
         // Pause animation when not visible
-        const saturn = document.querySelector('.saturn-planet');
+        const saturn = document.querySelector(".saturn-planet");
         if (saturn) {
             if (!entry.isIntersecting) {
-                saturn.style.animationPlayState = 'paused';
+                saturn.style.animationPlayState = "paused";
             } else {
-                saturn.style.animationPlayState = 'running';
+                saturn.style.animationPlayState = "running";
             }
         }
     });
-    
-    const container = document.querySelector('.planets-container');
+
+    const container = document.querySelector(".planets-container");
     if (container) {
         observer.observe(container);
     }

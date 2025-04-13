@@ -1,4 +1,3 @@
-
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -50,12 +49,17 @@ if (!isLowPowerDevice && window.performance) {
     const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
             // Log when frame rate drops below 50fps
-            if (entry.name === 'frame-render' && entry.duration > 20) { // 20ms = ~50fps
-                console.warn(`Performance warning: Frame took ${entry.duration.toFixed(2)}ms to render`);
+            if (entry.name === "frame-render" && entry.duration > 20) {
+                // 20ms = ~50fps
+                console.warn(
+                    `Performance warning: Frame took ${entry.duration.toFixed(
+                        2
+                    )}ms to render`
+                );
             }
         }
     });
-    observer.observe({ entryTypes: ['frame'] });
+    observer.observe({ entryTypes: ["frame"] });
 }
 </script>
 
@@ -92,11 +96,11 @@ if (!isLowPowerDevice && window.performance) {
             />
 
             <!-- Product Catalog Section -->
-            <!-- <ProductCatalogSection
+            <ProductCatalogSection
                 v-if="categories && categories.length > 0"
                 :categories="categories"
                 :products="catalogProducts"
-            /> -->
+            />
         </div>
     </GuestLayout>
 </template>

@@ -1,4 +1,3 @@
-
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
         <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
@@ -17,7 +16,13 @@ const targetFPS = 60;
 const frameDuration = 1000 / targetFPS;
 
 // Banner exclusion zone (mask area behind banner image)
-const bannerExclusionZone = ref({ top: 0, left: 0, width: 0, height: 0, active: false });
+const bannerExclusionZone = ref({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    active: false,
+});
 
 const isReducedMotion = computed(() => {
     return (
@@ -39,8 +44,9 @@ const isLowPower = computed(() => {
 const getStarCount = computed(() => {
     // 30% fewer stars in visible areas as requested
     const reductionFactor = 0.7;
-    
-    if (isLowPower.value || isMobile.value) return Math.floor(50 * reductionFactor);
+
+    if (isLowPower.value || isMobile.value)
+        return Math.floor(50 * reductionFactor);
     if (isTablet.value) return Math.floor(30 * reductionFactor);
     return Math.floor(50 * reductionFactor);
 });
@@ -65,7 +71,7 @@ function initCanvas() {
 
 function calculateBannerExclusionZone() {
     // Find banner image
-    const bannerImage = document.querySelector('.carousel-container img');
+    const bannerImage = document.querySelector(".carousel-container img");
     if (bannerImage) {
         requestIdleCallback(() => {
             const rect = bannerImage.getBoundingClientRect();
@@ -74,7 +80,7 @@ function calculateBannerExclusionZone() {
                 left: rect.left,
                 width: rect.width,
                 height: rect.height,
-                active: true
+                active: true,
             };
         });
     }
@@ -134,19 +140,19 @@ function resizeCanvas() {
     if (stars.length > 0) {
         generateStars();
     }
-    
+
     // Recalculate banner exclusion zone
     calculateBannerExclusionZone();
 }
 
 function isInExclusionZone(x, y) {
     if (!bannerExclusionZone.value.active) return false;
-    
+
     const zone = bannerExclusionZone.value;
     return (
-        x >= zone.left && 
-        x <= zone.left + zone.width && 
-        y >= zone.top && 
+        x >= zone.left &&
+        x <= zone.left + zone.width &&
+        y >= zone.top &&
         y <= zone.top + zone.height
     );
 }
@@ -161,7 +167,7 @@ function drawStar(star) {
     ) {
         return;
     }
-    
+
     // Skip if in exclusion zone
     if (isInExclusionZone(star.x, star.y)) {
         return;
@@ -213,11 +219,15 @@ function animate(timestamp = 0) {
 
         // Draw all stars
         stars.forEach(drawStar);
-        
+
         // Performance monitoring
         const drawTime = performance.now() - timestamp;
         if (drawTime > 5 && frameCount % 60 === 0) {
-            console.warn(`StarfieldLayer paint time: ${drawTime.toFixed(2)}ms (limit: 2ms)`);
+            console.warn(
+                `StarfieldLayer paint time: ${drawTime.toFixed(
+                    2
+                )}ms (limit: 2ms)`
+            );
         }
     }
 
@@ -233,7 +243,7 @@ let observer = null;
 function setupVisibilityObserver() {
     observer = new IntersectionObserver((entries) => {
         const [entry] = entries;
-        
+
         if (entry.isIntersecting) {
             // Restart animation when visible
             if (!animationFrameId) {
@@ -248,7 +258,7 @@ function setupVisibilityObserver() {
             }
         }
     });
-    
+
     observer.observe(canvasRef.value);
 }
 
@@ -256,7 +266,7 @@ function setupVisibilityObserver() {
 onMounted(() => {
     initCanvas();
     window.addEventListener("resize", resizeCanvas);
-    
+
     // Setup visibility observer for performance
     setupVisibilityObserver();
 
@@ -279,7 +289,7 @@ onUnmounted(() => {
         cancelAnimationFrame(animationFrameId);
     }
     window.removeEventListener("resize", resizeCanvas);
-    
+
     if (observer) {
         observer.disconnect();
     }
