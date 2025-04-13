@@ -1,3 +1,4 @@
+
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
         <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
@@ -12,8 +13,11 @@ let animationFrameId = null;
 let ctx = null;
 let stars = [];
 let lastTime = 0;
+let frameCount = 0;
 const targetFPS = 60;
+const throttledFPS = 30;
 const frameDuration = 1000 / targetFPS;
+const throttledFrameDuration = 1000 / throttledFPS;
 
 // Banner exclusion zone (mask area behind banner image)
 const bannerExclusionZone = ref({
@@ -73,16 +77,14 @@ function calculateBannerExclusionZone() {
     // Find banner image
     const bannerImage = document.querySelector(".carousel-container img");
     if (bannerImage) {
-        requestIdleCallback(() => {
-            const rect = bannerImage.getBoundingClientRect();
-            bannerExclusionZone.value = {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-                active: true,
-            };
-        });
+        const rect = bannerImage.getBoundingClientRect();
+        bannerExclusionZone.value = {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            active: true,
+        };
     }
 }
 
@@ -101,7 +103,7 @@ function generateStars() {
         const x = 50 + edgeBiasX * 50; // 25% to 75% with center bias
         const y = 50 + edgeBiasY * 50; // 25% to 75% with center bias
 
-        const size = Math.random() * 2 + 2; // 2-4px
+        const size = Math.random() * 2 + 1; // 1-3px
         const useSecondary = Math.random() > 0.3;
         const color = useSecondary ? "#33C3F0" : "#ffffff"; // secondary or white
 
@@ -208,31 +210,36 @@ function drawStar(star) {
 }
 
 function animate(timestamp = 0) {
+    // Determine correct frame duration based on tab visibility
+    const currentFrameDuration = document.hidden ? throttledFrameDuration : frameDuration;
+    
     // Throttle frame rate for performance
     const elapsed = timestamp - lastTime;
 
-    if (elapsed > frameDuration) {
-        lastTime = timestamp - (elapsed % frameDuration);
+    if (elapsed > currentFrameDuration) {
+        lastTime = timestamp - (elapsed % currentFrameDuration);
 
         // Clear with proper alpha handling
+        if (!canvasRef.value || !ctx) return;
+        
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
         // Draw all stars
         stars.forEach(drawStar);
 
         // Performance monitoring
-        const drawTime = performance.now() - timestamp;
-        if (drawTime > 5 && frameCount % 60 === 0) {
-            console.warn(
-                `StarfieldLayer paint time: ${drawTime.toFixed(
-                    2
-                )}ms (limit: 2ms)`
-            );
+        if (process.env.NODE_ENV !== 'production') {
+            frameCount++;
+            const drawTime = performance.now() - timestamp;
+            if (drawTime > 5 && frameCount % 60 === 0) {
+                console.warn(
+                    `StarfieldLayer paint time: ${drawTime.toFixed(
+                        2
+                    )}ms (limit: 2ms)`
+                );
+            }
         }
     }
-
-    // Use reduced framerate when tab is not visible
-    const frameRate = document.hidden ? 30 : targetFPS;
 
     animationFrameId = requestAnimationFrame(animate);
 }
@@ -246,7 +253,7 @@ function setupVisibilityObserver() {
 
         if (entry.isIntersecting) {
             // Restart animation when visible
-            if (!animationFrameId) {
+            if (!animationFrameId && canvasRef.value) {
                 lastTime = performance.now();
                 animate();
             }
@@ -259,7 +266,9 @@ function setupVisibilityObserver() {
         }
     });
 
-    observer.observe(canvasRef.value);
+    if (canvasRef.value) {
+        observer.observe(canvasRef.value);
+    }
 }
 
 // Lifecycle hooks
@@ -277,7 +286,7 @@ onMounted(() => {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
-        } else if (!animationFrameId) {
+        } else if (!animationFrameId && canvasRef.value) {
             lastTime = performance.now();
             animate();
         }

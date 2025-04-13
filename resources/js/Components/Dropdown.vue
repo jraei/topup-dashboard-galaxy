@@ -33,28 +33,31 @@ const positionDropdown = () => {
     if (!dropdownRef.value || !triggerRef.value) return;
 
     const triggerRect = triggerRef.value.getBoundingClientRect();
-    const dropdownRect = dropdownRef.value.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-
-    let top = triggerRect.bottom + 4; // Default posisi di bawah tombol
+    
+    const dropdownRect = dropdownRef.value.getBoundingClientRect();
+    
+    let top = triggerRect.bottom + 4; // Default position below button
     let left = triggerRect.left;
 
-    // Jika dropdown keluar dari layar kanan, geser ke kiri
-    if (triggerRect.right + dropdownRect.width > viewportWidth) {
-        left = triggerRect.right - dropdownRect.width;
+    // Horizontal positioning - prevent overflow on the right side
+    if (left + dropdownRect.width > viewportWidth) {
+        left = Math.max(0, viewportWidth - dropdownRect.width - 8);
     }
 
-    // Jika dropdown keluar dari layar bawah, pindah ke atas
-    if (triggerRect.bottom + dropdownRect.height > viewportHeight) {
-        top = triggerRect.top - dropdownRect.height - 4;
+    // Vertical positioning - flip to above trigger if not enough space below
+    if (top + dropdownRect.height > viewportHeight) {
+        top = Math.max(8, triggerRect.top - dropdownRect.height - 4);
     }
 
+    // Apply positioning - use fixed to avoid scroll issues
     dropdownStyles.value = {
         position: "fixed",
         top: `${top}px`,
         left: `${left}px`,
         zIndex: 9999,
+        width: dropdownRect.width > 0 ? `${dropdownRect.width}px` : undefined,
     };
 };
 
@@ -62,14 +65,28 @@ const closeDropdown = () => {
     open.value = false;
 };
 
+// Handle window resize to reposition dropdown
+const handleResize = () => {
+    if (open.value) {
+        positionDropdown();
+    }
+};
+
+// Handle scroll events to keep dropdown positioned correctly
+const handleScroll = () => {
+    if (open.value) {
+        positionDropdown();
+    }
+};
+
 onMounted(() => {
-    window.addEventListener("resize", positionDropdown);
-    window.addEventListener("scroll", positionDropdown, true);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, true);
 });
 
 onUnmounted(() => {
-    window.removeEventListener("resize", positionDropdown);
-    window.removeEventListener("scroll", positionDropdown, true);
+    window.removeEventListener("resize", handleResize);
+    window.removeEventListener("scroll", handleScroll, true);
 });
 </script>
 
@@ -79,12 +96,14 @@ onUnmounted(() => {
             <slot name="trigger" />
         </button>
 
+        <!-- Backdrop for closing dropdown when clicking outside -->
         <div
             v-if="open"
             class="fixed inset-0 z-40"
             @click="closeDropdown"
         ></div>
 
+        <!-- Dropdown content with improved transitions -->
         <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="scale-95 opacity-0"
@@ -96,7 +115,7 @@ onUnmounted(() => {
             <div
                 v-show="open"
                 ref="dropdownRef"
-                class="w-48 bg-white border rounded-md shadow-lg border-primary/60 dark:bg-gray-700"
+                class="w-48 bg-white border rounded-md shadow-lg border-primary/60 dark:bg-gray-700 will-change-transform"
                 :style="dropdownStyles"
             >
                 <slot name="content" />

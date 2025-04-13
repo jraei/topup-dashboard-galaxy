@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import { debounce } from "lodash";
@@ -21,7 +22,7 @@ const showResults = ref(false);
 const searchInputRef = ref(null);
 const resultsRef = ref(null);
 
-// Debounced search function
+// Improved debounced search - increased to 500ms for performance
 const performSearch = debounce(async (query) => {
     if (!query || query.length < 2) {
         searchResults.value = [];
@@ -34,7 +35,8 @@ const performSearch = debounce(async (query) => {
         const response = await axios.get(
             route("api.search.products", { query })
         );
-        searchResults.value = response.data.slice(0, 5); // Limit to 5 results
+        // Limit to 5 results as specified
+        searchResults.value = response.data.slice(0, 5);
         showResults.value = true;
     } catch (error) {
         console.error("Search error:", error);
@@ -42,7 +44,7 @@ const performSearch = debounce(async (query) => {
     } finally {
         isLoading.value = false;
     }
-}, 300);
+}, 500); // Increased to 500ms as required
 
 // Watch for changes to search query
 watch(searchQuery, (newValue) => {
@@ -78,12 +80,52 @@ const handleClickOutside = (event) => {
     }
 };
 
+// Position dropdown correctly relative to viewport
+const updateResultsPosition = () => {
+    if (!resultsRef.value || !showResults.value) return;
+    
+    const inputRect = searchInputRef.value?.getBoundingClientRect();
+    if (!inputRect) return;
+    
+    const viewportHeight = window.innerHeight;
+    const resultsHeight = resultsRef.value.offsetHeight;
+    
+    // Check if there's enough space below
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    
+    if (spaceBelow < resultsHeight && inputRect.top > resultsHeight) {
+        // Position above if not enough space below
+        resultsRef.value.style.top = 'auto';
+        resultsRef.value.style.bottom = '100%';
+        resultsRef.value.style.marginTop = '0';
+        resultsRef.value.style.marginBottom = '0.5rem';
+    } else {
+        // Position below (default)
+        resultsRef.value.style.top = '100%';
+        resultsRef.value.style.bottom = 'auto';
+        resultsRef.value.style.marginTop = '0.5rem';
+        resultsRef.value.style.marginBottom = '0';
+    }
+};
+
 onMounted(() => {
     document.addEventListener("click", handleClickOutside);
+    window.addEventListener("resize", updateResultsPosition);
+    window.addEventListener("scroll", updateResultsPosition);
 });
 
 onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
+    window.removeEventListener("resize", updateResultsPosition);
+    window.removeEventListener("scroll", updateResultsPosition);
+});
+
+watch(showResults, (newValue) => {
+    if (newValue) {
+        nextTick(() => {
+            updateResultsPosition();
+        });
+    }
 });
 </script>
 
@@ -141,11 +183,12 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- Search Results -->
+        <!-- Search Results - Optimized with absolute positioning and max height -->
         <div
             v-if="showResults && searchResults.length > 0"
             ref="resultsRef"
             class="absolute z-50 w-full mt-2 overflow-hidden overflow-y-auto transition-all duration-300 origin-top border rounded-md bg-content_background shadow-glow-primary max-h-60 border-primary/30"
+            style="max-height: 50vh; will-change: transform, opacity;"
         >
             <div class="py-1">
                 <Link
@@ -163,6 +206,7 @@ onUnmounted(() => {
                             :src="'/storage/' + product.thumbnail"
                             :alt="product.nama"
                             class="object-cover w-full h-full"
+                            loading="lazy"
                         />
                     </div>
 
@@ -186,6 +230,7 @@ onUnmounted(() => {
         <!-- No Results Message -->
         <div
             v-else-if="showResults && searchQuery.length >= 2 && !isLoading"
+            ref="resultsRef"
             class="absolute z-50 w-full mt-2 transition-all duration-300 origin-top border rounded-md bg-content_background shadow-glow-primary border-primary/30"
         >
             <div

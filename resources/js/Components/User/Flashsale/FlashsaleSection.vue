@@ -19,7 +19,6 @@ const props = defineProps({
 const carouselRef = ref(null);
 const isScrolling = ref(false);
 const isHovering = ref(false);
-const scrollInterval = ref(null);
 const isMobile = ref(window.innerWidth < 768);
 const isUserScrolling = ref(false);
 const scrollTimeoutId = ref(null);
@@ -60,16 +59,19 @@ const ensureInfiniteScroll = () => {
     }
 };
 
-// Start auto-scroll with improved infinite loop logic
-const startAutoScroll = () => {
-    if (scrollInterval.value || isMobile.value) return;
-    
-    ensureInfiniteScroll();
+// Use requestAnimationFrame for smoother animation
+let lastTimestamp = 0;
+const animate = (timestamp) => {
+    if (isHovering.value || isUserScrolling.value || !carouselRef.value) {
+        scrollAnimationId.value = requestAnimationFrame(animate);
+        return;
+    }
 
-    scrollInterval.value = setInterval(() => {
-        if (isHovering.value || isUserScrolling.value || !carouselRef.value)
-            return;
-
+    // Control frame rate for performance
+    const elapsed = timestamp - lastTimestamp;
+    if (elapsed > 16) { // ~60fps
+        lastTimestamp = timestamp;
+        
         // Increment scroll position based on speed
         carouselRef.value.scrollLeft += getScrollSpeed();
 
@@ -79,10 +81,11 @@ const startAutoScroll = () => {
 
         // When we reach the end (with 20px buffer), reset seamlessly
         if (container.scrollLeft >= scrollRight - 20) {
-            // Using smooth animation to reset
             resetScroll();
         }
-    }, 16); // ~60fps refresh rate
+    }
+    
+    scrollAnimationId.value = requestAnimationFrame(animate);
 };
 
 // Handle seamless reset with animation
@@ -115,7 +118,7 @@ const resetScroll = () => {
         } else {
             container.scrollLeft = 0;
             isScrolling.value = false;
-            scrollAnimationId.value = null;
+            scrollAnimationId.value = requestAnimationFrame(animate);
         }
     };
 
@@ -128,13 +131,13 @@ const handleScroll = () => {
 
     isUserScrolling.value = true;
 
-    // Clear previous timeout
+    // Clear previous timeout and use requestAnimationFrame for better performance
     if (scrollTimeoutId.value) {
-        clearTimeout(scrollTimeoutId.value);
+        window.clearTimeout(scrollTimeoutId.value);
     }
 
     // Set new timeout to detect when user stops scrolling
-    scrollTimeoutId.value = setTimeout(() => {
+    scrollTimeoutId.value = window.setTimeout(() => {
         isUserScrolling.value = false;
     }, 250);
 };
@@ -144,74 +147,89 @@ const handleResize = () => {
     isMobile.value = window.innerWidth < 768;
 
     // Stop auto-scroll on mobile
-    if (isMobile.value && scrollInterval.value) {
-        clearInterval(scrollInterval.value);
-        scrollInterval.value = null;
-    } else if (!isMobile.value && !scrollInterval.value) {
+    if (isMobile.value && scrollAnimationId.value) {
+        cancelAnimationFrame(scrollAnimationId.value);
+        scrollAnimationId.value = null;
+    } else if (!isMobile.value && !scrollAnimationId.value) {
         // Restart on desktop
-        startAutoScroll();
+        ensureInfiniteScroll();
+        lastTimestamp = performance.now();
+        scrollAnimationId.value = requestAnimationFrame(animate);
     }
 };
 
-// Clean up all intervals and animations
+// Clean up all animations
 const cleanupAnimations = () => {
-    if (scrollInterval.value) {
-        clearInterval(scrollInterval.value);
-        scrollInterval.value = null;
-    }
-
-    if (scrollTimeoutId.value) {
-        clearTimeout(scrollTimeoutId.value);
-        scrollTimeoutId.value = null;
-    }
-
     if (scrollAnimationId.value) {
         cancelAnimationFrame(scrollAnimationId.value);
         scrollAnimationId.value = null;
     }
+
+    if (scrollTimeoutId.value) {
+        window.clearTimeout(scrollTimeoutId.value);
+        scrollTimeoutId.value = null;
+    }
 };
 
-// Performance monitoring
+// Implement performance monitoring
 const setupPerformanceMonitor = () => {
-    let lastTimestamp = performance.now();
-    let frameCount = 0;
-    
-    const checkPerformance = () => {
-        frameCount++;
-        const now = performance.now();
-        const elapsed = now - lastTimestamp;
+    if (process.env.NODE_ENV !== 'production') {
+        let lastTimestamp = performance.now();
+        let frameCount = 0;
         
-        if (elapsed >= 1000) { // Check every second
-            const fps = Math.round((frameCount * 1000) / elapsed);
-            frameCount = 0;
-            lastTimestamp = now;
+        const checkPerformance = () => {
+            frameCount++;
+            const now = performance.now();
+            const elapsed = now - lastTimestamp;
             
-            // Console warning for low FPS
-            if (fps < 50 && !isMobile.value) {
-                console.warn(`Flashsale carousel performance: ${fps}fps (target: 60fps)`);
+            if (elapsed >= 1000) { // Check every second
+                const fps = Math.round((frameCount * 1000) / elapsed);
+                frameCount = 0;
+                lastTimestamp = now;
+                
+                // Console warning for low FPS
+                if (fps < 50 && !isMobile.value) {
+                    console.warn(`Flashsale carousel performance: ${fps}fps (target: 60fps)`);
+                }
             }
-        }
+            
+            performanceMonitorId = requestAnimationFrame(checkPerformance);
+        };
         
-        performanceMonitorId = requestAnimationFrame(checkPerformance);
-    };
+        let performanceMonitorId = requestAnimationFrame(checkPerformance);
+        
+        return () => {
+            if (performanceMonitorId) {
+                cancelAnimationFrame(performanceMonitorId);
+            }
+        };
+    }
     
-    let performanceMonitorId = requestAnimationFrame(checkPerformance);
-    
-    return () => {
-        if (performanceMonitorId) {
-            cancelAnimationFrame(performanceMonitorId);
-        }
-    };
+    return () => {};
 };
 
 let performanceCleanup;
 
 onMounted(() => {
+    // Clone items for infinite scroll
+    ensureInfiniteScroll();
+    
     // Only start auto-scroll on desktop
     if (!isMobile.value) {
-        startAutoScroll();
+        lastTimestamp = performance.now();
+        scrollAnimationId.value = requestAnimationFrame(animate);
     }
+    
     window.addEventListener("resize", handleResize);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && scrollAnimationId.value) {
+            cancelAnimationFrame(scrollAnimationId.value);
+            scrollAnimationId.value = null;
+        } else if (!document.hidden && !isMobile.value && !scrollAnimationId.value) {
+            lastTimestamp = performance.now();
+            scrollAnimationId.value = requestAnimationFrame(animate);
+        }
+    });
     
     // Setup performance monitoring
     performanceCleanup = setupPerformanceMonitor();
@@ -257,7 +275,7 @@ onUnmounted(() => {
                     @mouseenter="isHovering = true"
                     @mouseleave="isHovering = false"
                     @touchstart="isHovering = true"
-                    @touchend="setTimeout(() => (isHovering = false), 1000)"
+                    @touchend="() => { window.setTimeout(() => (isHovering = false), 1000) }"
                     class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none will-change-transform"
                     style="transform: translateZ(0);"
                 >
@@ -349,10 +367,10 @@ section::after {
 @keyframes card-breathing {
     0%,
     100% {
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
     }
     50% {
-        transform: scale(1.02);
+        transform: scale(1.02) translateZ(0);
     }
 }
 

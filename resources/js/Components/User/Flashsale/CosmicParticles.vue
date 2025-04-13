@@ -1,3 +1,4 @@
+
 <template>
     <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
 </template>
@@ -38,7 +39,8 @@ const isLowPowerDevice = computed(() => {
 
 // Determine particle count based on device capability
 const getParticleCount = computed(() => {
-    const base = isMobile.value ? 10 : isLowPowerDevice.value ? 15 : 25;
+    // Reduced counts for better performance
+    const base = isMobile.value ? 8 : isLowPowerDevice.value ? 12 : 20;
     return Math.floor(base * props.density);
 });
 
@@ -92,22 +94,37 @@ function generateParticles() {
     const count = getParticleCount.value;
     const colors = getColors.value;
 
+    // Object pooling approach - create all particles at once
     for (let i = 0; i < count; i++) {
+        // More random distribution across the canvas
         particles.push({
             x: Math.random() * canvasRef.value.width,
             y: Math.random() * canvasRef.value.height,
-            size: Math.random() * 2 + 1,
+            size: Math.random() * 2 + 0.5, // 0.5-2.5px (smaller particles for better performance)
             color: i % 3 === 0 ? colors.main : colors.faint,
-            vx: (Math.random() - 0.5) * 0.2,
-            vy: (Math.random() - 0.5) * 0.2,
+            vx: (Math.random() - 0.5) * 0.15, // Slower movement
+            vy: (Math.random() - 0.5) * 0.15,
             opacity: Math.random() * 0.5 + 0.3,
-            pulse: Math.random() * 0.01 + 0.01,
+            pulse: Math.random() * 0.01 + 0.005, // Slower pulsing
             pulseDirection: Math.random() > 0.5 ? 1 : -1,
         });
     }
 }
 
 function drawParticle(particle) {
+    // Performance optimization - Only animate visible particles
+    if (
+        particle.x < -10 ||
+        particle.x > canvasRef.value.width + 10 ||
+        particle.y < -10 ||
+        particle.y > canvasRef.value.height + 10
+    ) {
+        // Reposition off-screen particles
+        particle.x = Math.random() * canvasRef.value.width;
+        particle.y = Math.random() * canvasRef.value.height;
+        return;
+    }
+
     // Pulse opacity
     particle.opacity += particle.pulse * particle.pulseDirection;
     if (particle.opacity > 0.8) {
@@ -117,8 +134,8 @@ function drawParticle(particle) {
     }
 
     // Move position with slight random variation
-    particle.x += particle.vx + (Math.random() - 0.5) * 0.1;
-    particle.y += particle.vy + (Math.random() - 0.5) * 0.1;
+    particle.x += particle.vx;
+    particle.y += particle.vy;
 
     // Wrap around screen edges
     if (particle.x < 0) particle.x = canvasRef.value.width;
@@ -137,20 +154,33 @@ function drawParticle(particle) {
 function animate(timestamp = 0) {
     if (!isActive || !isVisible) return;
 
-    // Throttle to 30fps for low power devices
+    // Throttle to 30fps for low power devices, 60fps for others
     const frameRate = isLowPowerDevice.value ? 33.3 : 16.6; // 30fps or 60fps
     const elapsed = timestamp - lastTime;
 
     if (elapsed > frameRate) {
-        // Clear canvas
+        // Clear canvas with opacity adjustment for better performance
+        if (!ctx || !canvasRef.value) return;
+        
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
-        // Draw all particles
+        // Draw all particles - this is the most intensive part
         for (const particle of particles) {
             drawParticle(particle);
         }
 
         lastTime = timestamp - (elapsed % frameRate);
+        
+        // Performance monitoring
+        if (process.env.NODE_ENV !== 'production') {
+            frameCount++;
+            if (frameCount % 60 === 0) {
+                const elapsedTime = performance.now() - timestamp;
+                if (elapsedTime > 4) {
+                    console.warn(`CosmicParticles render time: ${elapsedTime.toFixed(2)}ms - Consider reducing particle count`);
+                }
+            }
+        }
     }
 
     // Request next frame only if active and visible
