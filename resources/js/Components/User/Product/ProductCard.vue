@@ -1,3 +1,4 @@
+
 <script setup>
 import { computed, ref, onMounted } from "vue";
 
@@ -25,55 +26,85 @@ const thumbnail = computed(() => {
     return "/img/default-product.png";
 });
 
-// Cosmic effects configuration
-const nebulaType = ref(Math.floor(Math.random() * 4));
-const starDensity = ref(Math.floor(Math.random() * 5) + 5);
-const blackholeSize = ref(Math.floor(Math.random() * 20) + 15);
-const pulsarAngle = ref(Math.floor(Math.random() * 360));
+// Cosmos effects configuration
+const prefersReducedMotion = ref(false);
+const cardVariant = ref(Math.floor(Math.random() * 4));
+const starCount = ref(prefersReducedMotion.value ? 3 : Math.floor(Math.random() * 3) + 5);
+const galaxyRotation = ref(Math.floor(Math.random() * 360));
+const planetType = ref(Math.floor(Math.random() * 4));
 
-// Generate random stars
+// Generate stars
 const stars = ref([]);
+
 const generateStars = () => {
     stars.value = [];
-    for (let i = 0; i < starDensity.value; i++) {
+    const count = prefersReducedMotion.value ? 3 : starCount.value;
+    
+    for (let i = 0; i < count; i++) {
         stars.value.push({
-            size: Math.random() * 2 + 1,
+            size: Math.random() * 1.5 + 0.5,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            delay: Math.random() * 5,
+            delay: Math.random() * 3,
+            opacity: Math.random() * 0.5 + 0.5
         });
     }
 };
 
-// Check reduced motion preference
-const prefersReducedMotion = ref(false);
-const checkReducedMotion = () => {
+// Detect device capabilities
+const checkDevicePreferences = () => {
+    // Check for reduced motion preference
     prefersReducedMotion.value = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     ).matches;
+    
+    // Check for low-power device
+    const isLowPower = window.navigator.hardwareConcurrency 
+        ? window.navigator.hardwareConcurrency < 4 
+        : window.innerWidth < 768;
+        
+    if (isLowPower) {
+        starCount.value = 3;
+    }
 };
 
 onMounted(() => {
+    checkDevicePreferences();
     generateStars();
-    checkReducedMotion();
 });
 
-// Compute nebula gradients
+// Style computations for cosmic elements
 const nebulaGradient = computed(() => {
     const gradients = [
-        "radial-gradient(circle at 70% 70%, rgba(155, 135, 245, 0.15) 0%, transparent 60%)",
-        "radial-gradient(circle at 30% 60%, rgba(51, 195, 240, 0.15) 0%, transparent 65%)",
-        "radial-gradient(ellipse at 20% 20%, rgba(155, 135, 245, 0.2) 0%, transparent 70%)",
-        "radial-gradient(circle at 80% 30%, rgba(51, 195, 240, 0.2) 0%, transparent 75%)",
+        "radial-gradient(circle at 70% 30%, rgba(155, 135, 245, 0.2) 0%, transparent 60%)",
+        "radial-gradient(circle at 30% 60%, rgba(51, 195, 240, 0.2) 0%, transparent 65%)",
+        "radial-gradient(ellipse at 20% 20%, rgba(155, 135, 245, 0.3) 0%, transparent 70%)",
+        "radial-gradient(circle at 80% 30%, rgba(51, 195, 240, 0.3) 0%, transparent 75%)",
     ];
+    return gradients[cardVariant.value % gradients.length];
+});
 
-    return gradients[nebulaType.value];
+const planetStyle = computed(() => {
+    const variants = [
+        "radial-gradient(circle, #9b87f5 30%, #784af2 100%)", // Purple planet
+        "radial-gradient(circle, #33C3F0 20%, #207fa1 100%)", // Blue planet
+        "radial-gradient(circle, #6b7280 30%, #4b5563 100%)", // Gray planet
+        "radial-gradient(circle, #da8ee7 20%, #8946a6 100%)", // Pink planet
+    ];
+    
+    return {
+        background: variants[planetType.value % variants.length],
+    };
+});
+
+const hasRing = computed(() => {
+    return [0, 2].includes(planetType.value);
 });
 </script>
 
 <template>
     <div
-        class="relative overflow-hidden transition-all duration-300 ease-out border rounded-2xl bg-gradient-to-br from-secondary/5 to-content_background border-primary/20 group hover:border-primary hover:scale-105 hover:shadow-glow-primary cosmic-card"
+        class="relative overflow-hidden transition-all duration-300 ease-out border rounded-2xl bg-gradient-to-br from-content_background to-primary/10 border-secondary/30 hover:border-primary cosmic-card group"
         :class="{ 'reduced-motion': prefersReducedMotion }"
     >
         <!-- Nebula Background -->
@@ -81,8 +112,8 @@ const nebulaGradient = computed(() => {
             class="absolute inset-0 nebula-background"
             :style="{ backgroundImage: nebulaGradient }"
         ></div>
-
-        <!-- Stars -->
+        
+        <!-- Starfield Pattern -->
         <div class="absolute inset-0 overflow-hidden stars-layer">
             <div
                 v-for="(star, i) in stars"
@@ -93,30 +124,24 @@ const nebulaGradient = computed(() => {
                     height: `${star.size}px`,
                     left: star.left,
                     top: star.top,
+                    opacity: star.opacity,
                     animationDelay: `${star.delay}s`,
                 }"
             ></div>
         </div>
 
-        <!-- Black Hole Effect (Bottom Right) -->
-        <div
-            class="absolute bottom-0 right-0 black-hole"
-            :style="{
-                width: `${blackholeSize.value}px`,
-                height: `${blackholeSize.value}px`,
-            }"
-        >
-            <div class="accretion-disk"></div>
+        <!-- Planetary Badge (Bottom Left) -->
+        <div class="absolute bottom-2 left-2 planet-badge z-20">
+            <div 
+                class="planet-body" 
+                :style="planetStyle"
+            ></div>
+            <div 
+                v-if="hasRing" 
+                class="planet-ring"
+            ></div>
         </div>
-
-        <!-- Pulsar Beam -->
-        <div
-            class="pulsar-container"
-            :style="{ transform: `rotate(${pulsarAngle}deg)` }"
-        >
-            <div class="pulsar-beam"></div>
-        </div>
-
+        
         <!-- Card Body -->
         <div class="flex p-1 h-[80%] relative z-10">
             <!-- Product Thumbnail -->
@@ -137,14 +162,14 @@ const nebulaGradient = computed(() => {
 
             <!-- Product Info -->
             <div class="flex flex-col justify-center w-3/5 px-2">
-                <div class="p-1 rounded-lg">
+                <div class="p-1 rounded-lg backdrop-blur-sm bg-primary/5 info-panel">
                     <h3
-                        class="mb-1 text-xs font-bold md:text-lg text-primary-text line-clamp-2 product-title"
+                        class="mb-1 text-xs font-bold md:text-sm text-primary-text line-clamp-2 product-title"
                     >
                         {{ productName }}
                     </h3>
                     <p
-                        class="text-xs md:text-sm text-primary-text/80 product-developer"
+                        class="text-xs md:text-xs text-primary-text/80 product-developer"
                     >
                         {{ developer }}
                     </p>
@@ -154,10 +179,13 @@ const nebulaGradient = computed(() => {
 
         <!-- Card Footer -->
         <div
-            class="border-t border-primary/20 bg-gradient-to-br from-primary/50 to-content_background py-2 px-3 h-[20%] flex items-center justify-end relative z-10"
+            class="border-t border-primary/20 bg-gradient-to-br from-primary/20 to-content_background py-2 px-3 h-[20%] flex items-center justify-end relative z-10"
         >
-            <!-- Quantum Fractal Border (visible on hover) -->
-            <div class="quantum-fractal"></div>
+            <!-- Galaxy Swirl (decorative element in footer) -->
+            <div 
+                class="galaxy-swirl"
+                :style="{ transform: `rotate(${galaxyRotation}deg)` }"
+            ></div>
         </div>
     </div>
 </template>
@@ -166,34 +194,44 @@ const nebulaGradient = computed(() => {
 /* Base Card Styling */
 .cosmic-card {
     position: relative;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    will-change: transform, opacity;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .cosmic-card:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Nebula Background */
 .nebula-background {
-    opacity: 0.7;
+    opacity: 0.3;
     transition: opacity 0.4s ease;
     z-index: 1;
+    transform: scale(1.2);
+    filter: blur(20px);
+    will-change: opacity, transform;
 }
 
 .cosmic-card:hover .nebula-background {
-    opacity: 1;
+    opacity: 0.8;
 }
 
 /* Stars Layer */
+.stars-layer {
+    z-index: 2;
+}
+
 .twinkle-star {
-    box-shadow: 0 0 4px #fff;
-    animation: twinkle 4s infinite ease-in-out;
+    position: absolute;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+    animation: twinkle 3s ease-in-out infinite;
 }
 
 @keyframes twinkle {
-    0%,
-    100% {
+    0%, 100% {
         opacity: 0.2;
         transform: scale(0.8);
     }
@@ -203,84 +241,38 @@ const nebulaGradient = computed(() => {
     }
 }
 
-/* Black Hole Effect */
-.black-hole {
-    border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        rgba(0, 0, 0, 0.7) 0%,
-        rgba(0, 0, 0, 0) 70%
-    );
-    filter: blur(2px);
-    z-index: 2;
-    transform: translate(30%, 30%);
+/* Planetary Badge */
+.planet-badge {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
 }
 
-.accretion-disk {
+.cosmic-card:hover .planet-badge {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.planet-body {
     position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    background-image: conic-gradient(
-        from 0deg,
-        rgba(51, 195, 240, 0.8),
-        rgba(155, 135, 245, 0.6),
-        rgba(51, 195, 240, 0.2),
-        transparent
-    );
-    animation: rotate 20s linear infinite;
-    opacity: 0.5;
-    transform: rotateX(70deg);
-}
-
-.cosmic-card:hover .accretion-disk {
-    opacity: 0.8;
-}
-
-/* Pulsar Beam */
-.pulsar-container {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2;
-    opacity: 0.3;
-    transition: opacity 0.4s ease;
+    border-radius: 50%;
 }
 
-.pulsar-beam {
+.planet-ring {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(155, 135, 245, 0.5) 5deg,
-        transparent 10deg,
-        transparent 175deg,
-        rgba(155, 135, 245, 0.5) 180deg,
-        transparent 185deg,
-        transparent 355deg
-    );
-    animation: rotate 8s linear infinite;
-}
-
-.cosmic-card:hover .pulsar-container {
-    opacity: 0.5;
-}
-
-/* Text Protection */
-.text-protection {
-    background-color: rgba(
-        7,
-        76,
-        172,
-        0.5
-    ); /* content_background with 50% opacity */
-    backdrop-filter: blur(2px);
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 8px;
+    margin-left: -11px;
+    margin-top: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(155, 135, 245, 0.6);
+    transform: rotateX(75deg);
 }
 
 /* Product Image Container */
@@ -288,16 +280,19 @@ const nebulaGradient = computed(() => {
     position: relative;
     z-index: 15;
     box-shadow: 0 0 10px rgba(155, 135, 245, 0.3);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transform: translate3d(0, 0, 0);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
 }
 
 .cosmic-card:hover .product-image-container {
-    transform: translateY(-3px) rotate(2deg);
+    transform: translate3d(0, -3px, 0) rotate(2deg);
 }
 
 /* Product Image */
 .product-image {
-    transition: transform 1s ease;
+    transform: scale(1);
+    transition: transform 0.8s ease;
 }
 
 .cosmic-card:hover .product-image {
@@ -310,53 +305,35 @@ const nebulaGradient = computed(() => {
     inset: 0;
     background-image: linear-gradient(
             45deg,
-            transparent 95%,
-            rgba(155, 135, 245, 0.3) 95%,
-            transparent 96%
+            transparent 98%,
+            rgba(155, 135, 245, 0.3) 98%,
+            transparent 100%
         ),
         linear-gradient(
             135deg,
             transparent 97%,
             rgba(51, 195, 240, 0.3) 97%,
-            transparent 98%
+            transparent 100%
         );
     opacity: 0.3;
     mix-blend-mode: screen;
     pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-/* Quantum Fractal Border */
-.quantum-fractal {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-image: linear-gradient(
-        90deg,
-        transparent,
-        rgba(155, 135, 245, 0.5),
-        rgba(51, 195, 240, 0.8),
-        rgba(155, 135, 245, 0.5),
-        transparent
-    );
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 0.5s ease;
+.cosmic-card:hover .cosmic-rays {
+    opacity: 0.6;
 }
 
-.cosmic-card:hover .quantum-fractal {
-    transform: scaleX(1);
+/* Info Panel */
+.info-panel {
+    transition: all 0.2s ease;
+    transform: translateZ(0);
+    background: rgba(31, 41, 55, 0.6);
 }
 
-/* Animation for rotation */
-@keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.cosmic-card:hover .info-panel {
+    background: rgba(31, 41, 55, 0.75);
 }
 
 /* Text Styles */
@@ -368,10 +345,43 @@ const nebulaGradient = computed(() => {
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
 }
 
+/* Galaxy Swirl */
+.galaxy-swirl {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-image: conic-gradient(
+        from 0deg,
+        rgba(155, 135, 245, 0.05),
+        rgba(51, 195, 240, 0.3),
+        rgba(155, 135, 245, 0.05)
+    );
+    filter: blur(1px);
+    opacity: 0.4;
+    transition: opacity 0.3s ease;
+    animation: rotate 120s linear infinite;
+    transform-origin: center;
+}
+
+.cosmic-card:hover .galaxy-swirl {
+    opacity: 0.8;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Reduced Motion */
 .reduced-motion .twinkle-star,
-.reduced-motion .accretion-disk,
-.reduced-motion .pulsar-beam,
+.reduced-motion .galaxy-swirl,
 .reduced-motion:hover .product-image-container,
 .reduced-motion:hover .product-image {
     animation: none !important;
@@ -379,18 +389,31 @@ const nebulaGradient = computed(() => {
     transform: none !important;
 }
 
-/* Media Queries */
+/* Media Queries for Mobile Optimization */
 @media (max-width: 768px) {
-    .pulsar-beam {
+    .galaxy-swirl {
+        width: 20px;
+        height: 20px;
         opacity: 0.3;
     }
-
-    .black-hole {
-        transform: translate(40%, 40%);
+    
+    .planet-badge {
+        width: 15px;
+        height: 15px;
     }
-
-    .stars-layer .twinkle-star:nth-child(odd) {
-        display: none; /* Reduce stars on mobile */
+    
+    .planet-ring {
+        width: 18px;
+        height: 6px;
+        margin-left: -9px;
+        margin-top: -3px;
+    }
+    
+    .nebula-background {
+        /* Use static background on mobile for better performance */
+        animation: none;
+        transform: none;
+        filter: blur(10px);
     }
 }
 </style>
