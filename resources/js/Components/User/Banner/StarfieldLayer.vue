@@ -1,3 +1,4 @@
+
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
         <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
@@ -15,6 +16,9 @@ let lastTime = 0;
 const targetFPS = 60;
 const frameDuration = 1000 / targetFPS;
 
+// Banner exclusion zone (mask area behind banner image)
+const bannerExclusionZone = ref({ top: 0, left: 0, width: 0, height: 0, active: false });
+
 const isReducedMotion = computed(() => {
     return (
         window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches || false
@@ -31,11 +35,14 @@ const isLowPower = computed(() => {
         : isMobile.value;
 });
 
-// Determine star count based on device capability
+// Determine star count based on device capability with 30% reduction
 const getStarCount = computed(() => {
-    if (isLowPower.value || isMobile.value) return 50;
-    if (isTablet.value) return 30;
-    return 50;
+    // 30% fewer stars in visible areas as requested
+    const reductionFactor = 0.7;
+    
+    if (isLowPower.value || isMobile.value) return Math.floor(50 * reductionFactor);
+    if (isTablet.value) return Math.floor(30 * reductionFactor);
+    return Math.floor(50 * reductionFactor);
 });
 
 function initCanvas() {
@@ -48,9 +55,29 @@ function initCanvas() {
     // Create stars with optimized properties
     generateStars();
 
+    // Calculate banner exclusion zone
+    calculateBannerExclusionZone();
+
     // Start animation loop with timing control
     lastTime = performance.now();
     animate();
+}
+
+function calculateBannerExclusionZone() {
+    // Find banner image
+    const bannerImage = document.querySelector('.carousel-container img');
+    if (bannerImage) {
+        requestIdleCallback(() => {
+            const rect = bannerImage.getBoundingClientRect();
+            bannerExclusionZone.value = {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+                active: true
+            };
+        });
+    }
 }
 
 function generateStars() {
@@ -107,6 +134,21 @@ function resizeCanvas() {
     if (stars.length > 0) {
         generateStars();
     }
+    
+    // Recalculate banner exclusion zone
+    calculateBannerExclusionZone();
+}
+
+function isInExclusionZone(x, y) {
+    if (!bannerExclusionZone.value.active) return false;
+    
+    const zone = bannerExclusionZone.value;
+    return (
+        x >= zone.left && 
+        x <= zone.left + zone.width && 
+        y >= zone.top && 
+        y <= zone.top + zone.height
+    );
 }
 
 function drawStar(star) {
@@ -117,6 +159,11 @@ function drawStar(star) {
         star.y < 0 ||
         star.y > canvasRef.value.height
     ) {
+        return;
+    }
+    
+    // Skip if in exclusion zone
+    if (isInExclusionZone(star.x, star.y)) {
         return;
     }
 
@@ -166,6 +213,12 @@ function animate(timestamp = 0) {
 
         // Draw all stars
         stars.forEach(drawStar);
+        
+        // Performance monitoring
+        const drawTime = performance.now() - timestamp;
+        if (drawTime > 5 && frameCount % 60 === 0) {
+            console.warn(`StarfieldLayer paint time: ${drawTime.toFixed(2)}ms (limit: 2ms)`);
+        }
     }
 
     // Use reduced framerate when tab is not visible
@@ -174,16 +227,47 @@ function animate(timestamp = 0) {
     animationFrameId = requestAnimationFrame(animate);
 }
 
+// Use intersection observer for performance
+let observer = null;
+
+function setupVisibilityObserver() {
+    observer = new IntersectionObserver((entries) => {
+        const [entry] = entries;
+        
+        if (entry.isIntersecting) {
+            // Restart animation when visible
+            if (!animationFrameId) {
+                lastTime = performance.now();
+                animate();
+            }
+        } else {
+            // Pause animation when not visible
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+    });
+    
+    observer.observe(canvasRef.value);
+}
+
 // Lifecycle hooks
 onMounted(() => {
     initCanvas();
     window.addEventListener("resize", resizeCanvas);
+    
+    // Setup visibility observer for performance
+    setupVisibilityObserver();
 
     // Reduce animation load when tab is not visible
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
-            cancelAnimationFrame(animationFrameId);
-        } else {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        } else if (!animationFrameId) {
             lastTime = performance.now();
             animate();
         }
@@ -195,6 +279,10 @@ onUnmounted(() => {
         cancelAnimationFrame(animationFrameId);
     }
     window.removeEventListener("resize", resizeCanvas);
+    
+    if (observer) {
+        observer.disconnect();
+    }
 });
 </script>
 

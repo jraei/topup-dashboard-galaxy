@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 
 const props = defineProps({
     itemId: {
@@ -30,6 +30,11 @@ let frameCount = 0;
 let isVisible = false;
 let isActive = true;
 
+// Create a shared particle pool across all instances
+const SHARED_POOL_SIZE = 200;
+let sharedParticlePool = null;
+let poolIndex = 0;
+
 const isMobile = computed(() => window.innerWidth < 768);
 const isLowPowerDevice = computed(() => {
     return navigator.hardwareConcurrency ? navigator.hardwareConcurrency < 4 : isMobile.value;
@@ -37,7 +42,10 @@ const isLowPowerDevice = computed(() => {
 
 // Determine particle count based on device capability
 const getParticleCount = computed(() => {
-    const base = isMobile.value ? 10 : (isLowPowerDevice.value ? 15 : 25);
+    // Use 12 particles on mobile as requested
+    if (isMobile.value) return Math.floor(12 * props.density);
+    
+    const base = isLowPowerDevice.value ? 15 : 25;
     return Math.floor(base * props.density);
 });
 
@@ -57,6 +65,28 @@ const getColors = computed(() => {
         faint: 'rgba(155, 135, 245, 0.3)'
     };
 });
+
+// Initialize or reuse the shared particle pool
+function getSharedPool() {
+    if (!sharedParticlePool) {
+        sharedParticlePool = new Array(SHARED_POOL_SIZE);
+        for (let i = 0; i < SHARED_POOL_SIZE; i++) {
+            sharedParticlePool[i] = {
+                x: 0,
+                y: 0,
+                size: 0,
+                color: '',
+                vx: 0,
+                vy: 0,
+                opacity: 0,
+                pulse: 0,
+                pulseDirection: 1,
+                inUse: false
+            };
+        }
+    }
+    return sharedParticlePool;
+}
 
 function initCanvas() {
     const canvas = canvasRef.value;
@@ -90,34 +120,57 @@ function generateParticles() {
     particles = [];
     const count = getParticleCount.value;
     const colors = getColors.value;
+    const pool = getSharedPool();
     
     for (let i = 0; i < count; i++) {
-        particles.push({
-            x: Math.random() * canvasRef.value.width,
-            y: Math.random() * canvasRef.value.height,
-            size: Math.random() * 2 + 1,
-            color: i % 3 === 0 ? colors.main : colors.faint,
-            vx: (Math.random() - 0.5) * 0.2,
-            vy: (Math.random() - 0.5) * 0.2,
-            opacity: Math.random() * 0.5 + 0.3,
-            pulse: Math.random() * 0.02 + 0.01,
-            pulseDirection: Math.random() > 0.5 ? 1 : -1
-        });
+        // Find an unused particle in the pool
+        let particleIndex = -1;
+        for (let j = 0; j < SHARED_POOL_SIZE; j++) {
+            const idx = (poolIndex + j) % SHARED_POOL_SIZE;
+            if (!pool[idx].inUse) {
+                particleIndex = idx;
+                break;
+            }
+        }
+        
+        // If the pool is full, skip
+        if (particleIndex === -1) continue;
+        
+        poolIndex = (particleIndex + 1) % SHARED_POOL_SIZE;
+        
+        // Get particle from pool and initialize
+        const particle = pool[particleIndex];
+        particle.x = Math.random() * canvasRef.value.width;
+        particle.y = Math.random() * canvasRef.value.height;
+        particle.size = Math.random() * 2 + 1;
+        particle.color = i % 3 === 0 ? colors.main : colors.faint;
+        
+        // Brownian motion - 2px/s drift as requested
+        particle.vx = (Math.random() - 0.5) * 0.1; // Slower drift
+        particle.vy = (Math.random() - 0.5) * 0.1;
+        
+        // Opacity pulsing in 0.6-1 range as requested
+        particle.opacity = Math.random() * 0.2 + 0.6; // 0.6-0.8 initial
+        particle.pulse = Math.random() * 0.01 + 0.005;
+        particle.pulseDirection = Math.random() > 0.5 ? 1 : -1;
+        particle.inUse = true;
+        
+        particles.push(particle);
     }
 }
 
 function drawParticle(particle) {
-    // Pulse opacity
+    // Pulse opacity in the 0.6-1 range
     particle.opacity += particle.pulse * particle.pulseDirection;
-    if (particle.opacity > 0.8) {
+    if (particle.opacity > 0.9) {
         particle.pulseDirection = -1;
-    } else if (particle.opacity < 0.3) {
+    } else if (particle.opacity < 0.6) {
         particle.pulseDirection = 1;
     }
     
-    // Move position with slight random variation
-    particle.x += particle.vx + (Math.random() - 0.5) * 0.1;
-    particle.y += particle.vy + (Math.random() - 0.5) * 0.1;
+    // Move position with Brownian motion (2px/s drift)
+    particle.x += particle.vx + (Math.random() - 0.5) * 0.05;
+    particle.y += particle.vy + (Math.random() - 0.5) * 0.05;
     
     // Wrap around screen edges
     if (particle.x < 0) particle.x = canvasRef.value.width;
@@ -133,6 +186,21 @@ function drawParticle(particle) {
     ctx.fill();
 }
 
+// Move text check function to ensure particles don't overlap text
+function isNearTextArea(x, y) {
+    // For FlashsaleCard, avoid left 50% of card where text is
+    if (props.itemId.toString().includes('flashcard-')) {
+        const canvas = canvasRef.value;
+        const midpoint = canvas.width / 2;
+        
+        // Consider area near text (left side of card)
+        return x < midpoint;
+    }
+    
+    return false;
+}
+
+// Optimized animation loop with performance metrics
 function animate(timestamp = 0) {
     if (!isActive || !isVisible) return;
     
@@ -140,20 +208,40 @@ function animate(timestamp = 0) {
     const frameRate = isLowPowerDevice.value ? 33.3 : 16.6; // 30fps or 60fps
     const elapsed = timestamp - lastTime;
     
+    frameCount++;
+    if (frameCount % 60 === 0) {
+        // Check CPU usage every ~1 second
+        const cpuTime = performance.now() - timestamp;
+        if (cpuTime > 5 && !isLowPowerDevice.value) {
+            console.warn(`CosmicParticles (${props.itemId}) CPU time: ${cpuTime.toFixed(2)}ms (limit: 5ms)`);
+        }
+    }
+    
     if (elapsed > frameRate) {
         // Clear canvas
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
         
-        // Draw all particles
+        // Draw all particles with position constraints
         for (const particle of particles) {
-            drawParticle(particle);
+            // Max 3 particles near text areas
+            if (isNearTextArea(particle.x, particle.y)) {
+                const textAreaParticles = particles.filter(p => 
+                    isNearTextArea(p.x, p.y) && p !== particle
+                );
+                
+                if (textAreaParticles.length < 3) {
+                    drawParticle(particle);
+                }
+            } else {
+                drawParticle(particle);
+            }
         }
         
         lastTime = timestamp - (elapsed % frameRate);
     }
     
     // Request next frame only if active and visible
-    animationFrameId = requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
 }
 
 function checkVisibility() {
@@ -198,8 +286,23 @@ onUnmounted(() => {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
+    
+    // Release particles back to pool
+    if (particles.length > 0) {
+        particles.forEach(particle => {
+            particle.inUse = false;
+        });
+    }
+    
     window.removeEventListener('resize', resizeCanvas);
     window.removeEventListener('scroll', checkVisibility);
     isActive = false;
+});
+
+// Watch for density changes
+watch(() => props.density, () => {
+    if (isActive && isVisible) {
+        generateParticles();
+    }
 });
 </script>

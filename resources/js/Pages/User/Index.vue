@@ -1,3 +1,4 @@
+
 <script setup>
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import BannerCarousel from "@/Components/User/Banner/BannerCarousel.vue";
@@ -38,6 +39,24 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+// Detect if device is low-powered
+const isLowPowerDevice = navigator.hardwareConcurrency
+    ? navigator.hardwareConcurrency < 4
+    : window.innerWidth < 768;
+
+// Monitor performance
+if (!isLowPowerDevice && window.performance) {
+    const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+            // Log when frame rate drops below 50fps
+            if (entry.name === 'frame-render' && entry.duration > 20) { // 20ms = ~50fps
+                console.warn(`Performance warning: Frame took ${entry.duration.toFixed(2)}ms to render`);
+            }
+        }
+    });
+    observer.observe({ entryTypes: ['frame'] });
+}
 </script>
 
 <template>
