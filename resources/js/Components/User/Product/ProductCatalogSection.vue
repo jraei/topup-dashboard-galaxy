@@ -4,6 +4,7 @@ import CategoryFilter from "./CategoryFilter.vue";
 import ProductCatalogItem from "./ProductCatalogItem.vue";
 import CosmicParticles from "../Flashsale/CosmicParticles.vue";
 import { debounce } from "lodash";
+import { router } from "@inertiajs/vue3";
 
 const props = defineProps({
     categories: {
@@ -103,6 +104,8 @@ watch(
                     :key="product.id"
                     :product="product"
                     :index="index"
+                    class="hover:cursor-pointer"
+                    @click="router.visit(route('order.index', product.slug))"
                 />
             </div>
 
