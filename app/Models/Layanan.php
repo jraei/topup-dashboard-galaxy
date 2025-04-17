@@ -99,7 +99,8 @@ class Layanan extends Model
     protected $appends = ['harga_jual'];
 
     /**
-     * Accessor untuk harga_jual
+     * Assessor for harga_jual
+     * Cek harga jual kalau udah login
      */
     public function getHargaJualAttribute()
     {

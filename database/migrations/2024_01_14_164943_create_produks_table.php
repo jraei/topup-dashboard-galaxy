@@ -24,6 +24,7 @@ return new class extends Migration
             $table->text('petunjuk_field')->nullable();
             $table->string('status')->default('active');
             $table->string('thumbnail');
+            $table->string('banner')->nullable();
             $table->timestamps();
         });
     }

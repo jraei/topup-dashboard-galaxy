@@ -111,12 +111,14 @@ const currentData = ref({
     deskripsi_game: "",
     petunjuk_field: "",
     thumbnail: "",
+    banner: "",
     status: "active",
 });
 
 const openAddForm = () => {
     imagePreviews.value.petunjuk_field = null;
     imagePreviews.value.thumbnail = null;
+    imagePreviews.value.banner = null;
     formMode.value = "add";
     currentData.value = {
         nama: "",
@@ -185,6 +187,7 @@ watch(
 const imagePreviews = ref({
     petunjuk_field: null,
     thumbnail: null,
+    banner: null,
 });
 
 const getImagePreview = (field) => {
@@ -585,6 +588,42 @@ const handleFileUpload = (event, field) => {
                                             name="thumbnail"
                                         />
                                     </div>
+                                    <div>
+                                        <label
+                                            for="banner"
+                                            class="block mb-1 text-sm font-medium text-gray-300"
+                                            >Banner</label
+                                        >
+                                        <div
+                                            v-if="
+                                                getImagePreview('banner').value
+                                            "
+                                            class="mb-2"
+                                        >
+                                            <img
+                                                :src="
+                                                    getImagePreview('banner')
+                                                        .value
+                                                "
+                                                alt="banner"
+                                                class="object-cover w-24 h-24 border rounded-lg shadow-md sm:w-32 sm:h-32 border-primary/60"
+                                            />
+                                        </div>
+
+                                        <input
+                                            id="banner"
+                                            @change="
+                                                handleFileUpload(
+                                                    $event,
+                                                    'banner'
+                                                )
+                                            "
+                                            type="file"
+                                            class="w-full px-2 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                                            placeholder="banner"
+                                            name="banner"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -796,6 +835,16 @@ const handleFileUpload = (event, field) => {
                                             '/storage/' + selectedData.thumbnail
                                         "
                                         alt="Preview Thumbnail"
+                                        class="object-cover w-24 h-24 mt-2 border rounded-lg shadow-md sm:w-32 sm:h-32 border-primary/60"
+                                    />
+                                </div>
+                                <div v-if="selectedData.banner">
+                                    <p class="text-xs text-gray-400 sm:text-sm">
+                                        Banner
+                                    </p>
+                                    <img
+                                        :src="'/storage/' + selectedData.banner"
+                                        alt="Preview Banner"
                                         class="object-cover w-24 h-24 mt-2 border rounded-lg shadow-md sm:w-32 sm:h-32 border-primary/60"
                                     />
                                 </div>

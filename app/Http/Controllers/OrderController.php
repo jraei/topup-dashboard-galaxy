@@ -10,8 +10,11 @@ class OrderController extends Controller
 {
     public function index(Produk $produk)
     {
+        $layanans = $produk->layanan;
         return Inertia::render('Order/Index', [
-            'produk' => $produk
+            'user' => auth()->user(),
+            'produk' => $produk,
+            'layanans' => $layanans
         ]);
     }
 }

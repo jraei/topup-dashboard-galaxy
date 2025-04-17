@@ -85,6 +85,7 @@ class ProdukController extends Controller
             'deskripsi_game' => 'required',
             'petunjuk_field' => 'image|mimes:jpeg,png,jpg,webp|max:10240',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'banner' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
             'status' => 'required',
         ]);
 
@@ -93,6 +94,9 @@ class ProdukController extends Controller
         }
         if ($request->hasFile('thumbnail')) {
             $product['thumbnail'] = $request->file('thumbnail')->store('produk/thumbnail', 'public');
+        }
+        if ($request->hasFile('banner')) {
+            $product['banner'] = $request->file('banner')->store('produk/banner', 'public');
         }
 
         Produk::create($product);
@@ -141,6 +145,9 @@ class ProdukController extends Controller
         if ($request->hasFile('thumbnail')) {
             $rules['thumbnail'] = 'image|mimes:jpeg,png,jpg,webp|max:10240';
         }
+        if ($request->hasFile('banner')) {
+            $rules['banner'] = 'image|mimes:jpeg,png,jpg,webp|max:10240';
+        }
         // Cek jika slug berubah
 
         if ($request->slug != $produk->slug) {
@@ -162,6 +169,12 @@ class ProdukController extends Controller
                 Storage::disk('public')->delete($produk->thumbnail);
             }
             $validatedData['thumbnail'] = $request->file('thumbnail')->store('produk/thumbnail', 'public');
+        }
+        if ($request->hasFile('banner')) {
+            if ($produk->banner) {
+                Storage::disk('public')->delete($produk->banner);
+            }
+            $validatedData['banner'] = $request->file('banner')->store('produk/banner', 'public');
         }
 
         // Update data produk
@@ -185,6 +198,9 @@ class ProdukController extends Controller
         }
         if ($product->thumbnail) {
             Storage::disk('public')->delete($product->thumbnail);
+        }
+        if ($product->banner) {
+            Storage::disk('public')->delete($product->banner);
         }
         $product->delete();
 
