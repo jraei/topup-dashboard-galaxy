@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -11,15 +10,7 @@ class OrderController extends Controller
 {
     public function index(Produk $produk)
     {
-        // Get layanan data
         $layanans = $produk->layanan;
-        
-        // Load input fields with their options
-        $produk->load(['inputFields' => function($query) {
-            $query->with('options')
-                ->orderBy('order');
-        }]);
-        
         return Inertia::render('Order/Index', [
             'user' => auth()->user(),
             'produk' => $produk,
