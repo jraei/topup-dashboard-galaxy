@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\FlashsaleEvent;
 use App\Models\Produk;
@@ -63,7 +62,7 @@ class IndexController extends Controller
             ->with(['kategori'])
             ->get(['id', 'nama', 'slug', 'developer', 'thumbnail', 'kategori_id']);
 
-        return Inertia::render('User/Index', [
+        return Inertia::render('Index', [
             'banners' => $banners,
             'flashsaleEvent' => $activeEvents,
             'serverTime' => Carbon::now()->toISOString(),

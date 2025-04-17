@@ -4,8 +4,10 @@ use Inertia\Inertia;
 use App\Models\Banner;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\IndexController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ProdukController;
@@ -24,7 +26,6 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
-use App\Http\Controllers\User\IndexController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +39,8 @@ use App\Http\Controllers\User\IndexController;
 */
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
+
+Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import FlashsaleCard from "./FlashsaleCard.vue";
@@ -38,22 +37,22 @@ const getScrollSpeed = () => {
 // Clone cards if needed for infinite scrolling
 const ensureInfiniteScroll = () => {
     if (!carouselRef.value || isCloned.value) return;
-    
+
     const container = carouselRef.value;
-    const items = container.querySelectorAll('.flashsale-card');
-    
+    const items = container.querySelectorAll(".flashsale-card");
+
     // Only clone if we have less than 8 items
     if (items.length < 8) {
         isCloned.value = true;
         const fragment = document.createDocumentFragment();
-        
+
         // Clone each card
-        items.forEach(item => {
+        items.forEach((item) => {
             const clone = item.cloneNode(true);
-            clone.classList.add('cloned-card');
+            clone.classList.add("cloned-card");
             fragment.appendChild(clone);
         });
-        
+
         // Add clones at the end
         container.appendChild(fragment);
     }
@@ -69,9 +68,10 @@ const animate = (timestamp) => {
 
     // Control frame rate for performance
     const elapsed = timestamp - lastTimestamp;
-    if (elapsed > 16) { // ~60fps
+    if (elapsed > 16) {
+        // ~60fps
         lastTimestamp = timestamp;
-        
+
         // Increment scroll position based on speed
         carouselRef.value.scrollLeft += getScrollSpeed();
 
@@ -84,7 +84,7 @@ const animate = (timestamp) => {
             resetScroll();
         }
     }
-    
+
     scrollAnimationId.value = requestAnimationFrame(animate);
 };
 
@@ -173,38 +173,41 @@ const cleanupAnimations = () => {
 
 // Implement performance monitoring
 const setupPerformanceMonitor = () => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
         let lastTimestamp = performance.now();
         let frameCount = 0;
-        
+
         const checkPerformance = () => {
             frameCount++;
             const now = performance.now();
             const elapsed = now - lastTimestamp;
-            
-            if (elapsed >= 1000) { // Check every second
+
+            if (elapsed >= 1000) {
+                // Check every second
                 const fps = Math.round((frameCount * 1000) / elapsed);
                 frameCount = 0;
                 lastTimestamp = now;
-                
+
                 // Console warning for low FPS
                 if (fps < 50 && !isMobile.value) {
-                    console.warn(`Flashsale carousel performance: ${fps}fps (target: 60fps)`);
+                    console.warn(
+                        `Flashsale carousel performance: ${fps}fps (target: 60fps)`
+                    );
                 }
             }
-            
+
             performanceMonitorId = requestAnimationFrame(checkPerformance);
         };
-        
+
         let performanceMonitorId = requestAnimationFrame(checkPerformance);
-        
+
         return () => {
             if (performanceMonitorId) {
                 cancelAnimationFrame(performanceMonitorId);
             }
         };
     }
-    
+
     return () => {};
 };
 
@@ -213,24 +216,28 @@ let performanceCleanup;
 onMounted(() => {
     // Clone items for infinite scroll
     ensureInfiniteScroll();
-    
+
     // Only start auto-scroll on desktop
     if (!isMobile.value) {
         lastTimestamp = performance.now();
         scrollAnimationId.value = requestAnimationFrame(animate);
     }
-    
+
     window.addEventListener("resize", handleResize);
     document.addEventListener("visibilitychange", () => {
         if (document.hidden && scrollAnimationId.value) {
             cancelAnimationFrame(scrollAnimationId.value);
             scrollAnimationId.value = null;
-        } else if (!document.hidden && !isMobile.value && !scrollAnimationId.value) {
+        } else if (
+            !document.hidden &&
+            !isMobile.value &&
+            !scrollAnimationId.value
+        ) {
             lastTimestamp = performance.now();
             scrollAnimationId.value = requestAnimationFrame(animate);
         }
     });
-    
+
     // Setup performance monitoring
     performanceCleanup = setupPerformanceMonitor();
 });
@@ -238,7 +245,7 @@ onMounted(() => {
 onUnmounted(() => {
     cleanupAnimations();
     window.removeEventListener("resize", handleResize);
-    
+
     if (performanceCleanup) {
         performanceCleanup();
     }
@@ -249,7 +256,10 @@ onUnmounted(() => {
     <section class="relative p-4 py-8 overflow-hidden bg-content_background">
         <!-- Cosmic particles overlay -->
         <div class="absolute inset-0 z-0">
-            <CosmicParticles :item-id="'flashsale-section'" class="absolute inset-0" />
+            <CosmicParticles
+                :item-id="'flashsale-section'"
+                class="absolute inset-0"
+            />
         </div>
 
         <div
@@ -265,8 +275,8 @@ onUnmounted(() => {
             <!-- Enhanced Cards Carousel with improved scroll behavior -->
             <div class="relative flashsale-carousel">
                 <!-- Scroll indicators (fade edges) -->
-                <div class="scroll-fade-left"></div>
-                <div class="scroll-fade-right"></div>
+                <!-- <div class="scroll-fade-left"></div>
+                <div class="scroll-fade-right"></div> -->
 
                 <!-- Main carousel container -->
                 <div
@@ -275,9 +285,13 @@ onUnmounted(() => {
                     @mouseenter="isHovering = true"
                     @mouseleave="isHovering = false"
                     @touchstart="isHovering = true"
-                    @touchend="() => { window.setTimeout(() => (isHovering = false), 1000) }"
+                    @touchend="
+                        () => {
+                            window.setTimeout(() => (isHovering = false), 1000);
+                        }
+                    "
                     class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none will-change-transform"
-                    style="transform: translateZ(0);"
+                    style="transform: translateZ(0)"
                 >
                     <FlashsaleCard
                         v-for="item in event.item"

@@ -1,4 +1,5 @@
 <script setup>
+import { router } from "@inertiajs/vue3";
 import ProductCard from "./ProductCard.vue";
 import CosmicParticles from "../Flashsale/CosmicParticles.vue";
 
@@ -43,7 +44,8 @@ const props = defineProps({
                     :key="product.id"
                     :product="product"
                     :index="index"
-                    class="h-[100px] md:h-[130px]"
+                    class="h-[100px] md:h-[130px] hover:cursor-pointer"
+                    @click="router.visit(route('order.index', product.slug))"
                 />
             </div>
         </div>
