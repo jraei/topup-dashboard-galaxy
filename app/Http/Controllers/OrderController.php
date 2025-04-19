@@ -25,7 +25,6 @@ class OrderController extends Controller
             ->where('status', 'active')
             ->pluck('layanan_id');
 
-
         // Normal services (excluding flashsale items)
         $services = $produk->layanan()
             ->whereNotIn('id', $excludedLayananIds)
@@ -42,7 +41,6 @@ class OrderController extends Controller
                         )?->image_url
                 ]);
             });
-
 
         // Get active flashsale events related to this product
         $flashsaleEvents = FlashsaleEvent::whereHas('layanan', function ($q) use ($produk) {
@@ -94,6 +92,38 @@ class OrderController extends Controller
                 return $serviceWithThumbnail;
             });
 
+        // Payment Method Data Assembly ---
+        // Static methods (saldo, qris)
+        $staticMethods = [
+            'saldo' => \App\Models\PayMethod::where('tipe', 'saldo')->first(),
+            'qris' => [
+                'nama' => 'QRIS (Semua Pembayaran)',
+                'gambar' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->gambar,
+                'fee' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->fee,
+                'fee_type' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->fee_type,
+            ]
+        ];
+        // Dynamic methods (grouped by tipe)
+        $dynamicMethods = \App\Models\PayMethod::whereNotIn('tipe', ['saldo', 'qris'])
+            ->where('status', 'active')
+            ->with('paymentProvider')
+            ->get()
+            ->groupBy('tipe')
+            ->map(function ($group) {
+                return $group->map(function ($method) {
+                    return [
+                        'id' => $method->id,
+                        'nama' => $method->nama,
+                        'tipe' => $method->tipe,
+                        'fee' => $method->fee,
+                        'fee_type' => $method->fee_type,
+                        'gambar' => $method->gambar,
+                        'is_recommended' => $method->keterangan && str_contains(strtolower($method->keterangan), 'recommended'),
+                        'payment_provider' => $method->paymentProvider?->toArray(),
+                    ];
+                })->values();
+            });
+
         return Inertia::render('Order/Index', [
             'user' => auth()->user(),
             'produk' => $produk,
@@ -101,7 +131,9 @@ class OrderController extends Controller
             'flashsaleItems' => $flashsaleItems,
             'inputFields' => $inputFields,
             'waNumber' => $waNumber,
-            'flashsaleEvents' => $flashsaleEvents
+            'flashsaleEvents' => $flashsaleEvents,
+            'staticMethods' => $staticMethods,
+            'dynamicMethods' => $dynamicMethods,
         ]);
     }
 }
