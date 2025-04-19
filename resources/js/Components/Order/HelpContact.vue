@@ -1,38 +1,41 @@
-
 <script setup>
-import { MessageSquare, Comet } from "lucide-vue-next";
+import { MessageSquare } from "lucide-vue-next";
 import { computed } from "vue";
 
 const props = defineProps({
     waNumber: {
         type: String,
-        required: true
-    }
+        required: true,
+    },
 });
 
 const waLink = computed(() => {
     // Format the WhatsApp number for the URL
-    const formattedNumber = props.waNumber.replace(/[^0-9]/g, '');
+    const formattedNumber = props.waNumber.replace(/[^0-9]/g, "");
     return `https://wa.me/${formattedNumber}`;
 });
 </script>
 
 <template>
-    <a 
+    <a
         :href="waLink"
         target="_blank"
         rel="noopener noreferrer"
         class="flex items-center gap-3 p-4 text-white transition-all rounded-lg cosmic-help-card bg-gradient-to-br from-primary/20 to-secondary/10 hover:translate-y-[-2px] hover:scale-[1.02] border border-secondary/20"
     >
-        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-secondary/20 cosmic-icon-container">
+        <div
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-secondary/20 cosmic-icon-container"
+        >
             <MessageSquare class="w-5 h-5 text-secondary" />
             <!-- Comet trail effect -->
             <div class="absolute comet-trail"></div>
         </div>
-        
+
         <div>
             <h4 class="font-bold leading-tight">Need help?</h4>
-            <p class="text-sm font-medium text-primary-text/80">Contact admin here</p>
+            <p class="text-sm font-medium text-primary-text/80">
+                Contact admin here
+            </p>
         </div>
     </a>
 </template>

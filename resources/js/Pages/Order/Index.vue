@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -29,32 +28,44 @@ const minimumPrice = computed(() => getMinimumPrice());
 <template>
     <GuestLayout>
         <!-- Product Information Section -->
-        <section class="relative w-full overflow-hidden">
-            <!-- Banner -->
-            <ProductBanner :banner="produk.banner" />
+        <section class="relative">
+            <div class="relative w-full overflow-hidden">
+                <!-- Banner -->
+                <ProductBanner :banner="produk.banner" />
+            </div>
 
             <!-- Cosmic Product Panel -->
             <ProductInfoPanel :produk="produk" :min-price="minimumPrice" />
         </section>
 
         <!-- User Data Section -->
-        <section class="relative px-4 py-8 overflow-hidden bg-content_background">
+        <section
+            class="relative px-4 py-8 overflow-hidden bg-content_background"
+        >
             <div class="absolute inset-0 z-0">
                 <CosmicParticles />
             </div>
-            
+
             <!-- Two-column layout on MD+ screens -->
-            <div class="relative z-10 grid max-w-7xl grid-cols-1 mx-auto md:grid-cols-5 md:gap-6">
+            <div
+                class="relative z-10 grid grid-cols-1 mx-auto max-w-7xl md:grid-cols-6 md:gap-6"
+            >
                 <!-- Main column (80%) -->
                 <div class="md:col-span-4 md:pr-8">
-                    <UserDataCard :input-fields="inputFields" :produk="produk" />
+                    <UserDataCard
+                        :input-fields="inputFields"
+                        :produk="produk"
+                    />
                 </div>
-                
+
                 <!-- Sidebar column (20%) -->
-                <div class="space-y-4 md:col-span-1">
-                    <div class="sticky top-24 space-y-4">
+                <div class="space-y-4 md:col-span-2">
+                    <div class="sticky space-y-4 top-24">
                         <HelpContact :wa-number="waNumber" />
-                        <CheckoutSummary :produk="produk" :min-price="minimumPrice" />
+                        <CheckoutSummary
+                            :produk="produk"
+                            :min-price="minimumPrice"
+                        />
                     </div>
                 </div>
             </div>
