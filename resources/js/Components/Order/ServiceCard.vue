@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from "vue";
 import { Rocket, Flame, Image } from "lucide-vue-next";
@@ -26,7 +25,10 @@ const selectService = () => {
 
 const hasDiscount = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
-        return props.service.flashSaleItem.harga_flashsale < props.service.harga_beli_idr;
+        return (
+            props.service.flashSaleItem.harga_flashsale <
+            props.service.harga_beli_idr
+        );
     }
     return false;
 });
@@ -44,7 +46,6 @@ const servicePrice = computed(() => {
     }
     return props.service.harga_beli_idr;
 });
-
 </script>
 
 <template>
@@ -65,11 +66,11 @@ const servicePrice = computed(() => {
                     v-if="service.thumbnail"
                     :src="service.thumbnail"
                     :alt="service.nama_layanan"
-                    class="w-full h-full object-cover rounded-lg cosmic-thumbnail"
+                    class="object-cover w-full h-full rounded-lg cosmic-thumbnail"
                 />
                 <div
                     v-else
-                    class="w-full h-full flex items-center justify-center rounded-lg bg-secondary/20"
+                    class="flex items-center justify-center w-full h-full rounded-lg bg-secondary/20"
                 >
                     <Image class="w-4 h-4 md:w-5 md:h-5 text-secondary/60" />
                 </div>
@@ -78,7 +79,9 @@ const servicePrice = computed(() => {
 
             <div class="flex-1 min-w-0">
                 <!-- Service Title -->
-                <h4 class="font-semibold text-white cosmic-glow text-sm md:text-base truncate">
+                <h4
+                    class="text-sm font-semibold text-white truncate cosmic-glow md:text-base"
+                >
                     {{ service.nama_layanan }}
                 </h4>
 
@@ -98,7 +101,7 @@ const servicePrice = computed(() => {
 
                         <span
                             v-if="hasDiscount"
-                            class="font-bold text-white supernova-text text-xs md:text-sm"
+                            class="text-xs font-bold text-white supernova-text md:text-sm"
                         >
                             {{ servicePrice }}
                         </span>
@@ -114,7 +117,9 @@ const servicePrice = computed(() => {
                 </div>
 
                 <!-- Footer -->
-                <div class="flex items-center mt-2 text-xs text-primary-text/70">
+                <div
+                    class="flex items-center mt-2 text-xs text-primary-text/70"
+                >
                     <Rocket class="w-3 h-3 mr-1 text-secondary" />
                     <span>Instant Process</span>
 
@@ -195,7 +200,8 @@ const servicePrice = computed(() => {
 }
 
 @keyframes ring-pulse {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 0.3;
     }
@@ -206,7 +212,8 @@ const servicePrice = computed(() => {
 }
 
 @keyframes pulse-badge {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 0.9;
     }
