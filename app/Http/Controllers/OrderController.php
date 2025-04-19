@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -15,10 +14,10 @@ class OrderController extends Controller
         $layanans = $produk->layanan;
         $inputFields = $produk->inputFields()->with('options')->orderBy('order')->get();
         $waNumber = WebConfig::get('support_whatsapp', '');
-        
+
         // Get active flashsale events related to this product
         $flashsaleEvents = $produk->layanan()
-            ->whereHas('flashSaleItem.flashsaleEvent', function($q) {
+            ->whereHas('flashSaleItem.flashsaleEvent', function ($q) {
                 $q->where('status', 'active')
                     ->where('event_start_date', '<=', now())
                     ->where('event_end_date', '>=', now());
@@ -27,7 +26,7 @@ class OrderController extends Controller
             ->get()
             ->pluck('flashSaleItem.flashsaleEvent')
             ->unique('id');
-        
+
         return Inertia::render('Order/Index', [
             'user' => auth()->user(),
             'produk' => $produk,

@@ -202,7 +202,7 @@ const savedIdForFuture = ref(false);
 }
 
 .cosmic-card:hover {
-    box-shadow: 0 12px 48px rgba(155, 135, 245, 0.2);
+    box-shadow: 0 6px 24px rgba(155, 135, 245, 0.2);
 }
 
 .cosmic-input-effect {
@@ -256,9 +256,9 @@ const savedIdForFuture = ref(false);
     }
 }
 
-@media (hover: hover) {
+/* @media (hover: hover) {
     .cosmic-card:hover {
         transform: skewY(0.5deg) translateY(-2px);
     }
-}
+} */
 </style>

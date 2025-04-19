@@ -1,18 +1,17 @@
-
 <script setup>
 defineProps({
     title: {
         type: String,
-        required: true
+        required: true,
     },
     stepNumber: {
         type: Number,
-        default: null
+        default: null,
     },
     totalSteps: {
         type: Number,
-        default: 6
-    }
+        default: 6,
+    },
 });
 </script>
 
@@ -32,7 +31,10 @@ defineProps({
                     {{ title }}
                 </h3>
                 <!-- Cosmic progress bar -->
-                <div v-if="stepNumber !== null" class="h-1 mt-2 rounded bg-primary/30 cosmic-progress">
+                <div
+                    v-if="stepNumber !== null"
+                    class="h-1 mt-2 rounded bg-primary/30 cosmic-progress"
+                >
                     <div
                         :style="`width: ${(stepNumber / totalSteps) * 100}%`"
                         class="h-full rounded bg-gradient-to-r from-primary to-secondary"
@@ -43,7 +45,9 @@ defineProps({
                             :key="`star-${i}`"
                             class="absolute w-px h-px bg-white rounded-full cosmic-star"
                             :style="{
-                                left: `${(stepNumber / totalSteps) * 100 * (i * 0.3)}%`,
+                                left: `${
+                                    (stepNumber / totalSteps) * 100 * (i * 0.3)
+                                }%`,
                                 top: '50%',
                                 transform: 'translate(-50%, -50%)',
                                 animationDelay: `${i * 0.5}s`,
@@ -59,16 +63,18 @@ defineProps({
             class="relative p-6 border bg-gradient-to-b from-primary/20 to-primary/5 border-secondary/20"
         >
             <!-- Micro-planet border accents -->
-            <div v-for="i in 6" :key="`planet-${i}`" 
+            <div
+                v-for="i in 6"
+                :key="`planet-${i}`"
                 class="absolute w-1.5 h-1.5 rounded-full bg-secondary/50 micro-planet"
                 :style="{
                     top: `${(i % 3) * 33 + 5}%`,
-                    left: i <= 3 ? '-3px' : 'auto',
-                    right: i > 3 ? '-3px' : 'auto',
+                    left: i <= 3 ? '3px' : 'auto',
+                    right: i > 3 ? '3px' : 'auto',
                     animationDelay: `${i * 0.7}s`,
-                }">
-            </div>
-            
+                }"
+            ></div>
+
             <div class="relative z-10">
                 <slot></slot>
             </div>
@@ -101,12 +107,11 @@ defineProps({
     animation: border-pulse 4s ease-in-out infinite;
 }
 
-.cosmic-card:hover {
-    box-shadow: 0 12px 48px rgba(155, 135, 245, 0.2);
-}
-
-.cosmic-card:hover::before {
+/* .cosmic-card:hover::before {
     animation: warp-field 1.5s ease-out forwards;
+} */
+.cosmic-card:hover {
+    box-shadow: 0 6px 24px rgba(155, 135, 245, 0.2);
 }
 
 .constellation-pattern {
@@ -133,7 +138,8 @@ defineProps({
 }
 
 @keyframes border-pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.3;
     }
     50% {
@@ -154,7 +160,8 @@ defineProps({
 }
 
 @keyframes star-twinkle {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.3;
         transform: translate(-50%, -50%) scale(1);
     }
@@ -165,7 +172,8 @@ defineProps({
 }
 
 @keyframes planet-pulse {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(0.8);
         opacity: 0.5;
     }
@@ -175,9 +183,9 @@ defineProps({
     }
 }
 
-@media (hover: hover) {
+/* @media (hover: hover) {
     .cosmic-card:hover {
         transform: skewY(0.5deg) translateY(-2px);
     }
-}
+} */
 </style>

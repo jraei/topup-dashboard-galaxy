@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -10,7 +9,7 @@ import ServiceList from "@/Components/Order/ServiceList.vue";
 import QuantitySelector from "@/Components/Order/QuantitySelector.vue";
 import CheckoutSummary from "@/Components/Order/CheckoutSummary.vue";
 import HelpContact from "@/Components/Order/HelpContact.vue";
-import { useToast } from '@/Composables/useToast';
+import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
     produk: Object,
@@ -18,7 +17,7 @@ const props = defineProps({
     user: Object,
     inputFields: Array,
     waNumber: String,
-    flashsaleEvents: Array
+    flashsaleEvents: Array,
 });
 
 // Initialize reactive state
@@ -26,18 +25,10 @@ const selectedService = ref(null);
 const quantity = ref(1);
 const { toast } = useToast();
 
-// Calculate minimum price from layanans
-const getMinimumPrice = () => {
-    if (!props.layanans || props.layanans.length === 0) return 0;
-    return Math.min(...props.layanans.map((item) => item.harga_jual));
-};
-
-const minimumPrice = computed(() => getMinimumPrice());
-
 // Handle service selection
 const handleServiceSelection = (service) => {
     selectedService.value = service;
-    
+
     // Reset quantity when service changes
     quantity.value = 1;
 };
@@ -50,12 +41,14 @@ const handleQuantityUpdate = (newQuantity) => {
 // Handle checkout
 const handleCheckout = () => {
     if (!selectedService.value) {
-        toast.error('Please select a service first');
+        toast.error("Please select a service first");
         return;
     }
-    
+
     // TODO: Implement checkout functionality
-    toast.success(`Processing order for ${quantity.value} x ${selectedService.value.nama_layanan}`);
+    toast.success(
+        `Processing order for ${quantity.value} x ${selectedService.value.nama_layanan}`
+    );
 };
 </script>
 
@@ -91,16 +84,16 @@ const handleCheckout = () => {
                         :input-fields="inputFields"
                         :produk="produk"
                     />
-                    
+
                     <!-- Service Selection -->
-                    <ServiceList 
+                    <ServiceList
                         :services="layanans"
                         :flashsale-events="flashsaleEvents"
                         @select-service="handleServiceSelection"
                     />
-                    
+
                     <!-- Purchase Quantity -->
-                    <QuantitySelector 
+                    <QuantitySelector
                         :disabled="!selectedService"
                         :max-quantity="1000"
                         :initial-quantity="1"
@@ -110,11 +103,11 @@ const handleCheckout = () => {
 
                 <!-- Sidebar column (20%) -->
                 <div class="space-y-4 md:col-span-2">
-                    <div class="sticky space-y-4 top-24">
+                    <div class="sticky top-0 space-y-4">
                         <HelpContact :wa-number="waNumber" />
                         <CheckoutSummary
                             :produk="produk"
-                            :min-price="minimumPrice"
+                            min-price="0"
                             :selected-service="selectedService"
                             :quantity="quantity"
                             @checkout="handleCheckout"
