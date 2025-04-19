@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -69,10 +68,12 @@ class OrderController extends Controller
                 $q->where('stok_tersedia', '>', 0)
                     ->orWhereNull('stok_tersedia');
             })
-            ->whereHas('layanan', function ($q) {
-                $q->whereColumn('harga_jual', '>', 'flashsale_items.harga_flashsale');
-            })
+
             ->get()
+            ->filter(function ($item) {
+                $layanan = $item->layanan;
+                return $layanan->harga_jual > $item->harga_flashsale;
+            })
             ->map(function ($item) {
                 $service = $item->layanan;
                 // Similar thumbnail logic for flashsale items

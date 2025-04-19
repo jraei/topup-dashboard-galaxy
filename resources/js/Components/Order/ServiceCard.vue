@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from "vue";
 import { Rocket, Flame, Image } from "lucide-vue-next";
@@ -90,32 +89,30 @@ const hasThumbnail = computed(() => {
                 >
                     <Image class="w-4 h-4 md:w-5 md:h-5 text-secondary/60" />
                 </div>
-                <div class="absolute inset-0 cosmic-ring"></div>
             </div>
 
             <div class="flex-1 min-w-0">
                 <!-- Price Row with Casino Animation -->
-                <div class="flex items-center justify-between mt-2">
+                <div class="flex items-center justify-between">
                     <div class="flex flex-col">
-                        <span
-                            :class="[
-                                ' price-display',
-                                hasDiscount
-                                    ? 'line-through text-primary-text/50 text-[10px] md:text-xs'
-                                    : 'text-primary-text/80 text-xs md:text-sm',
-                            ]"
-                        >
-                            {{ service.harga_jual.toLocaleString() }}
-                        </span>
-
                         <span
                             v-if="hasDiscount"
                             class="text-xs font-bold text-white supernova-text md:text-sm price-display flashsale-price"
-                            :data-value="servicePrice"
                         >
+                            Rp
                             {{
                                 servicePrice ? servicePrice.toLocaleString() : 0
                             }}
+                        </span>
+                        <span
+                            :class="[
+                                ' price-display ',
+                                hasDiscount
+                                    ? 'line-through text-primary-text/50 text-[10px] md:text-xs'
+                                    : 'text-primary-text/80 text-xs md:text-sm mt-1',
+                            ]"
+                        >
+                            Rp {{ service.harga_jual.toLocaleString() }}
                         </span>
                     </div>
 
@@ -187,12 +184,6 @@ const hasThumbnail = computed(() => {
     z-index: 1;
     aspect-ratio: 1/1;
     object-fit: cover;
-}
-
-.cosmic-ring {
-    border: 1px solid rgba(51, 195, 240, 0.3);
-    border-radius: 0.5rem;
-    animation: ring-pulse 3s ease-in-out infinite;
 }
 
 .discount-badge {
