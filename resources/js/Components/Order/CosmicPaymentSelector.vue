@@ -1,31 +1,32 @@
+
 <script setup>
 import { ref, computed, watch } from "vue";
 import CosmicCard from "./CosmicCard.vue";
 
+// Props: staticMethods, dynamicGroups, basePrice, modelValue, emits
 const props = defineProps({
     staticMethods: Object,
     dynamicGroups: Object,
     basePrice: Number,
     modelValue: Object, // { type: 'static'|'dynamic', code: string, channelId: number|null }
 });
-
 const emit = defineEmits(["update:modelValue", "update:fee"]);
 
-// Fee calculation helper
+// Helper: Fee calc
 function calculateFee(base, fee, feeType) {
-    if (feeType === "fixed") return base + Number(fee);
+    if (feeType === "fixed") return base + Number(fee || 0);
     if (feeType === "percent")
         return Math.round(base * (1 + Number(fee) / 100));
     return base;
 }
 
-// Flatten all dynamic channels for comparison/selection
+// Compose all dynamic channels for lookup/selection.
 const allDynamicChannels = computed(() => {
     let ch = [];
     Object.entries(props.dynamicGroups).forEach(([tipe, group]) => {
-        group.forEach((method) => {
+        group.forEach(method => {
             if (Array.isArray(method.payment_channels)) {
-                method.payment_channels.forEach((chan) =>
+                method.payment_channels.forEach(chan =>
                     ch.push({ ...chan, groupTipe: tipe })
                 );
             }
@@ -34,15 +35,16 @@ const allDynamicChannels = computed(() => {
     return ch;
 });
 
-const localSelected = ref({ ...props.modelValue });
+// Model local selection
+const localSelected = ref(props.modelValue ? { ...props.modelValue } : null);
 watch(
     () => props.modelValue,
-    (nv) => {
+    nv => {
         if (nv) localSelected.value = { ...nv };
     }
 );
 
-// Card selection handler
+// Card selection/emitters
 function selectStatic(code) {
     localSelected.value = { type: "static", code, channelId: null };
     let method = props.staticMethods[code];
@@ -52,9 +54,8 @@ function selectStatic(code) {
     emit("update:fee", { fee, feeType, amount });
     emit("update:modelValue", { ...localSelected.value });
 }
-
 function selectDynamic(channelId) {
-    const channel = allDynamicChannels.value.find((c) => c.id === channelId);
+    const channel = allDynamicChannels.value.find(c => c.id === channelId);
     if (!channel) return;
     localSelected.value = { type: "dynamic", code: channel.kode, channelId };
     let fee = channel.fee || 0;
@@ -63,16 +64,17 @@ function selectDynamic(channelId) {
     emit("update:fee", { fee, feeType, amount });
     emit("update:modelValue", { ...localSelected.value });
 }
-
-// Utility for active selection
+// Utility for selection states
 function isSelectedStatic(code) {
     return (
+        localSelected.value &&
         localSelected.value.type === "static" &&
         localSelected.value.code === code
     );
 }
 function isSelectedChannel(id) {
     return (
+        localSelected.value &&
         localSelected.value.type === "dynamic" &&
         localSelected.value.channelId === id
     );
@@ -93,9 +95,10 @@ function isSelectedChannel(id) {
                         'flex items-center justify-between px-4 py-3 rounded-2xl bg-content_background/90 cursor-pointer overflow-hidden transition-all border-2',
                         isSelectedStatic(key)
                             ? 'border-primary shadow-[0_0_16px_2px_#9b87f5] animate-pulse'
-                            : 'border-transparent hover:border-secondary',
+                            : 'border-transparent hover:border-secondary/70',
                     ]"
                     @click="selectStatic(key)"
+                    tabindex="0"
                 >
                     <!-- Cosmic "BEST PRICE" Ribbon -->
                     <div
@@ -140,7 +143,7 @@ function isSelectedChannel(id) {
                                               method.fee,
                                               "percent"
                                           )
-                                    : basePrice | toRupiah
+                                    : basePrice
                             }}
                         </span>
                         <span
@@ -198,14 +201,25 @@ function isSelectedChannel(id) {
                                               )
                                             : basePrice
                                     )
-                                ) | toRupiah
+                                )
                             }}
                         </span>
+                        <!-- Icon collage -->
+                        <div class="flex -space-x-2 ml-4">
+                            <img
+                                v-for="channel in (group.length>0 && group[0].payment_channels?.slice(0, 4))"
+                                :key="channel?.id"
+                                v-if="channel && channel.gambar"
+                                :src="'/storage/' + channel.gambar"
+                                class="w-7 h-7 rounded object-contain border-2 border-dark shadow-[0_0_4px_#9b87f5a7] cosmic-border"
+                                alt="Payment Channel"
+                            />
+                        </div>
                     </summary>
                     <!-- Channel grid -->
                     <div class="grid grid-cols-2 gap-3 py-2">
                         <div
-                            v-for="channel in method.payment_channels"
+                            v-for="channel in group[0].payment_channels"
                             :key="'ch' + channel.id"
                             class="relative"
                         >
@@ -243,7 +257,7 @@ function isSelectedChannel(id) {
                                                   basePrice,
                                                   channel.fee,
                                                   "percent"
-                                              ) | toRupiah
+                                              )
                                     }}
                                 </span>
                                 <span
@@ -265,14 +279,6 @@ function isSelectedChannel(id) {
     </CosmicCard>
 </template>
 
-<script>
-import { toRupiah } from "@/Utils/currency";
-export default {
-    // ... (Composition API only)
-    // Filter methods, cosmos logic
-};
-</script>
-
 <style scoped>
 .cosmic-stars-pattern {
     background: repeating-linear-gradient(
@@ -283,7 +289,6 @@ export default {
         transparent 5px
     );
 }
-
 .cosmic-border {
     box-shadow: 0 0 8px 1.5px #9b87f5bb;
 }
@@ -295,7 +300,6 @@ export default {
 .animate-blackhole-spin {
     animation: blackhole-spin 20s linear infinite;
 }
-
 .cosmic-verification-badge {
     box-shadow: 0 0 8px 2px #33c3f0a0;
 }
