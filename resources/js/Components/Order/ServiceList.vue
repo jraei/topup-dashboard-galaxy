@@ -1,9 +1,8 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import CosmicCard from "./CosmicCard.vue";
 import ServiceCard from "./ServiceCard.vue";
-import { Rocket, Meteor } from "lucide-vue-next";
+import { Rocket } from "lucide-vue-next";
 
 const props = defineProps({
     services: {
@@ -41,9 +40,7 @@ const flashsaleServiceGroups = computed(() => {
                 service.flashSaleItem &&
                 service.flashSaleItem.flashsaleEvent &&
                 service.flashSaleItem.flashsaleEvent.id === event.id &&
-                service.flashSaleItem.isActive() &&
-                service.flashSaleItem.harga_flashsale < service.harga_jual &&
-                (service.flashSaleItem.stok_tersedia > 0 || service.flashSaleItem.stok_tersedia === null)
+                service.flashSaleItem.isActive()
         );
 
         if (servicesInEvent.length > 0) {
@@ -73,7 +70,9 @@ const flashsaleServiceGroups = computed(() => {
                         v-for="service in regularServices"
                         :key="service.id"
                         :service="service"
-                        :isSelected="selectedService && selectedService.id === service.id"
+                        :isSelected="
+                            selectedService && selectedService.id === service.id
+                        "
                         @select="selectService"
                     />
                 </div>
@@ -95,7 +94,9 @@ const flashsaleServiceGroups = computed(() => {
                         v-for="service in group.services"
                         :key="service.id"
                         :service="service"
-                        :isSelected="selectedService && selectedService.id === service.id"
+                        :isSelected="
+                            selectedService && selectedService.id === service.id
+                        "
                         :isFlashsale="true"
                         @select="selectService"
                     />
@@ -104,7 +105,10 @@ const flashsaleServiceGroups = computed(() => {
 
             <!-- No services message -->
             <div
-                v-if="regularServices.length === 0 && flashsaleServiceGroups.length === 0"
+                v-if="
+                    regularServices.length === 0 &&
+                    flashsaleServiceGroups.length === 0
+                "
                 class="p-4 text-center text-primary-text/80"
             >
                 No services available at the moment

@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from "vue";
 import { Rocket, Flame } from "lucide-vue-next";
@@ -15,7 +14,7 @@ const props = defineProps({
     isFlashsale: {
         type: Boolean,
         default: false,
-    }
+    },
 });
 
 const emit = defineEmits(["select"]);
@@ -24,16 +23,19 @@ const selectService = () => {
     emit("select", props.service);
 };
 
-// Computed values for pricing display
 const hasDiscount = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
-        return props.service.flashSaleItem.harga_flashsale < props.service.harga_jual;
+        return (
+            props.service.flashSaleItem.harga_flashsale <
+            props.service.harga_jual
+        );
     }
     return false;
 });
 
 const discountPercentage = computed(() => {
     if (!hasDiscount.value) return 0;
+
     const regular = props.service.harga_jual;
     const sale = props.service.flashSaleItem.harga_flashsale;
     return Math.round(((regular - sale) / regular) * 100);
@@ -46,12 +48,7 @@ const servicePrice = computed(() => {
     return props.service.harga_jual;
 });
 
-// Get the service thumbnail
-const thumbnail = computed(() => {
-    return props.service.gambar || 
-           (props.service.thumbnails?.length ? props.service.thumbnails[0].image_path : null);
-});
-
+// Format currency to IDR
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -65,62 +62,53 @@ const formatCurrency = (value) => {
     <div
         @click="selectService"
         :class="[
-            'cursor-pointer p-4 rounded-lg border transition-all duration-300',
+            'cursor-pointer p-3 rounded-lg border transition-all',
             'bg-gradient-to-b from-primary/10 to-primary/5 cosmic-service-card',
             isSelected
-                ? 'ring-2 ring-primary border-primary/50 cosmic-selected'
-                : 'border-secondary/20 hover:border-secondary/40 hover:transform hover:-translate-y-1',
+                ? 'ring-2 ring-primary border-primary/50'
+                : 'border-secondary/20 hover:border-secondary/40',
         ]"
     >
-        <div class="flex items-start space-x-3">
-            <!-- Service Thumbnail -->
-            <div v-if="thumbnail" class="flex-shrink-0">
-                <img 
-                    :src="`/storage/${thumbnail}`"
-                    :alt="service.nama_layanan"
-                    class="w-6 h-6 md:w-8 md:h-8 rounded object-cover"
-                />
-            </div>
+        <!-- Service Title -->
+        <h4 class="font-semibold text-white cosmic-glow text-md">
+            {{ service.nama_layanan }}
+        </h4>
 
-            <!-- Service Info -->
-            <div class="flex-1">
-                <h4 class="font-semibold text-white cosmic-text-glow text-sm md:text-base">
-                    {{ service.nama_layanan }}
-                </h4>
+        <!-- Price Row -->
+        <div class="flex items-center justify-between mt-2">
+            <div class="flex flex-col">
+                <!-- Original price (shown with line-through if discounted) -->
+                <span
+                    :class="[
+                        'text-sm',
+                        hasDiscount
+                            ? 'line-through text-primary-text/50'
+                            : 'text-primary-text/80',
+                    ]"
+                >
+                    {{ formatCurrency(service.harga_jual) }}
+                </span>
 
-                <!-- Price Section -->
-                <div class="mt-2 space-y-1">
-                    <span
-                        :class="[
-                            'block text-sm',
-                            hasDiscount
-                                ? 'line-through text-primary-text/50'
-                                : 'text-primary-text/80',
-                        ]"
-                    >
-                        {{ formatCurrency(service.harga_jual) }}
-                    </span>
-
-                    <span
-                        v-if="hasDiscount"
-                        class="block font-bold text-white supernova-text"
-                    >
-                        {{ formatCurrency(servicePrice) }}
-                    </span>
-                </div>
+                <!-- Sale price (if applicable) -->
+                <span
+                    v-if="hasDiscount"
+                    class="font-bold text-white supernova-text"
+                >
+                    {{ formatCurrency(servicePrice) }}
+                </span>
             </div>
 
             <!-- Discount Badge -->
             <div
                 v-if="hasDiscount"
-                class="absolute top-2 right-2 px-2 py-1 text-xs font-bold text-white rounded-full cosmic-badge bg-primary/90"
+                class="px-2 py-1 text-xs font-bold text-white rounded-full discount-badge bg-primary/90"
             >
                 -{{ discountPercentage }}%
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center mt-3 text-xs text-primary-text/70">
+        <div class="flex items-center mt-2 text-xs text-primary-text/70">
             <Rocket class="w-3 h-3 mr-1 text-secondary" />
             <span>Instant Process</span>
 
@@ -136,7 +124,7 @@ const formatCurrency = (value) => {
         </div>
 
         <!-- Flashsale indicator -->
-        <div v-if="isFlashsale" class="absolute top-2 right-2">
+        <div v-if="isFlashsale" class="absolute top-0 right-0 p-1 -m-1">
             <Flame class="w-4 h-4 text-secondary animate-pulse" />
         </div>
     </div>
@@ -146,15 +134,16 @@ const formatCurrency = (value) => {
 .cosmic-service-card {
     position: relative;
     overflow: hidden;
-    transform: translateZ(0);
+    transition: all 0.3s ease;
     will-change: transform, box-shadow;
 }
 
-.cosmic-selected {
-    box-shadow: 0 0 15px rgba(155, 135, 245, 0.2);
+.cosmic-service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(155, 135, 245, 0.15);
 }
 
-.cosmic-text-glow {
+.cosmic-glow {
     text-shadow: 0 0 8px rgba(155, 135, 245, 0.3);
 }
 
@@ -163,9 +152,10 @@ const formatCurrency = (value) => {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    position: relative;
 }
 
-.cosmic-badge {
+.discount-badge {
     animation: pulse-badge 2s infinite;
     box-shadow: 0 0 10px rgba(155, 135, 245, 0.5);
 }
@@ -186,7 +176,8 @@ const formatCurrency = (value) => {
 }
 
 @keyframes pulse-badge {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 0.9;
     }

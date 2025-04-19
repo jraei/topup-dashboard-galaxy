@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -24,12 +23,14 @@ const props = defineProps({
 // Initialize reactive state
 const selectedService = ref(null);
 const quantity = ref(1);
-const isSticky = ref(false);
 const { toast } = useToast();
 
-// Handle service selection - quantity persists
+// Handle service selection
 const handleServiceSelection = (service) => {
     selectedService.value = service;
+
+    // Reset quantity when service changes
+    quantity.value = 1;
 };
 
 // Handle quantity update
@@ -49,29 +50,6 @@ const handleCheckout = () => {
         `Processing order for ${quantity.value} x ${selectedService.value.nama_layanan}`
     );
 };
-
-// Handle sticky sidebar
-const handleScroll = () => {
-    const navbar = document.querySelector("nav"); // Adjust selector as needed
-    const sidebar = document.querySelector(".sidebar");
-    
-    if (sidebar && navbar) {
-        const navBottom = navbar.getBoundingClientRect().bottom;
-        const sidebarTop = sidebar.getBoundingClientRect().top;
-        const buffer = 10;
-
-        isSticky.value = sidebarTop <= navBottom + buffer;
-    }
-};
-
-// Event listeners for scroll
-onMounted(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-});
-
-onUnmounted(() => {
-    window.removeEventListener("scroll", handleScroll);
-});
 </script>
 
 <template>
@@ -79,23 +57,33 @@ onUnmounted(() => {
         <!-- Product Information Section -->
         <section class="relative">
             <div class="relative w-full overflow-hidden">
+                <!-- Banner -->
                 <ProductBanner :banner="produk.banner" />
             </div>
-            <ProductInfoPanel :produk="produk" />
+
+            <!-- Cosmic Product Panel -->
+            <ProductInfoPanel :produk="produk" :min-price="minimumPrice" />
         </section>
 
-        <!-- Main Content Section -->
-        <section class="relative px-4 py-8 overflow-hidden bg-content_background">
+        <!-- User Data Section -->
+        <section
+            class="relative px-4 py-8 overflow-hidden bg-content_background"
+        >
             <div class="absolute inset-0 z-0">
                 <CosmicParticles />
             </div>
 
             <!-- Two-column layout on MD+ screens -->
-            <div class="relative z-10 grid grid-cols-1 mx-auto max-w-7xl md:grid-cols-5 md:gap-6">
+            <div
+                class="relative z-10 grid grid-cols-1 mx-auto max-w-7xl md:grid-cols-6 md:gap-6"
+            >
                 <!-- Main column (80%) -->
                 <div class="md:col-span-4 md:pr-8">
                     <!-- User Data Card -->
-                    <UserDataCard :input-fields="inputFields" :produk="produk" />
+                    <UserDataCard
+                        :input-fields="inputFields"
+                        :produk="produk"
+                    />
 
                     <!-- Service Selection -->
                     <ServiceList
@@ -108,20 +96,18 @@ onUnmounted(() => {
                     <QuantitySelector
                         :disabled="!selectedService"
                         :max-quantity="1000"
-                        :initial-quantity="quantity"
+                        :initial-quantity="1"
                         @update:quantity="handleQuantityUpdate"
                     />
                 </div>
 
                 <!-- Sidebar column (20%) -->
-                <div class="space-y-4 md:col-span-1">
-                    <div 
-                        class="sidebar transition-transform duration-300"
-                        :class="{ 'md:sticky md:top-[70px]': isSticky }"
-                    >
+                <div class="space-y-4 md:col-span-2">
+                    <div class="sticky top-0 space-y-4">
                         <HelpContact :wa-number="waNumber" />
                         <CheckoutSummary
                             :produk="produk"
+                            min-price="0"
                             :selected-service="selectedService"
                             :quantity="quantity"
                             @checkout="handleCheckout"
