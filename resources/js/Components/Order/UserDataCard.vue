@@ -48,7 +48,7 @@ const savedIdForFuture = ref(false);
 
         <!-- Card Body -->
         <div
-            class="relative p-6 bg-gradient-to-r from-primary/30 to-content_background"
+            class="relative p-6 border bg-gradient-to-b from-primary/20 to-primary/5 border-secondary/20"
         >
             <!-- Dynamic Input Fields -->
             <form class="relative z-10">
@@ -195,8 +195,8 @@ const savedIdForFuture = ref(false);
     border-radius: inherit;
     background: linear-gradient(
         120deg,
-        rgba(155, 135, 245, 0.3),
-        rgba(51, 195, 240, 0.3)
+        rgba(51, 195, 240, 0.1),
+        rgba(155, 135, 245, 0.3)
     );
     animation: border-pulse 4s ease-in-out infinite;
 }
