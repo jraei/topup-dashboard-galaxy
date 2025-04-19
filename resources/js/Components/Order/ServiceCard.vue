@@ -27,7 +27,7 @@ const hasDiscount = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
         return (
             props.service.flashSaleItem.harga_flashsale <
-            props.service.harga_beli_idr
+            props.service.harga_jual
         );
     }
     return false;
@@ -35,16 +35,24 @@ const hasDiscount = computed(() => {
 
 const discountPercentage = computed(() => {
     if (!hasDiscount.value) return 0;
-    const regular = props.service.harga_beli_idr;
+    const regular = props.service.harga_jual;
     const sale = props.service.flashSaleItem.harga_flashsale;
     return Math.round(((regular - sale) / regular) * 100);
 });
 
 const servicePrice = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
-        return props.service.flashSaleItem.harga_flashsale;
+        return props.service.flashSaleItem.harga_flashsale || 0;
     }
-    return props.service.harga_beli_idr;
+    return props.service.harga_jual;
+});
+
+// Decide if we have a thumbnail to display
+const hasThumbnail = computed(() => {
+    return (
+        props.service.thumbnail !== null &&
+        props.service.thumbnail !== undefined
+    );
 });
 </script>
 
@@ -55,15 +63,21 @@ const servicePrice = computed(() => {
             'cursor-pointer p-3 rounded-lg border transition-all relative',
             'bg-gradient-to-b from-primary/10 to-primary/5 cosmic-service-card',
             isSelected
-                ? 'ring-2 ring-primary border-primary/50 pointer-events-none'
+                ? 'ring-2 ring-primary border-primary pointer-events-none cosmic-selected'
                 : 'border-secondary/20 hover:border-secondary/40',
         ]"
     >
-        <!-- Thumbnail -->
+        <h4
+            class="mb-1 text-xs font-semibold text-white truncate cosmic-glow md:text-sm"
+        >
+            {{ service.nama_layanan }}
+        </h4>
+        <!-- Card Content with Thumbnail -->
         <div class="flex items-start space-x-3">
+            <!-- Thumbnail with Cosmic Ring -->
             <div class="relative w-6 h-6 md:w-8 md:h-8 shrink-0">
                 <img
-                    v-if="service.thumbnail"
+                    v-if="hasThumbnail"
                     :src="service.thumbnail"
                     :alt="service.nama_layanan"
                     class="object-cover w-full h-full rounded-lg cosmic-thumbnail"
@@ -74,36 +88,34 @@ const servicePrice = computed(() => {
                 >
                     <Image class="w-4 h-4 md:w-5 md:h-5 text-secondary/60" />
                 </div>
-                <div class="absolute inset-0 cosmic-ring"></div>
+                <!-- <div class="absolute inset-0 cosmic-ring"></div> -->
             </div>
 
             <div class="flex-1 min-w-0">
                 <!-- Service Title -->
-                <h4
-                    class="text-sm font-semibold text-white truncate cosmic-glow md:text-base"
-                >
-                    {{ service.nama_layanan }}
-                </h4>
 
-                <!-- Price Row -->
+                <!-- Price Row with Casino Animation -->
                 <div class="flex items-center justify-between mt-2">
                     <div class="flex flex-col">
                         <span
                             :class="[
-                                'text-xs md:text-sm',
+                                ' price-display',
                                 hasDiscount
-                                    ? 'line-through text-primary-text/50'
-                                    : 'text-primary-text/80',
+                                    ? 'line-through text-primary-text/50 text-[10px] md:text-xs'
+                                    : 'text-primary-text/80 text-xs md:text-sm',
                             ]"
                         >
-                            {{ servicePrice }}
+                            {{ service.harga_jual }}
                         </span>
 
                         <span
                             v-if="hasDiscount"
-                            class="text-xs font-bold text-white supernova-text md:text-sm"
+                            class="text-xs font-bold text-white supernova-text md:text-sm price-display flashsale-price"
+                            :data-value="servicePrice"
                         >
-                            {{ servicePrice }}
+                            {{
+                                servicePrice ? servicePrice.toLocaleString() : 0
+                            }}
                         </span>
                     </div>
 
@@ -115,30 +127,27 @@ const servicePrice = computed(() => {
                         -{{ discountPercentage }}%
                     </div>
                 </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="flex items-center mt-2 text-xs text-primary-text/70">
+            <Rocket class="w-3 h-3 mr-1 text-secondary" />
+            <span>Instant Process</span>
 
-                <!-- Footer -->
+            <!-- Rocket trail animation when selected -->
+            <div v-if="isSelected" class="ml-1 rocket-trail">
                 <div
-                    class="flex items-center mt-2 text-xs text-primary-text/70"
-                >
-                    <Rocket class="w-3 h-3 mr-1 text-secondary" />
-                    <span>Instant Process</span>
-
-                    <!-- Rocket trail animation when selected -->
-                    <div v-if="isSelected" class="ml-1 rocket-trail">
-                        <div
-                            v-for="i in 3"
-                            :key="`spark-${i}`"
-                            class="spark"
-                            :style="{ animationDelay: `${i * 0.2}s` }"
-                        ></div>
-                    </div>
-                </div>
+                    v-for="i in 3"
+                    :key="`spark-${i}`"
+                    class="spark"
+                    :style="{ animationDelay: `${i * 0.2}s` }"
+                ></div>
             </div>
         </div>
 
         <!-- Flashsale indicator -->
         <div v-if="isFlashsale" class="absolute top-0 right-0 p-1 -m-1">
-            <Flame class="w-4 h-4 text-secondary animate-pulse" />
+            <Flame class="w-6 h-6 text-secondary animate-pulse" />
         </div>
     </div>
 </template>
@@ -156,6 +165,11 @@ const servicePrice = computed(() => {
     box-shadow: 0 8px 16px rgba(155, 135, 245, 0.15);
 }
 
+.cosmic-selected {
+    box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+    animation: selected-pulse 2s infinite;
+}
+
 .cosmic-glow {
     text-shadow: 0 0 8px rgba(155, 135, 245, 0.3);
 }
@@ -171,6 +185,8 @@ const servicePrice = computed(() => {
 .cosmic-thumbnail {
     position: relative;
     z-index: 1;
+    aspect-ratio: 1/1;
+    object-fit: cover;
 }
 
 .cosmic-ring {
@@ -198,6 +214,20 @@ const servicePrice = computed(() => {
     opacity: 0.7;
     animation: spark-fade 1s infinite;
 }
+
+.price-display {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.flashsale-price {
+    /* This class will be used for the casino-style animation with JS */
+    position: relative;
+}
+
+/* Price animation setup for the casino effect 
+   Animation will be handled via JavaScript for performance */
 
 @keyframes ring-pulse {
     0%,
@@ -231,6 +261,16 @@ const servicePrice = computed(() => {
     100% {
         transform: scale(1.5);
         opacity: 0;
+    }
+}
+
+@keyframes selected-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(155, 135, 245, 0.5);
     }
 }
 </style>

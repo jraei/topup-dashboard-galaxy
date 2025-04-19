@@ -2,12 +2,16 @@
 import { ref, computed } from "vue";
 import CosmicCard from "./CosmicCard.vue";
 import ServiceCard from "./ServiceCard.vue";
-import { Rocket } from "lucide-vue-next";
+import { ShoppingBag, BadgePercent } from "lucide-vue-next";
 
 const props = defineProps({
     services: {
         type: Array,
         required: true,
+    },
+    flashsaleItems: {
+        type: Array,
+        default: () => [],
     },
     flashsaleEvents: {
         type: Array,
@@ -26,30 +30,37 @@ const selectService = (service) => {
 
 // Group services by flashsale events or regular
 const regularServices = computed(() => {
-    return props.services.filter(
-        (service) => !service.flashSaleItem || !service.flashSaleItem.isActive()
-    );
+    return props.services;
 });
 
 const flashsaleServiceGroups = computed(() => {
     const groups = [];
 
-    props.flashsaleEvents.forEach((event) => {
-        const servicesInEvent = props.services.filter(
-            (service) =>
-                service.flashSaleItem &&
-                service.flashSaleItem.flashsaleEvent &&
-                service.flashSaleItem.flashsaleEvent.id === event.id &&
-                service.flashSaleItem.isActive() &&
-                service.flashSaleItem.stok_tersedia > 0 &&
-                service.flashSaleItem.harga_flashsale < service.harga_beli_idr
-        );
+    if (!props.flashsaleItems || props.flashsaleItems.length === 0) {
+        return groups;
+    }
 
-        if (servicesInEvent.length > 0) {
-            groups.push({
-                event: event,
-                services: servicesInEvent,
-            });
+    // Group flashsale items by event ID
+    const groupedByEvent = {};
+
+    props.flashsaleItems.forEach((service) => {
+        const eventId = service.flashSaleItem.flashsale_event_id;
+
+        if (!groupedByEvent[eventId]) {
+            groupedByEvent[eventId] = {
+                event:
+                    props.flashsaleEvents.find((e) => e?.id === eventId) ?? {},
+                services: [],
+            };
+        }
+
+        groupedByEvent[eventId].services.push(service);
+    });
+
+    // Convert the object to an array
+    Object.values(groupedByEvent).forEach((group) => {
+        if (group.event && group.services.length > 0) {
+            groups.push(group);
         }
     });
 
@@ -63,7 +74,7 @@ const flashsaleServiceGroups = computed(() => {
             <!-- Regular Services -->
             <div v-if="regularServices.length > 0" class="space-y-3">
                 <div class="flex items-center space-x-2">
-                    <Rocket class="w-5 h-5 text-secondary" />
+                    <ShoppingBag class="w-5 h-5 text-secondary" />
                     <h4 class="text-white">Best Seller</h4>
                 </div>
 
@@ -87,7 +98,9 @@ const flashsaleServiceGroups = computed(() => {
                 class="space-y-3"
             >
                 <div class="flex items-center space-x-2">
-                    <Meteor class="w-5 h-5 text-secondary animate-pulse" />
+                    <BadgePercent
+                        class="w-5 h-5 text-secondary animate-pulse"
+                    />
                     <h4 class="text-white">{{ group.event.event_name }}</h4>
                 </div>
 

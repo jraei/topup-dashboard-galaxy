@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('usage_count')->default(0);
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
+            $table->boolean('is_public')->default(true);
             $table->string('status')->default('active');
             $table->timestamps();
         });

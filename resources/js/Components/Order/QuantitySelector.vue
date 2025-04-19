@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, watch } from 'vue';
 import CosmicCard from './CosmicCard.vue';
@@ -67,7 +66,9 @@ const decrement = () => {
 
 // Watch for initialQuantity changes
 watch(() => props.initialQuantity, (newVal) => {
-    quantity.value = newVal;
+    if (newVal !== quantity.value) {
+        quantity.value = newVal;
+    }
 });
 </script>
 

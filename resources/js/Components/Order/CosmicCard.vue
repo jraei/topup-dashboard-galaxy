@@ -1,3 +1,4 @@
+
 <script setup>
 defineProps({
     title: {
@@ -13,6 +14,24 @@ defineProps({
         default: 6,
     },
 });
+
+// SVG paths for planet icons
+const planetIcons = [
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="10" stroke="currentColor" fill="none"/></svg>',
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="8" stroke="currentColor" fill="none"/><circle cx="12" cy="12" r="4" stroke="currentColor" fill="none"/></svg>',
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="8" stroke="currentColor" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="5" stroke="currentColor" fill="none" transform="rotate(30 12 12)"/></svg>',
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="8" stroke="currentColor" fill="none"/><circle cx="18" cy="8" r="2" stroke="currentColor" fill="none"/></svg>',
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="8" stroke="currentColor" fill="none"/><ellipse cx="12" cy="12" rx="12" ry="3" stroke="currentColor" fill="none"/></svg>',
+    '<svg viewBox="0 0 24 24" class="cosmic-planet"><circle cx="12" cy="12" r="10" stroke="currentColor" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" fill="currentColor" opacity="0.3"/></svg>',
+];
+
+// Get SVG for the current step
+const getPlanetSvg = (step) => {
+    if (step === null || step <= 0 || step > planetIcons.length) {
+        return '';
+    }
+    return planetIcons[step - 1];
+};
 </script>
 
 <template>
@@ -23,37 +42,23 @@ defineProps({
             <!-- Constellation pattern -->
             <div class="absolute inset-0 constellation-pattern"></div>
 
-            <div class="relative z-10">
-                <h3 class="text-lg font-bold md:text-xl">
-                    <template v-if="stepNumber !== null">
-                        Step {{ stepNumber }} of {{ totalSteps }}:
-                    </template>
-                    {{ title }}
-                </h3>
-                <!-- Cosmic progress bar -->
-                <div
-                    v-if="stepNumber !== null"
-                    class="h-1 mt-2 rounded bg-primary/30 cosmic-progress"
-                >
-                    <div
-                        :style="`width: ${(stepNumber / totalSteps) * 100}%`"
-                        class="h-full rounded bg-gradient-to-r from-primary to-secondary"
-                    >
-                        <!-- Micro stars in progress bar -->
-                        <div
-                            v-for="i in 3"
-                            :key="`star-${i}`"
-                            class="absolute w-px h-px bg-white rounded-full cosmic-star"
-                            :style="{
-                                left: `${
-                                    (stepNumber / totalSteps) * 100 * (i * 0.3)
-                                }%`,
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                animationDelay: `${i * 0.5}s`,
-                            }"
-                        ></div>
-                    </div>
+            <div class="relative z-10 flex items-center">
+                <!-- Planet Step Indicator -->
+                <div v-if="stepNumber !== null" class="mr-3 space-x-1">
+                    <div 
+                        v-html="getPlanetSvg(stepNumber)"
+                        class="w-5 h-5 md:w-6 md:h-6 text-secondary inline-block"
+                        :class="{'current-step': true}"
+                    ></div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold md:text-xl">
+                        <template v-if="stepNumber !== null">
+                            Step {{ stepNumber }} of {{ totalSteps }}:
+                        </template>
+                        {{ title }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -107,9 +112,6 @@ defineProps({
     animation: border-pulse 4s ease-in-out infinite;
 }
 
-/* .cosmic-card:hover::before {
-    animation: warp-field 1.5s ease-out forwards;
-} */
 .cosmic-card:hover {
     box-shadow: 0 6px 24px rgba(155, 135, 245, 0.2);
 }
@@ -123,18 +125,18 @@ defineProps({
     background-size: 25px 25px;
 }
 
-.cosmic-progress {
-    overflow: hidden;
-    position: relative;
-}
-
-.cosmic-star {
-    animation: star-twinkle 2s ease-in-out infinite;
-}
-
 .micro-planet {
     transform: scale(0.8);
     animation: planet-pulse 3s ease-in-out infinite;
+}
+
+.cosmic-planet {
+    display: inline-block;
+    animation: planet-orbit 120s linear infinite;
+}
+
+.current-step {
+    animation: step-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes border-pulse {
@@ -144,30 +146,6 @@ defineProps({
     }
     50% {
         opacity: 0.7;
-    }
-}
-
-@keyframes warp-field {
-    0% {
-        transform: skewY(0deg);
-    }
-    50% {
-        transform: skewY(0.5deg);
-    }
-    100% {
-        transform: skewY(0deg);
-    }
-}
-
-@keyframes star-twinkle {
-    0%,
-    100% {
-        opacity: 0.3;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.5);
     }
 }
 
@@ -183,9 +161,24 @@ defineProps({
     }
 }
 
-/* @media (hover: hover) {
-    .cosmic-card:hover {
-        transform: skewY(0.5deg) translateY(-2px);
+@keyframes planet-orbit {
+    from {
+        transform: rotate(0deg);
     }
-} */
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes step-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+        filter: drop-shadow(0 0 3px rgba(51, 195, 240, 0.6));
+    }
+}
 </style>
