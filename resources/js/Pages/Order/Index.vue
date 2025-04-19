@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -10,6 +9,8 @@ import ServiceList from "@/Components/Order/ServiceList.vue";
 import QuantitySelector from "@/Components/Order/QuantitySelector.vue";
 import CheckoutSummary from "@/Components/Order/CheckoutSummary.vue";
 import HelpContact from "@/Components/Order/HelpContact.vue";
+import CosmicPaymentSelector from "@/Components/Order/CosmicPaymentSelector.vue";
+import CosmicContactForm from "@/Components/Order/CosmicContactForm.vue";
 import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
@@ -20,6 +21,8 @@ const props = defineProps({
     inputFields: Array,
     waNumber: String,
     flashsaleEvents: Array,
+    staticMethods: Object,
+    dynamicMethods: Object,
 });
 
 // Initialize reactive state
@@ -29,6 +32,19 @@ const { toast } = useToast();
 const sidebarRef = ref(null);
 const isSidebarSticky = ref(false);
 const footerVisible = ref(false);
+const paymentMethods = ref({
+    static: {
+        saldo: props.staticMethods?.saldo || {},
+        qris: props.staticMethods?.qris || {},
+    },
+    dynamic: props.dynamicMethods || {},
+});
+const selectedPayment = ref({ type: "static", code: "saldo", channelId: null });
+const paymentFee = ref({ fee: 0, feeType: "fixed", amount: props.produk?.harga_min || 0 });
+
+// Contact section fields
+const contactEmail = ref("");
+const contactPhone = ref("");
 
 // Handle service selection
 const handleServiceSelection = (service) => {
@@ -236,6 +252,15 @@ const initPriceAnimations = () => {
         }
     });
 };
+
+// Payment selection triggers fee/summary update
+function onPaymentSelected(value) {
+    selectedPayment.value = value;
+}
+function onFeeUpdate(payload) {
+    paymentFee.value = payload;
+    // Update CheckoutSummary if necessary
+}
 </script>
 
 <template>
@@ -286,6 +311,23 @@ const initPriceAnimations = () => {
                         :initial-quantity="quantity"
                         @update:quantity="handleQuantityUpdate"
                     />
+
+                    <!-- ADD Cosmic Payment Selector -->
+                    <CosmicPaymentSelector
+                        :static-methods="paymentMethods.static"
+                        :dynamic-groups="paymentMethods.dynamic"
+                        :base-price="produk?.harga_min || 0"
+                        :model-value="selectedPayment"
+                        @update:modelValue="onPaymentSelected"
+                        @update:fee="onFeeUpdate"
+                        class="mb-8"
+                    />
+
+                    <!-- ADD Cosmic Contact Form -->
+                    <CosmicContactForm
+                        v-model:email="contactEmail"
+                        v-model:phone="contactPhone"
+                    />
                 </div>
 
                 <!-- Sidebar column (20%) -->
@@ -305,6 +347,9 @@ const initPriceAnimations = () => {
                             min-price="0"
                             :selected-service="selectedService"
                             :quantity="quantity"
+                            :payment-fee="paymentFee"
+                            :selected-payment="selectedPayment"
+                            :contact-info="{ email: contactEmail, phone: contactPhone }"
                             @checkout="handleCheckout"
                         />
                     </div>
