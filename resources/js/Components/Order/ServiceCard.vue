@@ -45,6 +45,10 @@ const servicePrice = computed(() => {
     return props.service.harga_beli_idr;
 });
 
+// Decide if we have a thumbnail to display
+const hasThumbnail = computed(() => {
+    return props.service.thumbnail !== null && props.service.thumbnail !== undefined;
+});
 </script>
 
 <template>
@@ -54,15 +58,16 @@ const servicePrice = computed(() => {
             'cursor-pointer p-3 rounded-lg border transition-all relative',
             'bg-gradient-to-b from-primary/10 to-primary/5 cosmic-service-card',
             isSelected
-                ? 'ring-2 ring-primary border-primary/50 pointer-events-none'
+                ? 'ring-2 ring-primary border-primary/50 pointer-events-none cosmic-selected'
                 : 'border-secondary/20 hover:border-secondary/40',
         ]"
     >
-        <!-- Thumbnail -->
+        <!-- Card Content with Thumbnail -->
         <div class="flex items-start space-x-3">
+            <!-- Thumbnail with Cosmic Ring -->
             <div class="relative w-6 h-6 md:w-8 md:h-8 shrink-0">
                 <img
-                    v-if="service.thumbnail"
+                    v-if="hasThumbnail"
                     :src="service.thumbnail"
                     :alt="service.nama_layanan"
                     class="w-full h-full object-cover rounded-lg cosmic-thumbnail"
@@ -82,23 +87,24 @@ const servicePrice = computed(() => {
                     {{ service.nama_layanan }}
                 </h4>
 
-                <!-- Price Row -->
+                <!-- Price Row with Casino Animation -->
                 <div class="flex items-center justify-between mt-2">
                     <div class="flex flex-col">
                         <span
                             :class="[
-                                'text-xs md:text-sm',
+                                'text-xs md:text-sm price-display',
                                 hasDiscount
                                     ? 'line-through text-primary-text/50'
                                     : 'text-primary-text/80',
                             ]"
                         >
-                            {{ servicePrice }}
+                            {{ service.harga_beli_idr }}
                         </span>
 
                         <span
                             v-if="hasDiscount"
-                            class="font-bold text-white supernova-text text-xs md:text-sm"
+                            class="font-bold text-white supernova-text text-xs md:text-sm price-display flashsale-price"
+                            :data-value="servicePrice"
                         >
                             {{ servicePrice }}
                         </span>
@@ -151,6 +157,11 @@ const servicePrice = computed(() => {
     box-shadow: 0 8px 16px rgba(155, 135, 245, 0.15);
 }
 
+.cosmic-selected {
+    box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+    animation: selected-pulse 2s infinite;
+}
+
 .cosmic-glow {
     text-shadow: 0 0 8px rgba(155, 135, 245, 0.3);
 }
@@ -166,6 +177,8 @@ const servicePrice = computed(() => {
 .cosmic-thumbnail {
     position: relative;
     z-index: 1;
+    aspect-ratio: 1/1;
+    object-fit: cover;
 }
 
 .cosmic-ring {
@@ -193,6 +206,20 @@ const servicePrice = computed(() => {
     opacity: 0.7;
     animation: spark-fade 1s infinite;
 }
+
+.price-display {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.flashsale-price {
+    /* This class will be used for the casino-style animation with JS */
+    position: relative;
+}
+
+/* Price animation setup for the casino effect 
+   Animation will be handled via JavaScript for performance */
 
 @keyframes ring-pulse {
     0%, 100% {
@@ -224,6 +251,15 @@ const servicePrice = computed(() => {
     100% {
         transform: scale(1.5);
         opacity: 0;
+    }
+}
+
+@keyframes selected-pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(155, 135, 245, 0.5);
     }
 }
 </style>

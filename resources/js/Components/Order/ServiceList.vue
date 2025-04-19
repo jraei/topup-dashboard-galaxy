@@ -10,6 +10,10 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    flashsaleItems: {
+        type: Array,
+        default: () => [],
+    },
     flashsaleEvents: {
         type: Array,
         default: () => [],
@@ -27,30 +31,36 @@ const selectService = (service) => {
 
 // Group services by flashsale events or regular
 const regularServices = computed(() => {
-    return props.services.filter(
-        (service) => !service.flashSaleItem || !service.flashSaleItem.isActive()
-    );
+    return props.services;
 });
 
 const flashsaleServiceGroups = computed(() => {
     const groups = [];
+    
+    if (!props.flashsaleItems || props.flashsaleItems.length === 0) {
+        return groups;
+    }
 
-    props.flashsaleEvents.forEach((event) => {
-        const servicesInEvent = props.services.filter(
-            (service) =>
-                service.flashSaleItem &&
-                service.flashSaleItem.flashsaleEvent &&
-                service.flashSaleItem.flashsaleEvent.id === event.id &&
-                service.flashSaleItem.isActive() &&
-                service.flashSaleItem.stok_tersedia > 0 &&
-                service.flashSaleItem.harga_flashsale < service.harga_beli_idr
-        );
-
-        if (servicesInEvent.length > 0) {
-            groups.push({
-                event: event,
-                services: servicesInEvent,
-            });
+    // Group flashsale items by event ID
+    const groupedByEvent = {};
+    
+    props.flashsaleItems.forEach(service => {
+        const eventId = service.flashSaleItem.flashsale_event_id;
+        
+        if (!groupedByEvent[eventId]) {
+            groupedByEvent[eventId] = {
+                event: props.flashsaleEvents.find(e => e.id === eventId),
+                services: []
+            };
+        }
+        
+        groupedByEvent[eventId].services.push(service);
+    });
+    
+    // Convert the object to an array
+    Object.values(groupedByEvent).forEach(group => {
+        if (group.event && group.services.length > 0) {
+            groups.push(group);
         }
     });
 
