@@ -1,3 +1,4 @@
+
 <script setup>
 import { computed } from "vue";
 import { Rocket, Flame, Image } from "lucide-vue-next";
@@ -25,6 +26,7 @@ const selectService = () => {
 
 const hasDiscount = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
+        // Using harga_jual for correct price comparison
         return (
             props.service.flashSaleItem.harga_flashsale <
             props.service.harga_jual
@@ -88,12 +90,10 @@ const hasThumbnail = computed(() => {
                 >
                     <Image class="w-4 h-4 md:w-5 md:h-5 text-secondary/60" />
                 </div>
-                <!-- <div class="absolute inset-0 cosmic-ring"></div> -->
+                <div class="absolute inset-0 cosmic-ring"></div>
             </div>
 
             <div class="flex-1 min-w-0">
-                <!-- Service Title -->
-
                 <!-- Price Row with Casino Animation -->
                 <div class="flex items-center justify-between mt-2">
                     <div class="flex flex-col">
@@ -105,7 +105,7 @@ const hasThumbnail = computed(() => {
                                     : 'text-primary-text/80 text-xs md:text-sm',
                             ]"
                         >
-                            {{ service.harga_jual }}
+                            {{ service.harga_jual.toLocaleString() }}
                         </span>
 
                         <span

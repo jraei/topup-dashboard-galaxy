@@ -35,7 +35,7 @@ const itemPrice = computed(() => {
     if (!props.selectedService) return props.minPrice;
     
     if (props.selectedService.flashSaleItem && 
-        props.selectedService.flashSaleItem.isActive()) {
+        props.selectedService.flashSaleItem.is_active) {
         return props.selectedService.flashSaleItem.harga_flashsale;
     }
     
@@ -45,6 +45,19 @@ const itemPrice = computed(() => {
 // Calculate total price
 const totalPrice = computed(() => {
     return itemPrice.value * props.quantity;
+});
+
+// Get the display name - service name or product name if no service selected
+const displayName = computed(() => {
+    if (props.selectedService) {
+        return props.selectedService.nama_layanan;
+    }
+    return props.produk.nama;
+});
+
+// Get developer name as fallback
+const developerName = computed(() => {
+    return props.produk.developer || '';
 });
 
 const handleCheckout = () => {
@@ -82,13 +95,13 @@ const calculationClass = computed(() => {
 
             <div class="overflow-hidden">
                 <h4 class="font-medium text-white truncate text-md">
-                    {{ produk.nama }}
+                    {{ displayName }}
                 </h4>
                 <p
-                    v-if="produk.developer"
+                    v-if="developerName"
                     class="text-xs truncate text-primary-text/80"
                 >
-                    {{ produk.developer }}
+                    {{ developerName }}
                 </p>
             </div>
         </div>

@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers;
@@ -69,7 +70,7 @@ class OrderController extends Controller
                     ->orWhereNull('stok_tersedia');
             })
             ->whereHas('layanan', function ($q) {
-                $q->whereColumn('harga_beli_idr', '>', 'flashsale_items.harga_flashsale');
+                $q->whereColumn('harga_jual', '>', 'flashsale_items.harga_flashsale');
             })
             ->get()
             ->map(function ($item) {
@@ -84,7 +85,9 @@ class OrderController extends Controller
                             $service->produk_id,
                             $quantity
                         )?->image_url,
-                    'flashSaleItem' => $item
+                    'flashSaleItem' => array_merge($item->toArray(), [
+                        'is_active' => true, // Add boolean flag for frontend use
+                    ])
                 ]);
 
                 return $serviceWithThumbnail;
