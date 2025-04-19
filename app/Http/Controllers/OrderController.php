@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers;
@@ -15,12 +16,25 @@ class OrderController extends Controller
         $inputFields = $produk->inputFields()->with('options')->orderBy('order')->get();
         $waNumber = WebConfig::get('support_whatsapp', '');
         
+        // Get active flashsale events related to this product
+        $flashsaleEvents = $produk->layanan()
+            ->whereHas('flashSaleItem.flashsaleEvent', function($q) {
+                $q->where('status', 'active')
+                    ->where('event_start_date', '<=', now())
+                    ->where('event_end_date', '>=', now());
+            })
+            ->with(['flashSaleItem.flashsaleEvent'])
+            ->get()
+            ->pluck('flashSaleItem.flashsaleEvent')
+            ->unique('id');
+        
         return Inertia::render('Order/Index', [
             'user' => auth()->user(),
             'produk' => $produk,
             'layanans' => $layanans,
             'inputFields' => $inputFields,
-            'waNumber' => $waNumber
+            'waNumber' => $waNumber,
+            'flashsaleEvents' => $flashsaleEvents
         ]);
     }
 }

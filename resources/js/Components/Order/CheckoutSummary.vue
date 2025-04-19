@@ -1,4 +1,6 @@
+
 <script setup>
+import { computed, watch } from 'vue';
 import { Rocket } from "lucide-vue-next";
 
 const props = defineProps({
@@ -7,7 +9,17 @@ const props = defineProps({
         type: Number,
         default: 0,
     },
+    selectedService: {
+        type: Object,
+        default: null
+    },
+    quantity: {
+        type: Number,
+        default: 1
+    }
 });
+
+const emit = defineEmits(['checkout']);
 
 // Format currency to IDR
 const formatCurrency = (value) => {
@@ -17,6 +29,32 @@ const formatCurrency = (value) => {
         minimumFractionDigits: 0,
     }).format(value);
 };
+
+// Calculate item price based on selection
+const itemPrice = computed(() => {
+    if (!props.selectedService) return props.minPrice;
+    
+    if (props.selectedService.flashSaleItem && 
+        props.selectedService.flashSaleItem.isActive()) {
+        return props.selectedService.flashSaleItem.harga_flashsale;
+    }
+    
+    return props.selectedService.harga_jual;
+});
+
+// Calculate total price
+const totalPrice = computed(() => {
+    return itemPrice.value * props.quantity;
+});
+
+const handleCheckout = () => {
+    if (!props.selectedService) return;
+    emit('checkout');
+};
+
+const calculationClass = computed(() => {
+    return props.selectedService ? 'price-updated' : '';
+});
 </script>
 
 <template>
@@ -59,13 +97,15 @@ const formatCurrency = (value) => {
         <div class="space-y-2 text-sm">
             <div class="flex justify-between">
                 <span class="text-primary-text/80">Harga</span>
-                <span class="font-medium text-white">{{
-                    formatCurrency(minPrice)
-                }}</span>
+                <span :class="['font-medium text-white', calculationClass]">
+                    {{ formatCurrency(itemPrice) }}
+                </span>
             </div>
             <div class="flex justify-between">
                 <span class="text-primary-text/80">Jumlah</span>
-                <span class="font-medium text-white">1</span>
+                <span :class="['font-medium text-white', calculationClass]">
+                    {{ quantity }}
+                </span>
             </div>
             <div class="flex justify-between">
                 <span class="text-primary-text/80">Biaya</span>
@@ -78,15 +118,17 @@ const formatCurrency = (value) => {
 
             <div class="flex justify-between">
                 <span class="font-medium text-primary-text">Total</span>
-                <span class="font-bold text-white">{{
-                    formatCurrency(minPrice)
-                }}</span>
+                <span :class="['font-bold text-white total-price', calculationClass]">
+                    {{ formatCurrency(totalPrice) }}
+                </span>
             </div>
         </div>
 
         <!-- Checkout Button -->
         <button
-            class="flex items-center justify-center w-full gap-2 px-4 py-2 mt-4 text-white transition-all rounded-md bg-primary hover:bg-primary-hover group"
+            @click="handleCheckout"
+            :disabled="!selectedService"
+            class="flex items-center justify-center w-full gap-2 px-4 py-2 mt-4 text-white transition-all rounded-md bg-primary hover:bg-primary-hover group disabled:opacity-50 disabled:cursor-not-allowed"
         >
             <span>Pesan Sekarang</span>
             <Rocket
@@ -127,12 +169,59 @@ const formatCurrency = (value) => {
     animation: ray-animation 4s linear infinite;
 }
 
+.price-updated {
+    animation: price-update 0.5s ease-out;
+    position: relative;
+}
+
+.total-price.price-updated::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle,
+        rgba(51, 195, 240, 0.8) 0%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    z-index: -1;
+    animation: price-burst 0.6s ease-out;
+}
+
 @keyframes ray-animation {
     0% {
         background-position: 0% 0%;
     }
     100% {
         background-position: 200% 200%;
+    }
+}
+
+@keyframes price-update {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes price-burst {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
     }
 }
 </style>

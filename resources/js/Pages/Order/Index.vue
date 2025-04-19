@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, computed } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -5,8 +6,11 @@ import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 import ProductBanner from "@/Components/Order/ProductBanner.vue";
 import ProductInfoPanel from "@/Components/Order/ProductInfoPanel.vue";
 import UserDataCard from "@/Components/Order/UserDataCard.vue";
+import ServiceList from "@/Components/Order/ServiceList.vue";
+import QuantitySelector from "@/Components/Order/QuantitySelector.vue";
 import CheckoutSummary from "@/Components/Order/CheckoutSummary.vue";
 import HelpContact from "@/Components/Order/HelpContact.vue";
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     produk: Object,
@@ -14,7 +18,13 @@ const props = defineProps({
     user: Object,
     inputFields: Array,
     waNumber: String,
+    flashsaleEvents: Array
 });
+
+// Initialize reactive state
+const selectedService = ref(null);
+const quantity = ref(1);
+const { toast } = useToast();
 
 // Calculate minimum price from layanans
 const getMinimumPrice = () => {
@@ -23,6 +33,30 @@ const getMinimumPrice = () => {
 };
 
 const minimumPrice = computed(() => getMinimumPrice());
+
+// Handle service selection
+const handleServiceSelection = (service) => {
+    selectedService.value = service;
+    
+    // Reset quantity when service changes
+    quantity.value = 1;
+};
+
+// Handle quantity update
+const handleQuantityUpdate = (newQuantity) => {
+    quantity.value = newQuantity;
+};
+
+// Handle checkout
+const handleCheckout = () => {
+    if (!selectedService.value) {
+        toast.error('Please select a service first');
+        return;
+    }
+    
+    // TODO: Implement checkout functionality
+    toast.success(`Processing order for ${quantity.value} x ${selectedService.value.nama_layanan}`);
+};
 </script>
 
 <template>
@@ -52,9 +86,25 @@ const minimumPrice = computed(() => getMinimumPrice());
             >
                 <!-- Main column (80%) -->
                 <div class="md:col-span-4 md:pr-8">
+                    <!-- User Data Card -->
                     <UserDataCard
                         :input-fields="inputFields"
                         :produk="produk"
+                    />
+                    
+                    <!-- Service Selection -->
+                    <ServiceList 
+                        :services="layanans"
+                        :flashsale-events="flashsaleEvents"
+                        @select-service="handleServiceSelection"
+                    />
+                    
+                    <!-- Purchase Quantity -->
+                    <QuantitySelector 
+                        :disabled="!selectedService"
+                        :max-quantity="1000"
+                        :initial-quantity="1"
+                        @update:quantity="handleQuantityUpdate"
                     />
                 </div>
 
@@ -65,6 +115,9 @@ const minimumPrice = computed(() => getMinimumPrice());
                         <CheckoutSummary
                             :produk="produk"
                             :min-price="minimumPrice"
+                            :selected-service="selectedService"
+                            :quantity="quantity"
+                            @checkout="handleCheckout"
                         />
                     </div>
                 </div>
