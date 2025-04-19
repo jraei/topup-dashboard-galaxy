@@ -40,7 +40,11 @@ const paymentMethods = ref({
     dynamic: props.dynamicMethods || {},
 });
 const selectedPayment = ref({ type: "static", code: "saldo", channelId: null });
-const paymentFee = ref({ fee: 0, feeType: "fixed", amount: props.produk?.harga_min || 0 });
+const paymentFee = ref({
+    fee: 0,
+    feeType: "fixed",
+    amount: props.produk?.harga_min || 0,
+});
 
 // Contact section fields
 const contactEmail = ref("");
@@ -73,13 +77,13 @@ const handleCheckout = () => {
 // Create an improved scroll handler with IntersectionObserver
 const setupStickyObserver = () => {
     if (!sidebarRef.value) return;
-    
+
     // Footer observer to detect when footer is visible
-    const footerElement = document.querySelector('footer');
+    const footerElement = document.querySelector("footer");
     if (footerElement) {
         const footerObserver = new IntersectionObserver(
             (entries) => {
-                entries.forEach(entry => {
+                entries.forEach((entry) => {
                     footerVisible.value = entry.isIntersecting;
                     // Update sticky state when footer visibility changes
                     updateStickyState();
@@ -89,7 +93,7 @@ const setupStickyObserver = () => {
         );
         footerObserver.observe(footerElement);
     }
-    
+
     // Initial state check
     updateStickyState();
 };
@@ -105,19 +109,20 @@ const updateStickyState = () => {
         isSidebarSticky.value = false;
         return;
     }
-    
+
     const navbarHeight = 64; // Approximate height of the navbar
     const sidebarRect = sidebarRef.value.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    
+
     // Only make sidebar sticky if:
     // 1. It's at or above the navbar position
     // 2. Footer is not visible
     // 3. Sidebar bottom is within viewport
-    if (sidebarRect.top <= navbarHeight + 10 && 
+    if (
+        sidebarRect.top <= navbarHeight + 10 &&
         !footerVisible.value &&
-        sidebarRect.bottom <= viewportHeight) {
-        
+        sidebarRect.bottom <= viewportHeight
+    ) {
         if (!isSidebarSticky.value) {
             isSidebarSticky.value = true;
         }
@@ -146,10 +151,10 @@ const debouncedScroll = debounce(updateStickyState, 100);
 onMounted(() => {
     // Set up scroll event listener
     window.addEventListener("scroll", debouncedScroll, { passive: true });
-    
+
     // Set up resize listener to handle responsive changes
     window.addEventListener("resize", debouncedScroll, { passive: true });
-    
+
     // Setup IntersectionObserver
     nextTick(() => {
         setupStickyObserver();
@@ -168,33 +173,35 @@ onUnmounted(() => {
 const initPriceAnimations = () => {
     const animateDigits = (element, targetValue) => {
         if (!element || !targetValue) return;
-        
+
         // Convert targetValue to string
         const targetString = targetValue.toString();
         // Create temporary divs for each digit
         const digitContainers = [];
-        
+
         // Clear the element
         element.textContent = "";
-        
+
         // Create a container for each digit
         for (let i = 0; i < targetString.length; i++) {
             const digitContainer = document.createElement("span");
-            digitContainer.className = "inline-block overflow-hidden relative w-[0.6em] h-[1em]";
-            
+            digitContainer.className =
+                "inline-block overflow-hidden relative w-[0.6em] h-[1em]";
+
             const digit = document.createElement("span");
-            digit.className = "absolute transition-transform duration-800 ease-out-back";
+            digit.className =
+                "absolute transition-transform duration-800 ease-out-back";
             digit.textContent = targetString[i];
-            
+
             // Start from a random position
             digit.style.transform = "translateY(-1000%)";
-            
+
             // Append digit to container
             digitContainer.appendChild(digit);
-            
+
             // Append container to element
             element.appendChild(digitContainer);
-            
+
             // Store for animation
             digitContainers.push({
                 container: digitContainer,
@@ -202,7 +209,7 @@ const initPriceAnimations = () => {
                 targetValue: targetString[i],
             });
         }
-        
+
         // Animate each digit with slight delay between them
         digitContainers.forEach((container, index) => {
             setTimeout(() => {
@@ -210,15 +217,17 @@ const initPriceAnimations = () => {
             }, index * 80); // Stagger the animations, reduced from 100 to 80ms for faster animation
         });
     };
-    
+
     // Observer to watch for newly added price elements
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === "childList") {
                 mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { // Element node
+                    if (node.nodeType === 1) {
+                        // Element node
                         // Look for price elements
-                        const priceElements = node.querySelectorAll(".flashsale-price");
+                        const priceElements =
+                            node.querySelectorAll(".flashsale-price");
                         let animationCount = 0;
                         priceElements.forEach((el) => {
                             // Limit concurrent animations to 3
@@ -235,10 +244,10 @@ const initPriceAnimations = () => {
             }
         });
     });
-    
+
     // Start observing
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     // Initial run for existing elements
     let animationCount = 0;
     document.querySelectorAll(".flashsale-price").forEach((el) => {
@@ -337,7 +346,8 @@ function onFeeUpdate(payload) {
                         :class="[
                             'space-y-4 transition-all duration-300',
                             {
-                                'lg:sticky lg:top-[74px] cosmic-sticky': isSidebarSticky,
+                                'lg:sticky lg:top-[74px] cosmic-sticky':
+                                    isSidebarSticky,
                             },
                         ]"
                     >
@@ -349,7 +359,10 @@ function onFeeUpdate(payload) {
                             :quantity="quantity"
                             :payment-fee="paymentFee"
                             :selected-payment="selectedPayment"
-                            :contact-info="{ email: contactEmail, phone: contactPhone }"
+                            :contact-info="{
+                                email: contactEmail,
+                                phone: contactPhone,
+                            }"
                             @checkout="handleCheckout"
                         />
                     </div>
@@ -395,7 +408,11 @@ function onFeeUpdate(payload) {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: radial-gradient(circle, rgba(51, 195, 240, 0.3) 0%, transparent 70%);
+    background: radial-gradient(
+        circle,
+        rgba(51, 195, 240, 0.3) 0%,
+        transparent 70%
+    );
     opacity: 0.2;
     z-index: -1;
     animation: micro-planet-trail 5s infinite ease-in-out;
@@ -427,7 +444,8 @@ function onFeeUpdate(payload) {
 }
 
 @keyframes micro-planet-trail {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.2;
         height: 30%;
     }
