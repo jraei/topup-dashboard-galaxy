@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nama');
             $table->string('kode');
             $table->string('tipe');
-            $table->bigInteger('fee')->default(0);
+            $table->float('fee')->default(0);
             $table->string('fee_type')->default('fixed');
             $table->string('payment_provider');
             $table->string('gambar')->nullable();

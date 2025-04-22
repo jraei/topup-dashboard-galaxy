@@ -1,27 +1,32 @@
-
 <template>
     <div
-        class="p-4 rounded-2xl bg-dark-card/40 backdrop-blur-sm border-t border-secondary/20 shadow-lg"
+        class="p-4 border-t shadow-lg rounded-2xl bg-dark-card/40 backdrop-blur-sm border-secondary/20"
     >
-        <h3
-            class="mb-3 text-xl font-semibold text-white"
-        >
-            Order Summary
-        </h3>
+        <h3 class="mb-3 text-xl font-semibold text-white">Order Summary</h3>
 
         <div v-if="selectedService">
             <!-- Service selection -->
             <div
-                class="flex items-center justify-between p-3 mb-3 bg-primary/10 rounded-lg border border-primary/20"
+                class="flex items-center justify-between p-3 mb-3 border rounded-lg bg-primary/10 border-primary/20"
             >
                 <div>
-                    <h4 class="font-medium text-white">
-                        {{ selectedService.nama_layanan }}
-                    </h4>
-                    <p class="text-sm text-gray-300">
-                        {{ quantity }} x
-                        {{ formattedPrice(selectedService.harga_jual) }}
-                    </p>
+                    <!-- product thumbnail flex-->
+                    <div class="flex items-center">
+                        <img
+                            :src="'/storage/' + produk.thumbnail"
+                            :alt="selectedService.nama_layanan"
+                            class="w-12 h-12 mr-3 rounded-lg"
+                        />
+                        <div>
+                            <h4 class="font-medium text-white">
+                                {{ selectedService.nama_layanan }}
+                            </h4>
+                            <p class="text-sm text-gray-300">
+                                {{ quantity }} x
+                                {{ formattedPrice(selectedService.harga_jual) }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 <div class="text-lg font-bold text-white">
                     {{ formattedPrice(basePrice) }}
@@ -31,7 +36,7 @@
             <!-- Payment method fee -->
             <div
                 v-if="paymentInfo"
-                class="flex items-center justify-between p-3 mb-3 bg-primary/5 rounded-lg"
+                class="flex items-center justify-between p-3 mb-3 rounded-lg bg-primary/5"
             >
                 <div>
                     <h4 class="font-medium text-white">
@@ -48,11 +53,11 @@
                     {{ formattedPrice(paymentFee) }}
                 </div>
             </div>
-            
+
             <!-- Voucher discount -->
             <div
                 v-if="voucher"
-                class="flex items-center justify-between p-3 mb-3 bg-secondary/10 rounded-lg"
+                class="flex items-center justify-between p-3 mb-3 rounded-lg bg-secondary/10"
             >
                 <div>
                     <h4 class="font-medium text-white">
@@ -63,7 +68,12 @@
                             {{ formattedPrice(voucher.discount_value) }} off
                         </span>
                         <span v-else>
-                            {{ voucher.discount_value }}% off (Max: {{ formattedPrice(voucher.max_discount || basePrice) }})
+                            {{ voucher.discount_value }}% off (Max:
+                            {{
+                                formattedPrice(
+                                    voucher.max_discount || basePrice
+                                )
+                            }})
                         </span>
                     </p>
                 </div>
@@ -74,7 +84,7 @@
 
             <!-- Total -->
             <div
-                class="flex items-center justify-between p-3 mb-5 bg-secondary/10 rounded-lg"
+                class="flex items-center justify-between p-3 mb-5 rounded-lg bg-secondary/10"
             >
                 <h4 class="font-bold text-white">Total Payment</h4>
                 <div class="text-xl font-bold text-white">
@@ -84,7 +94,7 @@
 
             <!-- Order button -->
             <button
-                class="w-full py-3 text-white bg-primary rounded-lg focus:outline-none hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                class="w-full py-3 text-white transition-colors rounded-lg bg-primary focus:outline-none hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!canSubmit"
                 @click="$emit('checkout')"
             >
@@ -94,16 +104,12 @@
                 </span>
             </button>
         </div>
-        <div v-else class="space-y-4 text-center py-4">
-            <div
-                class="animate-pulse p-6 rounded-lg bg-primary/5 space-y-4"
-            >
-                <div class="h-5 bg-primary/10 rounded w-3/4 mx-auto"></div>
-                <div class="h-8 bg-primary/10 rounded w-1/2 mx-auto"></div>
+        <div v-else class="py-4 space-y-4 text-center">
+            <div class="p-6 space-y-4 rounded-lg animate-pulse bg-primary/5">
+                <div class="w-3/4 h-5 mx-auto rounded bg-primary/10"></div>
+                <div class="w-1/2 h-8 mx-auto rounded bg-primary/10"></div>
             </div>
-            <p class="text-gray-500">
-                Please select a service to continue
-            </p>
+            <p class="text-gray-500">Please select a service to continue</p>
         </div>
     </div>
 </template>
@@ -135,23 +141,26 @@ const basePrice = computed(() => {
 // Calculate voucher discount
 const voucherDiscount = computed(() => {
     if (!props.voucher || !props.selectedService) return 0;
-    
+
     let discount = 0;
-    
+
     // Fixed amount discount
-    if (props.voucher.discount_type === 'fixed') {
+    if (props.voucher.discount_type === "fixed") {
         discount = props.voucher.discount_value;
     }
     // Percentage discount
     else {
         discount = (basePrice.value * props.voucher.discount_value) / 100;
-        
+
         // Apply max discount cap if exists
-        if (props.voucher.max_discount && discount > props.voucher.max_discount) {
+        if (
+            props.voucher.max_discount &&
+            discount > props.voucher.max_discount
+        ) {
             discount = props.voucher.max_discount;
         }
     }
-    
+
     // Don't allow discount to exceed the base price
     return Math.min(discount, basePrice.value);
 });
@@ -188,8 +197,7 @@ const submitMessage = computed(() => {
 });
 
 const formattedPrice = (price) => {
-    if (price === 0 || price === undefined || price === null)
-        return "Rp 0";
+    if (price === 0 || price === undefined || price === null) return "Rp 0";
     return `Rp ${price.toLocaleString()}`;
 };
 </script>

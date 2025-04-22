@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -44,7 +43,7 @@ const selectedVoucher = ref(null);
 
 const totalAmount = computed(() => {
     if (!selectedService.value) return 0;
-    
+
     const baseAmount = selectedService.value.harga_jual * quantity.value;
     return baseAmount;
 });
@@ -87,7 +86,9 @@ const handleCheckout = () => {
         return;
     }
     toast.success(
-        `Processing ${quantity.value} x ${selectedService.value.nama_layanan} with ${paymentInfo.value?.methodLabel ?? "payment"}`
+        `Processing ${quantity.value} x ${
+            selectedService.value.nama_layanan
+        } with ${paymentInfo.value?.methodLabel ?? "payment"}`
     );
     contactData.value = { email: "", phone: "", country: "ID" };
     selectedPayment.value = null;
@@ -96,12 +97,12 @@ const handleCheckout = () => {
 
 const setupStickyObserver = () => {
     if (!sidebarRef.value) return;
-    
-    const footerElement = document.querySelector('footer');
+
+    const footerElement = document.querySelector("footer");
     if (footerElement) {
         const footerObserver = new IntersectionObserver(
             (entries) => {
-                entries.forEach(entry => {
+                entries.forEach((entry) => {
                     footerVisible.value = entry.isIntersecting;
                     updateStickyState();
                 });
@@ -110,7 +111,7 @@ const setupStickyObserver = () => {
         );
         footerObserver.observe(footerElement);
     }
-    
+
     updateStickyState();
 };
 
@@ -123,15 +124,16 @@ const updateStickyState = () => {
         isSidebarSticky.value = false;
         return;
     }
-    
+
     const navbarHeight = 64;
     const sidebarRect = sidebarRef.value.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    
-    if (sidebarRect.top <= navbarHeight + 10 && 
+
+    if (
+        sidebarRect.top <= navbarHeight + 10 &&
         !footerVisible.value &&
-        sidebarRect.bottom <= viewportHeight) {
-        
+        sidebarRect.bottom <= viewportHeight
+    ) {
         if (!isSidebarSticky.value) {
             isSidebarSticky.value = true;
         }
@@ -171,45 +173,48 @@ onUnmounted(() => {
 const initPriceAnimations = () => {
     const animateDigits = (element, targetValue) => {
         if (!element || !targetValue) return;
-        
+
         const targetString = targetValue.toString();
         const digitContainers = [];
-        
+
         element.textContent = "";
-        
+
         for (let i = 0; i < targetString.length; i++) {
             const digitContainer = document.createElement("span");
-            digitContainer.className = "inline-block overflow-hidden relative w-[0.6em] h-[1em]";
-            
+            digitContainer.className =
+                "inline-block overflow-hidden relative w-[0.6em] h-[1em]";
+
             const digit = document.createElement("span");
-            digit.className = "absolute transition-transform duration-800 ease-out-back";
+            digit.className =
+                "absolute transition-transform duration-800 ease-out-back";
             digit.textContent = targetString[i];
-            
+
             digit.style.transform = "translateY(-1000%)";
-            
+
             digitContainer.appendChild(digit);
             element.appendChild(digitContainer);
-            
+
             digitContainers.push({
                 container: digitContainer,
                 digit: digit,
                 targetValue: targetString[i],
             });
         }
-        
+
         digitContainers.forEach((container, index) => {
             setTimeout(() => {
                 container.digit.style.transform = "translateY(0)";
             }, index * 80);
         });
     };
-    
+
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === "childList") {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1) {
-                        const priceElements = node.querySelectorAll(".flashsale-price");
+                        const priceElements =
+                            node.querySelectorAll(".flashsale-price");
                         let animationCount = 0;
                         priceElements.forEach((el) => {
                             if (animationCount < 3) {
@@ -225,9 +230,9 @@ const initPriceAnimations = () => {
             }
         });
     });
-    
+
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     let animationCount = 0;
     document.querySelectorAll(".flashsale-price").forEach((el) => {
         if (animationCount < 3) {
@@ -243,8 +248,8 @@ const initPriceAnimations = () => {
 
 <template>
     <GuestLayout>
-        <section class="relative">
-            <div class="relative w-full overflow-hidden">
+        <section>
+            <div class="relative">
                 <ProductBanner :banner="produk.banner" />
             </div>
 
@@ -252,7 +257,7 @@ const initPriceAnimations = () => {
         </section>
 
         <section
-            class="relative px-4 py-8 overflow-hidden bg-content_background"
+            class="relative px-4 py-8 overflow-hidden md:pt-20 bg-content_background"
         >
             <div class="absolute inset-0 z-0">
                 <CosmicParticles />
@@ -283,7 +288,9 @@ const initPriceAnimations = () => {
                         :dynamic-methods="dynamicMethods"
                         :selected-service="selectedService"
                         :selected-payment="selectedPayment"
-                        :base-price="selectedService ? selectedService.harga_jual : 0"
+                        :base-price="
+                            selectedService ? selectedService.harga_jual : 0
+                        "
                         @update:selectedPayment="handlePaymentChange"
                         @update:fee="handleFeeChange"
                     />
@@ -306,7 +313,10 @@ const initPriceAnimations = () => {
                         ref="sidebarRef"
                         :class="[
                             'space-y-4 transition-all duration-300',
-                            { 'lg:sticky lg:top-[74px] cosmic-sticky': isSidebarSticky },
+                            {
+                                'lg:sticky lg:top-[74px] cosmic-sticky':
+                                    isSidebarSticky,
+                            },
                         ]"
                     >
                         <HelpContact :wa-number="waNumber" />
@@ -324,16 +334,12 @@ const initPriceAnimations = () => {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Product Description Section - Full Width -->
-            <div class="relative z-10 mx-auto max-w-7xl mt-8">
-                <ProductDescription 
-                    :description="produk.deskripsi_game"
-                />
-                
-                <FaqSection
-                    :faqs="faqs"
-                />
+            <div class="relative z-10 mx-auto mt-8 max-w-7xl">
+                <ProductDescription :description="produk.deskripsi_game" />
+
+                <FaqSection :faqs="faqs" />
             </div>
         </section>
     </GuestLayout>
@@ -373,7 +379,11 @@ const initPriceAnimations = () => {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: radial-gradient(circle, rgba(51, 195, 240, 0.3) 0%, transparent 70%);
+    background: radial-gradient(
+        circle,
+        rgba(51, 195, 240, 0.3) 0%,
+        transparent 70%
+    );
     opacity: 0.2;
     z-index: -1;
     animation: micro-planet-trail 5s infinite ease-in-out;
@@ -404,7 +414,8 @@ const initPriceAnimations = () => {
 }
 
 @keyframes micro-planet-trail {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.2;
         height: 30%;
     }

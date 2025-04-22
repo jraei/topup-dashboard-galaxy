@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -130,12 +129,12 @@ class OrderController extends Controller
         // Get active vouchers for public display
         $activeVouchers = Voucher::where('is_public', true)
             ->where('status', 'active')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('end_date')
-                  ->orWhere('end_date', '>', now());
+                    ->orWhere('end_date', '>', now());
             })
             ->get()
-            ->map(function($voucher) {
+            ->map(function ($voucher) {
                 return [
                     'code' => $voucher->code,
                     'description' => $voucher->description,
@@ -153,7 +152,7 @@ class OrderController extends Controller
         // FAQs for product
         $faqs = [
             [
-                'question' => 'How long does top-up take?',  
+                'question' => 'How long does top-up take?',
                 'answer' => 'Instant delivery for 90% of orders. Most top-ups are processed automatically and delivered within seconds. For manual processing, it may take up to 5 minutes during peak hours.',
                 'category' => 'delivery'
             ],

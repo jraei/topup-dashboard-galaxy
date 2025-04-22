@@ -49,7 +49,7 @@ onUnmounted(() => {
 
 <template>
     <div
-        class="flex min-h-32 w-full items-center border-b bg-gradient-to-r from-primary/20 to-bg-content_background/50 backdrop-blur lg:min-h-[160px] border-none bg-cover bg-center relative overflow-hidden"
+        class="flex min-h-32 w-full items-center border-b bg-gradient-to-r from-primary/20 to-bg-content_background/50 backdrop-blur lg:min-h-[160px] border-none bg-cover bg-center overflow-visible"
     >
         <!-- Saturn Decoration with enhanced ring system -->
         <div
@@ -123,11 +123,9 @@ onUnmounted(() => {
             </div>
 
             <!-- Product Info - Flex Container 1 -->
-            <div class="relative z-10 flex items-start gap-2 mx-4">
+            <div class="relative flex items-start gap-2 mx-4">
                 <!-- Thumbnail with 3D Effect -->
-                <div
-                    class="relative mt-[-4rem] md:mt-[-6rem] transform perspective-cosmic"
-                >
+                <div class="relative perspective-cosmic -top-16 md:-top-28">
                     <img
                         v-if="produk.thumbnail"
                         :src="`/storage/${produk.thumbnail}`"
@@ -135,6 +133,7 @@ onUnmounted(() => {
                         width="300"
                         height="300"
                         class="z-20 object-cover w-32 shadow-2xl -mb-14 aspect-square rounded-2xl lg:-mb-20 md:w-48 lg:w-60 rotateY-cosmic"
+                        loading="lazy"
                     />
 
                     <!-- Orbiting Planets with enhanced animation -->

@@ -1,4 +1,3 @@
-
 <template>
     <CosmicCard title="Promo Code" :step-number="6">
         <div class="space-y-4">
@@ -9,68 +8,94 @@
                         type="text"
                         v-model="voucherCode"
                         placeholder="Enter promo code"
-                        class="w-full px-4 py-2 bg-dark-lighter border border-primary/20 rounded text-white focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary/30"
+                        class="w-full px-4 py-2 border rounded-lg outline-none bg-secondary/20 text-primary_text focus:ring-2 focus:border-primary focus:bg-secondary/20/90 border-secondary placeholder-secondary"
                         :class="{ 'border-red-500': voucherError }"
                     />
-                    
+
                     <!-- Success animation -->
-                    <div v-if="voucherSuccess" class="absolute inset-0 pointer-events-none overflow-hidden">
-                        <div v-for="i in 20" :key="`success-${i}`" 
+                    <div
+                        v-if="voucherSuccess"
+                        class="absolute inset-0 overflow-hidden pointer-events-none"
+                    >
+                        <div
+                            v-for="i in 20"
+                            :key="`success-${i}`"
                             class="absolute h-0.5 w-10 bg-secondary opacity-0"
                             :style="{
                                 top: `${Math.random() * 100}%`,
                                 left: `${Math.random() * 100}%`,
                                 transform: `rotate(${Math.random() * 360}deg)`,
                                 animationDelay: `${Math.random() * 0.5}s`,
-                                animationDuration: `${Math.random() * 0.5 + 0.5}s`
+                                animationDuration: `${
+                                    Math.random() * 0.5 + 0.5
+                                }s`,
                             }"
-                            :class="{ 'animate-success-particle': voucherSuccess }"
+                            :class="{
+                                'animate-success-particle': voucherSuccess,
+                            }"
                         ></div>
                     </div>
-                    
+
                     <!-- Error animation -->
-                    <div v-if="voucherError" class="absolute inset-0 pointer-events-none overflow-hidden">
-                        <div 
+                    <div
+                        v-if="voucherError"
+                        class="absolute inset-0 overflow-hidden pointer-events-none"
+                    >
+                        <div
                             class="absolute h-0.5 w-20 bg-red-500 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-meteor-burn"
                         ></div>
                     </div>
-                    
-                    <div v-if="voucherError" class="text-red-500 text-xs mt-1">
+
+                    <div v-if="voucherError" class="mt-1 text-xs text-red-500">
                         {{ errorMessage }}
                     </div>
                 </div>
-                
+
                 <button
                     @click="applyVoucher"
-                    class="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80 transition-colors min-w-[100px]"
+                    class="px-4 py-2 border-primary border bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors min-w-[100px]"
                 >
                     Apply
                 </button>
             </div>
-            
+
             <!-- Available promos button -->
-            <button 
+            <button
                 @click="showVoucherModal = true"
-                class="w-full px-4 py-2 border border-secondary/50 text-secondary rounded-lg hover:bg-secondary/10 transition-colors flex items-center justify-center space-x-2"
+                class="flex items-center justify-center w-full px-4 py-2 space-x-2 transition-colors border rounded-lg border-secondary/50 text-secondary hover:bg-secondary/10"
             >
-                <span class="inline-block w-4 h-4 bg-secondary/20 rounded-full animate-ping-small"></span>
+                <span
+                    class="inline-block w-4 h-4 rounded-full bg-secondary/20 animate-ping-small"
+                ></span>
                 <span>Available Promos</span>
             </button>
         </div>
-        
+
         <!-- Voucher Modal -->
-        <Modal :show="showVoucherModal" @close="showVoucherModal = false" max-width="4xl">
+        <Modal
+            :show="showVoucherModal"
+            @close="showVoucherModal = false"
+            max-width="2xl"
+        >
             <div class="p-6 bg-dark-lighter">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-white">Available Promo Codes</h2>
-                    <button @click="showVoucherModal = false" class="text-gray-400 hover:text-white">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white">
+                        Available Promo Codes
+                    </h2>
+                    <button
+                        @click="showVoucherModal = false"
+                        class="text-gray-400 hover:text-white"
+                    >
                         &times;
                     </button>
                 </div>
-                
-                <div v-if="activeVouchers.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto p-1">
-                    <VoucherCard 
-                        v-for="voucher in activeVouchers" 
+
+                <div
+                    v-if="activeVouchers.length"
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-1"
+                >
+                    <VoucherCard
+                        v-for="voucher in activeVouchers"
                         :key="voucher.code"
                         :voucher="voucher"
                         :total-amount="totalAmount"
@@ -86,65 +111,72 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import CosmicCard from '@/Components/Order/CosmicCard.vue';
-import Modal from '@/Components/Modal.vue';
-import VoucherCard from '@/Components/Order/VoucherCard.vue';
-import { useToast } from '@/Composables/useToast';
+import { ref, watch } from "vue";
+import CosmicCard from "@/Components/Order/CosmicCard.vue";
+import Modal from "@/Components/Modal.vue";
+import VoucherCard from "@/Components/Order/VoucherCard.vue";
+import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
     activeVouchers: {
         type: Array,
-        default: () => []
+        default: () => [],
     },
     totalAmount: {
         type: Number,
-        default: 0
+        default: 0,
     },
     selectedService: {
         type: Object,
-        default: null
-    }
+        default: null,
+    },
 });
 
-const emit = defineEmits(['update:voucher']);
+const emit = defineEmits(["update:voucher"]);
 
 const { toast } = useToast();
-const voucherCode = ref('');
+const voucherCode = ref("");
 const showVoucherModal = ref(false);
 const voucherSuccess = ref(false);
 const voucherError = ref(false);
-const errorMessage = ref('');
+const errorMessage = ref("");
 
 const applyVoucher = () => {
     if (!voucherCode.value) {
-        showError('Please enter a promo code');
+        showError("Please enter a promo code");
         return;
     }
-    
-    const voucher = props.activeVouchers.find(v => v.code.toLowerCase() === voucherCode.value.toLowerCase());
-    
+
+    const voucher = props.activeVouchers.find(
+        (v) => v.code.toLowerCase() === voucherCode.value.toLowerCase()
+    );
+
     if (!voucher) {
-        showError('Invalid promo code');
+        showError("Invalid promo code");
         return;
     }
-    
+
     if (voucher.min_purchase > props.totalAmount) {
-        showError(`Minimum purchase of Rp ${voucher.min_purchase.toLocaleString()} required`);
+        showError(
+            `Minimum purchase of Rp ${voucher.min_purchase.toLocaleString()} required`
+        );
         return;
     }
-    
-    if (voucher.usage_limit !== null && voucher.usage_count >= voucher.usage_limit) {
-        showError('Usage limit reached for this voucher');
+
+    if (
+        voucher.usage_limit !== null &&
+        voucher.usage_count >= voucher.usage_limit
+    ) {
+        showError("Usage limit reached for this voucher");
         return;
     }
-    
+
     // Success case
     voucherSuccess.value = true;
     voucherError.value = false;
-    emit('update:voucher', voucher);
+    emit("update:voucher", voucher);
     toast.success(`Promo code "${voucher.code}" applied!`);
-    
+
     // Reset success animation after a delay
     setTimeout(() => {
         voucherSuccess.value = false;
@@ -161,7 +193,7 @@ const showError = (message) => {
     errorMessage.value = message;
     voucherError.value = true;
     voucherSuccess.value = false;
-    
+
     // Reset error state after a delay
     setTimeout(() => {
         voucherError.value = false;
