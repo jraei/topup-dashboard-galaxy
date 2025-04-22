@@ -1,140 +1,145 @@
+
 <?php
 
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
-use App\Models\Produk;
-use App\Models\PayMethod;
-use App\Models\WebConfig;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
-use App\Models\FlashsaleItem;
-use App\Models\ItemThumbnail;
-use App\Models\FlashsaleEvent;
+use App\Models\Produk;
 
 class OrderController extends Controller
 {
-    public function index(Produk $produk)
+    public function index($slug = null)
     {
-        $inputFields = $produk->inputFields()->with('options')->orderBy('order')->get();
-        $waNumber = WebConfig::get('support_whatsapp', '');
+        // Fetch the product based on slug
+        $produk = null;
+        if ($slug) {
+            $produk = Produk::where('slug', $slug)->first();
+            if (!$produk) {
+                abort(404);
+            }
+        }
 
-        $excludedLayananIds = FlashsaleItem::whereHas('flashsaleEvent', function ($q) {
-            $q->where('status', 'active')
-                ->where('event_start_date', '<=', now())
-                ->where('event_end_date', '>=', now());
-        })
+        // Get active vouchers
+        $activeVouchers = Voucher::where('is_public', true)
             ->where('status', 'active')
-            ->pluck('layanan_id');
-
-        // Normal services (excluding flashsale items)
-        $services = $produk->layanan()
-            ->whereNotIn('id', $excludedLayananIds)
+            ->where(function($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>', now());
+            })
             ->get()
-            ->map(function ($service) {
-                preg_match('/(\d+)/', $service->nama_layanan, $matches);
-                $quantity = $matches[1] ?? null;
-
-                return array_merge($service->toArray(), [
-                    'thumbnail' => $service->gambar
-                        ?: ItemThumbnail::findThumbnailForQuantity(
-                            $service->produk_id,
-                            $quantity
-                        )?->image_url
-                ]);
+            ->map(function($voucher) {
+                return [
+                    'code' => $voucher->code,
+                    'discount_value' => $voucher->discount_value,
+                    'discount_type' => $voucher->discount_type,
+                    'end_date' => $voucher->end_date?->format('d M Y'),
+                    'max_discount' => $voucher->max_discount,
+                    'min_purchase' => $voucher->min_purchase,
+                    'usage_limit' => $voucher->usage_limit,
+                    'usage_count' => $voucher->usage_count,
+                    'is_public' => $voucher->is_public
+                ];
             });
 
-        // Get active flashsale events related to this product
-        $flashsaleEvents = FlashsaleEvent::whereHas('layanan', function ($q) use ($produk) {
-            $q->where('produk_id', $produk->id);
-        })
-            ->where('status', 'active')
-            ->where('event_start_date', '<=', now())
-            ->where('event_end_date', '>=', now())
-            ->get();
-
-        // Active flashsale items with stock/price validation
-        $flashsaleItems = FlashsaleItem::with('flashsaleEvent', 'layanan')
-            ->whereHas('layanan', function ($q) use ($produk) {
-                $q->where('produk_id', $produk->id);
-            })
-            ->whereHas('flashsaleEvent', function ($q) {
-                $q->where('status', 'active')
-                    ->where('event_start_date', '<=', now())
-                    ->where('event_end_date', '>=', now());
-            })
-            ->where('status', 'active')
-            ->where(function ($q) {
-                $q->where('stok_tersedia', '>', 0)
-                    ->orWhereNull('stok_tersedia');
-            })
-
-            ->get()
-            ->filter(function ($item) {
-                $layanan = $item->layanan;
-                return $layanan->harga_jual > $item->harga_flashsale;
-            })
-            ->map(function ($item) {
-                $service = $item->layanan;
-                // Similar thumbnail logic for flashsale items
-                preg_match('/(\d+)/', $service->nama_layanan, $matches);
-                $quantity = $matches[1] ?? null;
-
-                $serviceWithThumbnail = array_merge($service->toArray(), [
-                    'thumbnail' => $service->gambar
-                        ?: ItemThumbnail::findThumbnailForQuantity(
-                            $service->produk_id,
-                            $quantity
-                        )?->image_url,
-                    'flashSaleItem' => array_merge($item->toArray(), [
-                        'is_active' => true, // Add boolean flag for frontend use
-                    ])
-                ]);
-
-                return $serviceWithThumbnail;
-            });
-
-        // Payment Method Data Assembly ---
-        // Static methods (saldo, qris)
-        $staticMethods = [
-            'saldo' => PayMethod::where('tipe', 'Saldo Akun')->first(),
-            'qris' => [
-                'nama' => 'QRIS (Semua Pembayaran)',
-                'gambar' => PayMethod::where('tipe', 'QRIS')->first()?->gambar,
-                'fee' => PayMethod::where('tipe', 'QRIS')->first()?->fee,
-                'fee_type' => PayMethod::where('tipe', 'QRIS')->first()?->fee_type,
+        // Example FAQs - In production, these would likely come from a database
+        $faqs = [
+            [
+                'question' => 'How long do top-ups take?',
+                'answer' => 'Instant delivery for 98% of orders. Some game servers may take up to 5 minutes to process.',
+                'category' => 'delivery'
+            ],
+            [
+                'question' => 'What payment methods do you accept?',
+                'answer' => 'We accept credit cards, e-wallets, bank transfers, and various local payment options.',
+                'category' => 'payment'
+            ],
+            [
+                'question' => 'Can I get a refund if there\'s an issue?',
+                'answer' => 'Yes, we offer full refunds if there are any issues with your order that are within our control.',
+                'category' => 'refunds'
+            ],
+            [
+                'question' => 'Do I need to create an account to make a purchase?',
+                'answer' => 'No, you can check out as a guest, but creating an account offers benefits like order tracking and special promotions.',
+                'category' => 'account'
+            ],
+            [
+                'question' => 'Are there any additional fees?',
+                'answer' => 'All prices shown include taxes and fees. There are no hidden charges.',
+                'category' => 'payment'
             ]
         ];
-        // Dynamic methods (grouped by tipe)
-        $dynamicMethods = PayMethod::whereNotIn('tipe', ['saldo', 'QRIS'])
-            ->where('status', 'active')
-            ->with('paymentProvider')
-            ->get()
-            ->groupBy('tipe')
-            ->map(function ($group) {
-                return $group->map(function ($method) {
-                    return [
-                        'id' => $method->id,
-                        'nama' => $method->nama,
-                        'tipe' => $method->tipe,
-                        'fee' => $method->fee,
-                        'fee_type' => $method->fee_type,
-                        'gambar' => $method->gambar,
-                        'is_recommended' => $method->keterangan && str_contains(strtolower($method->keterangan), 'recommended'),
-                        'payment_provider' => $method->paymentProvider?->toArray(),
-                    ];
-                })->values();
-            });
+
+        // Current order total - Replace with actual calculation from your cart
+        $currentTotal = 100000; // Example value
 
         return Inertia::render('Order/Index', [
-            'user' => auth()->user(),
+            'title' => 'Place Order',
             'produk' => $produk,
-            'layanans' => $services,
-            'flashsaleItems' => $flashsaleItems,
-            'inputFields' => $inputFields,
-            'waNumber' => $waNumber,
-            'flashsaleEvents' => $flashsaleEvents,
-            'staticMethods' => $staticMethods,
-            'dynamicMethods' => $dynamicMethods,
+            'activeVouchers' => $activeVouchers,
+            'faqs' => $faqs,
+            'currentTotal' => $currentTotal,
+        ]);
+    }
+
+    public function applyVoucher(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $code = $request->input('code');
+
+        // Find the voucher
+        $voucher = Voucher::where('code', $code)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>', now());
+            })
+            ->first();
+
+        if (!$voucher) {
+            return back()->withErrors([
+                'code' => 'Invalid voucher code',
+            ]);
+        }
+
+        // Check usage limit
+        if ($voucher->usage_limit && $voucher->usage_count >= $voucher->usage_limit) {
+            return back()->withErrors([
+                'code' => 'This voucher has reached its usage limit',
+            ]);
+        }
+
+        // Check minimum purchase
+        $currentTotal = 100000; // Replace with actual calculation from your cart
+        if ($voucher->min_purchase && $currentTotal < $voucher->min_purchase) {
+            return back()->withErrors([
+                'code' => 'Minimum purchase of Rp ' . number_format($voucher->min_purchase) . ' required',
+            ]);
+        }
+
+        // Apply the voucher (store in session)
+        session()->put('applied_voucher', $voucher->code);
+
+        return back()->with('status', [
+            'type' => 'success',
+            'action' => 'Success',
+            'text' => 'Voucher applied successfully!'
+        ]);
+    }
+
+    public function removeVoucher()
+    {
+        session()->forget('applied_voucher');
+
+        return back()->with('status', [
+            'type' => 'success',
+            'action' => 'Success',
+            'text' => 'Voucher removed successfully!'
         ]);
     }
 }
