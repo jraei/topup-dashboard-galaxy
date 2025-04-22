@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Produk;
+use App\Models\PayMethod;
 use App\Models\WebConfig;
 use Illuminate\Http\Request;
 use App\Models\FlashsaleItem;
@@ -95,16 +96,16 @@ class OrderController extends Controller
         // Payment Method Data Assembly ---
         // Static methods (saldo, qris)
         $staticMethods = [
-            'saldo' => \App\Models\PayMethod::where('tipe', 'saldo')->first(),
+            'saldo' => PayMethod::where('tipe', 'Saldo Akun')->first(),
             'qris' => [
                 'nama' => 'QRIS (Semua Pembayaran)',
-                'gambar' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->gambar,
-                'fee' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->fee,
-                'fee_type' => \App\Models\PayMethod::where('tipe', 'qris')->first()?->fee_type,
+                'gambar' => PayMethod::where('tipe', 'QRIS')->first()?->gambar,
+                'fee' => PayMethod::where('tipe', 'QRIS')->first()?->fee,
+                'fee_type' => PayMethod::where('tipe', 'QRIS')->first()?->fee_type,
             ]
         ];
         // Dynamic methods (grouped by tipe)
-        $dynamicMethods = \App\Models\PayMethod::whereNotIn('tipe', ['saldo', 'qris'])
+        $dynamicMethods = PayMethod::whereNotIn('tipe', ['saldo', 'QRIS'])
             ->where('status', 'active')
             ->with('paymentProvider')
             ->get()

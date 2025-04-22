@@ -77,7 +77,7 @@ const savedIdForFuture = ref(false);
                                 :id="`field_${field.id}`"
                                 :name="field.name"
                                 :required="field.required"
-                                class="w-full rounded-lg bg-secondary/20 border-secondary/30 focus:border-secondary focus:ring focus:ring-secondary/50 text-primary-text cosmic-input-effect"
+                                class="w-full rounded-lg outline-none bg-secondary/20 border-secondary placeholder-secondary focus:ring-secondary focus:border-primary/70 focus:bg-secondary/20/90 text-primary-text cosmic-input-effect"
                             />
 
                             <!-- Select Input -->
