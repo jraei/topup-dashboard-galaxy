@@ -1,3 +1,4 @@
+
 <?php
 
 use Inertia\Inertia;
@@ -41,6 +42,9 @@ use App\Http\Controllers\Admin\ProdukInputOptionController;
 Route::get('/', [IndexController::class, 'index'])->name('index');
 
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
+
+// Add a route for voucher validation (we'll implement this later)
+Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher'])->name('vouchers.validate');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

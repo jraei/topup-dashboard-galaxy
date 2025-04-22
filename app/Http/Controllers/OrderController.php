@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers;
@@ -5,6 +6,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Produk;
 use App\Models\PayMethod;
+use App\Models\Voucher;
 use App\Models\WebConfig;
 use Illuminate\Http\Request;
 use App\Models\FlashsaleItem;
@@ -125,6 +127,53 @@ class OrderController extends Controller
                 })->values();
             });
 
+        // Get active vouchers for public display
+        $activeVouchers = Voucher::where('is_public', true)
+            ->where('status', 'active')
+            ->where(function($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>', now());
+            })
+            ->get()
+            ->map(function($voucher) {
+                return [
+                    'code' => $voucher->code,
+                    'description' => $voucher->description,
+                    'discount_value' => $voucher->discount_value,
+                    'discount_type' => $voucher->discount_type,
+                    'end_date' => $voucher->end_date?->format('d M Y'),
+                    'max_discount' => $voucher->max_discount,
+                    'min_purchase' => $voucher->min_purchase,
+                    'usage_limit' => $voucher->usage_limit,
+                    'usage_count' => $voucher->usage_count,
+                    'is_public' => $voucher->is_public
+                ];
+            });
+
+        // FAQs for product
+        $faqs = [
+            [
+                'question' => 'How long does top-up take?',  
+                'answer' => 'Instant delivery for 90% of orders. Most top-ups are processed automatically and delivered within seconds. For manual processing, it may take up to 5 minutes during peak hours.',
+                'category' => 'delivery'
+            ],
+            [
+                'question' => 'Is it safe to purchase here?',
+                'answer' => 'Yes, all transactions are secured with industry-standard encryption. We never store your complete payment details and have been serving customers since 2020 with a 99.7% satisfaction rate.',
+                'category' => 'security'
+            ],
+            [
+                'question' => 'What payment methods are accepted?',
+                'answer' => 'We accept a wide range of payment methods including credit/debit cards, e-wallets, bank transfers, and convenience store payments. You can view all available options during checkout.',
+                'category' => 'payment'
+            ],
+            [
+                'question' => 'Can I get a refund if there\'s a problem?',
+                'answer' => 'We offer a full refund if the top-up fails to deliver. Please contact our support team within 24 hours of purchase with your order number for assistance.',
+                'category' => 'refunds'
+            ]
+        ];
+
         return Inertia::render('Order/Index', [
             'user' => auth()->user(),
             'produk' => $produk,
@@ -135,6 +184,8 @@ class OrderController extends Controller
             'flashsaleEvents' => $flashsaleEvents,
             'staticMethods' => $staticMethods,
             'dynamicMethods' => $dynamicMethods,
+            'activeVouchers' => $activeVouchers,
+            'faqs' => $faqs,
         ]);
     }
 }

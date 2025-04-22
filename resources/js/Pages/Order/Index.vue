@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -11,6 +12,9 @@ import CheckoutSummary from "@/Components/Order/CheckoutSummary.vue";
 import HelpContact from "@/Components/Order/HelpContact.vue";
 import PaymentSelector from "@/Components/Order/PaymentSelector.vue";
 import ContactForm from "@/Components/Order/ContactForm.vue";
+import VoucherSection from "@/Components/Order/VoucherSection.vue";
+import ProductDescription from "@/Components/Order/ProductDescription.vue";
+import FaqSection from "@/Components/Order/FaqSection.vue";
 import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
@@ -23,6 +27,8 @@ const props = defineProps({
     flashsaleEvents: Array,
     staticMethods: Array,
     dynamicMethods: Array,
+    activeVouchers: Array,
+    faqs: Array,
 });
 
 const selectedService = ref(null);
@@ -34,6 +40,14 @@ const footerVisible = ref(false);
 const paymentInfo = ref(null);
 const selectedPayment = ref(null);
 const contactData = ref({ email: "", phone: "", country: "ID" });
+const selectedVoucher = ref(null);
+
+const totalAmount = computed(() => {
+    if (!selectedService.value) return 0;
+    
+    const baseAmount = selectedService.value.harga_jual * quantity.value;
+    return baseAmount;
+});
 
 const handleServiceSelection = (service) => {
     selectedService.value = service;
@@ -53,6 +67,10 @@ const handleFeeChange = (info) => {
 
 const handleContactUpdate = (contact) => {
     contactData.value = contact;
+};
+
+const handleVoucherUpdate = (voucher) => {
+    selectedVoucher.value = voucher;
 };
 
 const handleCheckout = () => {
@@ -269,6 +287,12 @@ const initPriceAnimations = () => {
                         @update:selectedPayment="handlePaymentChange"
                         @update:fee="handleFeeChange"
                     />
+                    <VoucherSection
+                        :active-vouchers="activeVouchers"
+                        :total-amount="totalAmount"
+                        :selected-service="selectedService"
+                        @update:voucher="handleVoucherUpdate"
+                    />
                     <ContactForm
                         :initial-email="contactData.email"
                         :initial-phone="contactData.phone"
@@ -294,10 +318,22 @@ const initPriceAnimations = () => {
                             :selected-payment="selectedPayment"
                             :payment-info="paymentInfo"
                             :contact="contactData"
+                            :voucher="selectedVoucher"
                             @checkout="handleCheckout"
                         />
                     </div>
                 </div>
+            </div>
+            
+            <!-- Product Description Section - Full Width -->
+            <div class="relative z-10 mx-auto max-w-7xl mt-8">
+                <ProductDescription 
+                    :description="produk.deskripsi_game"
+                />
+                
+                <FaqSection
+                    :faqs="faqs"
+                />
             </div>
         </section>
     </GuestLayout>
