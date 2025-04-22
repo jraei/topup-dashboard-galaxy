@@ -40,9 +40,7 @@ use App\Http\Controllers\Admin\ProdukInputOptionController;
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
 
-Route::get('/order/{slug?}', [OrderController::class, 'index'])->name('order.index');
-Route::post('/voucher/apply', [OrderController::class, 'applyVoucher'])->name('voucher.apply');
-Route::post('/voucher/remove', [OrderController::class, 'removeVoucher'])->name('voucher.remove');
+Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
