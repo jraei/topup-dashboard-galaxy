@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 import ProductBanner from "@/Components/Order/ProductBanner.vue";
@@ -36,10 +37,14 @@ const { toast } = useToast();
 const sidebarRef = ref(null);
 const isSidebarSticky = ref(false);
 const footerVisible = ref(false);
+const navbarHeight = ref(64);
+const paymentSectionRef = ref(null);
+const contactSectionRef = ref(null);
 const paymentInfo = ref(null);
 const selectedPayment = ref(null);
 const contactData = ref({ email: "", phone: "", country: "ID" });
 const selectedVoucher = ref(null);
+const paymentSectionHighlight = ref(false);
 
 const totalAmount = computed(() => {
     if (!selectedService.value) return 0;
@@ -50,6 +55,56 @@ const totalAmount = computed(() => {
 
 const handleServiceSelection = (service) => {
     selectedService.value = service;
+    
+    // Auto-scroll to payment section with delay to ensure rendering
+    nextTick(() => {
+        setTimeout(() => {
+            scrollToPaymentSection();
+        }, 100);
+    });
+};
+
+// Scroll to payment section function
+const scrollToPaymentSection = () => {
+    if (!paymentSectionRef.value) return;
+    
+    const isInView = isElementInViewport(paymentSectionRef.value);
+    if (isInView) return; // Don't scroll if already in view
+    
+    // Smooth scroll to payment section with offset
+    const offset = 32; // 32px above the component
+    const top = paymentSectionRef.value.getBoundingClientRect().top + window.pageYOffset - offset;
+    
+    window.scrollTo({
+        top,
+        behavior: 'smooth'
+    });
+    
+    // Highlight payment section with pulsing glow
+    highlightPaymentSection();
+};
+
+// Check if element is in viewport
+const isElementInViewport = (el) => {
+    const rect = el.getBoundingClientRect();
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+};
+
+// Highlight payment section with pulsing glow
+const highlightPaymentSection = () => {
+    if (!paymentSectionRef.value) return;
+    
+    paymentSectionHighlight.value = true;
+    
+    // Remove highlight after animation (3 pulses ≈ 1500ms)
+    setTimeout(() => {
+        paymentSectionHighlight.value = false;
+    }, 1500);
 };
 
 const handleQuantityUpdate = (newQuantity) => {
@@ -95,9 +150,11 @@ const handleCheckout = () => {
     paymentInfo.value = null;
 };
 
+// Optimized sticky sidebar using IntersectionObserver
 const setupStickyObserver = () => {
     if (!sidebarRef.value) return;
 
+    // Footer observer
     const footerElement = document.querySelector("footer");
     if (footerElement) {
         const footerObserver = new IntersectionObserver(
@@ -110,6 +167,25 @@ const setupStickyObserver = () => {
             { threshold: 0.1 }
         );
         footerObserver.observe(footerElement);
+    }
+    
+    // Contact section observer (to unstick when scrolling past)
+    if (contactSectionRef.value) {
+        const contactObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    // When contact form is in view and we've scrolled past its top
+                    if (entry.isIntersecting && entry.boundingClientRect.top <= navbarHeight.value) {
+                        isSidebarSticky.value = false;
+                    }
+                });
+            },
+            { 
+                threshold: [0, 0.25, 0.5, 0.75, 1],
+                rootMargin: `-${navbarHeight.value}px 0px 0px 0px`
+            }
+        );
+        contactObserver.observe(contactSectionRef.value);
     }
 
     updateStickyState();
@@ -125,12 +201,11 @@ const updateStickyState = () => {
         return;
     }
 
-    const navbarHeight = 64;
     const sidebarRect = sidebarRef.value.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
 
     if (
-        sidebarRect.top <= navbarHeight + 10 &&
+        sidebarRect.top <= navbarHeight.value + 10 &&
         !footerVisible.value &&
         sidebarRect.bottom <= viewportHeight
     ) {
@@ -154,7 +229,7 @@ const debounce = (fn, delay) => {
     };
 };
 
-const debouncedScroll = debounce(updateStickyState, 100);
+const debouncedScroll = debounce(updateStickyState, 50); // Reduced from 100ms to 50ms for better responsiveness
 
 onMounted(() => {
     window.addEventListener("scroll", debouncedScroll, { passive: true });
@@ -283,29 +358,34 @@ const initPriceAnimations = () => {
                         :initial-quantity="quantity"
                         @update:quantity="handleQuantityUpdate"
                     />
-                    <PaymentSelector
-                        :static-methods="staticMethods"
-                        :dynamic-methods="dynamicMethods"
-                        :selected-service="selectedService"
-                        :selected-payment="selectedPayment"
-                        :base-price="
-                            selectedService ? selectedService.harga_jual : 0
-                        "
-                        @update:selectedPayment="handlePaymentChange"
-                        @update:fee="handleFeeChange"
-                    />
+                    <!-- Payment section with ref for scrolling and highlighting -->
+                    <div ref="paymentSectionRef" :class="{'cosmic-highlight-pulse': paymentSectionHighlight}">
+                        <PaymentSelector
+                            :static-methods="staticMethods"
+                            :dynamic-methods="dynamicMethods"
+                            :selected-service="selectedService"
+                            :selected-payment="selectedPayment"
+                            :base-price="
+                                selectedService ? selectedService.harga_jual : 0
+                            "
+                            @update:selectedPayment="handlePaymentChange"
+                            @update:fee="handleFeeChange"
+                        />
+                    </div>
                     <VoucherSection
                         :active-vouchers="activeVouchers"
                         :total-amount="totalAmount"
                         :selected-service="selectedService"
                         @update:voucher="handleVoucherUpdate"
                     />
-                    <ContactForm
-                        :initial-email="contactData.email"
-                        :initial-phone="contactData.phone"
-                        :initial-country="contactData.country"
-                        @update:contact="handleContactUpdate"
-                    />
+                    <div ref="contactSectionRef">
+                        <ContactForm
+                            :initial-email="contactData.email"
+                            :initial-phone="contactData.phone"
+                            :initial-country="contactData.country"
+                            @update:contact="handleContactUpdate"
+                        />
+                    </div>
                 </div>
 
                 <div class="space-y-4 lg:col-span-2">
@@ -387,6 +467,40 @@ const initPriceAnimations = () => {
     opacity: 0.2;
     z-index: -1;
     animation: micro-planet-trail 5s infinite ease-in-out;
+}
+
+/* New highlight pulse animation for payment section */
+.cosmic-highlight-pulse {
+    position: relative;
+}
+
+.cosmic-highlight-pulse::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 8px;
+    background: linear-gradient(
+        120deg,
+        rgba(155, 135, 245, 0.2),
+        rgba(51, 195, 240, 0.3)
+    );
+    z-index: -1;
+    animation: payment-highlight-pulse 1.5s ease-in-out;
+}
+
+@keyframes payment-highlight-pulse {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    25%, 75% {
+        opacity: 0.8;
+        transform: scale(1.01);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
 }
 
 @keyframes digit-shuffle {

@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, reactive } from "vue";
 import { Rocket, MessageSquare, Shield } from "lucide-vue-next";
 
 const props = defineProps({
@@ -29,6 +30,73 @@ const toggleMeteors = (active) => {
     meteorsActive.value = active;
 };
 
+// Vue-controlled meteor system
+const meteors = reactive([]);
+const meteorContainer = ref(null);
+let meteorCounter = 0;
+let animationFrameId = null;
+
+// Create a new meteor with unique properties
+const createMeteor = () => {
+    // Skip if component is not mounted or meteors are disabled
+    if (!meteorContainer.value || !meteorsActive.value || isReducedMotion.value) return;
+    
+    const containerWidth = meteorContainer.value.offsetWidth;
+    const containerHeight = meteorContainer.value.offsetHeight;
+    
+    // Limit concurrent meteors based on device
+    const maxMeteors = isMobile.value ? 1 : 3;
+    if (meteors.length >= maxMeteors) return;
+    
+    // Create meteor with unique properties
+    const meteor = {
+        id: `meteor-${meteorCounter++}`,
+        startX: containerWidth, // Start from right edge
+        startY: Math.random() * 30, // Start near top, with some randomness
+        length: 30 + Math.random() * 50, // Keep existing length randomness
+        opacity: 0.7 + Math.random() * 0.3,
+        duration: 800 + Math.random() * 400, // Match 800-1200ms range
+        timestamp: Date.now(),
+    };
+    
+    meteors.push(meteor);
+    
+    // Auto-remove after animation completes
+    setTimeout(() => {
+        const index = meteors.findIndex(m => m.id === meteor.id);
+        if (index !== -1) {
+            meteors.splice(index, 1);
+        }
+    }, meteor.duration + 100); // Add buffer to ensure animation completes
+};
+
+// Meteor animation scheduler
+const scheduleMeteors = () => {
+    if (!meteorContainer.value || !meteorsActive.value) return;
+    
+    // Determine interval based on device
+    const baseInterval = isMobile.value ? 3000 : 1500;
+    const interval = baseInterval + Math.random() * 1000;
+    
+    createMeteor();
+    setTimeout(scheduleMeteors, interval);
+};
+
+// Start/stop animation system
+const startMeteorSystem = () => {
+    if (isReducedMotion.value) return;
+    meteorsActive.value = true;
+    scheduleMeteors();
+};
+
+const stopMeteorSystem = () => {
+    meteorsActive.value = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+};
+
 // Lifecycle hooks
 onMounted(() => {
     handleResize();
@@ -39,11 +107,15 @@ onMounted(() => {
     document.addEventListener("visibilitychange", () => {
         toggleMeteors(!document.hidden);
     });
+    
+    // Start meteor system
+    startMeteorSystem();
 });
 
 onUnmounted(() => {
     window.removeEventListener("resize", handleResize);
     document.removeEventListener("visibilitychange", () => {});
+    stopMeteorSystem();
 });
 </script>
 
@@ -86,23 +158,24 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- Meteor shower effect (conditional based on performance) -->
+        <!-- Vue-controlled Meteor shower effect -->
         <div
-            v-if="meteorsActive && !isReducedMotion && !isMobile"
-            class="absolute inset-0 overflow-hidden opacity-80"
+            ref="meteorContainer"
+            class="absolute inset-0 overflow-hidden opacity-80 pointer-events-none"
         >
             <div
-                v-for="i in 5"
-                :key="`meteor-${i}`"
+                v-for="meteor in meteors"
+                :key="meteor.id"
                 class="absolute meteor-trail"
                 :style="{
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 40}%`,
-                    width: `${30 + Math.random() * 50}px`,
+                    top: `${meteor.startY}%`,
+                    left: `${meteor.startX}px`,
+                    width: `${meteor.length}px`,
                     height: '2px',
-                    transform: `rotate(45deg)`,
-                    animationDelay: `${i * 0.5}s`,
-                    animationDuration: '1.2s',
+                    transform: 'rotate(45deg)',
+                    opacity: meteor.opacity,
+                    background: 'linear-gradient(to left, rgba(155, 135, 245, 0.9), transparent)',
+                    animation: `meteor-vue ${meteor.duration}ms linear forwards`,
                 }"
             ></div>
         </div>
@@ -322,12 +395,16 @@ onUnmounted(() => {
     animation: pulse-subtle 4s ease-in-out infinite;
 }
 
-/* Enhanced meteor effect */
-.meteor-trail {
-    background: linear-gradient(to left, rgba(155, 135, 245, 0.9), transparent);
-    animation: meteor-animation 1.2s linear infinite;
-    will-change: transform, opacity;
-    transform: translateZ(0);
+/* Vue-controlled meteor animation */
+@keyframes meteor-vue {
+    0% {
+        transform: translateX(0) translateY(0) rotate(45deg);
+        opacity: var(--opacity, 0.8);
+    }
+    100% {
+        transform: translateX(-300%) translateY(300%) rotate(45deg);
+        opacity: 0;
+    }
 }
 
 /* Black hole effect */
@@ -422,25 +499,6 @@ onUnmounted(() => {
     }
     50% {
         opacity: 0.8;
-    }
-}
-
-@keyframes meteor-animation {
-    0% {
-        transform: translateX(100%) translateY(-100%)
-            rotate(var(--rotation, 45deg));
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(-200%) translateY(200%)
-            rotate(var(--rotation, 45deg));
-        opacity: 0;
     }
 }
 

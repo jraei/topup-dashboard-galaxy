@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import CosmicCard from "@/Components/Order/CosmicCard.vue";
 
 // --- Countries mini-list (for brevity; full list can be expanded if needed) ---
@@ -84,13 +85,83 @@ function formatPhone(val) {
 // Helper: show transaction alert only if email present and valid
 const showAlert = computed(() => email.value && !emailError.value);
 
-// Flag dropdown state
+// Flag dropdown state and positioning
 const dropdownOpen = ref(false);
+const dropdownRef = ref(null);
+const dropdownContainerRef = ref(null);
+const dropdownPosition = ref({ top: false, bottom: true });
+const isMobileView = ref(false);
+
+// Auto-position dropdown based on available space
+const positionDropdown = () => {
+    if (!dropdownRef.value || !dropdownContainerRef.value) return;
+    
+    // Check if we're in mobile view
+    isMobileView.value = window.innerWidth < 640;
+    
+    if (isMobileView.value) {
+        // On mobile, position at bottom of viewport
+        dropdownPosition.value = { top: false, bottom: true };
+        return;
+    }
+    
+    // Get container position
+    const containerRect = dropdownContainerRef.value.getBoundingClientRect();
+    const dropdownHeight = dropdownRef.value.scrollHeight;
+    
+    // Calculate space available above and below
+    const spaceAbove = containerRect.top;
+    const spaceBelow = window.innerHeight - containerRect.bottom;
+    
+    // If not enough space below but enough space above, flip to top
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        dropdownPosition.value = { top: true, bottom: false };
+    } else {
+        dropdownPosition.value = { top: false, bottom: true };
+    }
+};
 
 function selectCountry(code) {
     country.value = code;
-    dropdownOpen.value = false;
+    closeDropdown();
     nextTick(() => document.getElementById("contact-phone")?.focus());
+}
+
+function closeDropdown() {
+    dropdownOpen.value = false;
+}
+
+function toggleDropdown() {
+    dropdownOpen.value = !dropdownOpen.value;
+    if (dropdownOpen.value) {
+        nextTick(() => {
+            positionDropdown();
+            // Add event listeners for clicking outside
+            document.addEventListener('click', handleClickOutside);
+        });
+    }
+}
+
+function handleClickOutside(event) {
+    if (dropdownContainerRef.value && !dropdownContainerRef.value.contains(event.target)) {
+        closeDropdown();
+    }
+}
+
+// Lifecycle hooks for event cleanup
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+    document.removeEventListener('click', handleClickOutside);
+});
+
+function handleResize() {
+    if (dropdownOpen.value) {
+        positionDropdown();
+    }
 }
 </script>
 <template>
@@ -134,12 +205,12 @@ function selectCountry(code) {
                     >WhatsApp Number</label
                 >
                 <div class="flex items-stretch gap-6">
-                    <!-- Country selector -->
-                    <div class="relative">
+                    <!-- Country selector with improved positioning -->
+                    <div class="relative" ref="dropdownContainerRef">
                         <button
                             type="button"
                             class="flex items-center gap-1 px-3 py-2 text-xl font-bold transition-all border rounded-full shadow select-none bg-secondary/20 border-secondary hover-scale"
-                            @click="dropdownOpen = !dropdownOpen"
+                            @click="toggleDropdown"
                             aria-label="Choose country code"
                         >
                             <span class="mr-1 text-secondary/80">{{
@@ -169,30 +240,39 @@ function selectCountry(code) {
                                 ></span>
                             </span>
                         </button>
-                        <!-- Dropdown -->
+                        
+                        <!-- Improved Dropdown -->
                         <transition name="fade">
                             <div
-                                v-show="dropdownOpen"
-                                class="absolute left-0 z-30 w-56 py-1 mt-2 space-y-1 overflow-y-auto border rounded shadow-lg bg-content_background border-secondary max-h-56"
+                                v-if="dropdownOpen"
+                                ref="dropdownRef"
+                                class="cosmic-country-dropdown"
+                                :class="{
+                                    'cosmic-dropdown-top': dropdownPosition.top,
+                                    'cosmic-dropdown-bottom': dropdownPosition.bottom,
+                                    'cosmic-dropdown-mobile': isMobileView
+                                }"
                             >
-                                <button
-                                    v-for="ct in countries"
-                                    :key="ct.code"
-                                    @click="selectCountry(ct.code)"
-                                    type="button"
-                                    class="flex items-center w-full px-2 py-2 space-x-2 text-left hover:bg-secondary/10"
-                                    :class="{
-                                        'bg-secondary/10': ct.code === country,
-                                    }"
-                                >
-                                    <span>{{ ct.flag }}</span>
-                                    <span class="w-10 text-xs font-bold">{{
-                                        ct.dial_code
-                                    }}</span>
-                                    <span class="text-primary_text">{{
-                                        ct.name
-                                    }}</span>
-                                </button>
+                                <div class="py-1 space-y-1 overflow-y-auto max-h-56">
+                                    <button
+                                        v-for="ct in countries"
+                                        :key="ct.code"
+                                        @click="selectCountry(ct.code)"
+                                        type="button"
+                                        class="flex items-center w-full px-2 py-2 space-x-2 text-left hover:bg-secondary/10"
+                                        :class="{
+                                            'bg-secondary/10': ct.code === country,
+                                        }"
+                                    >
+                                        <span>{{ ct.flag }}</span>
+                                        <span class="w-10 text-xs font-bold">{{
+                                            ct.dial_code
+                                        }}</span>
+                                        <span class="text-primary_text">{{
+                                            ct.name
+                                        }}</span>
+                                    </button>
+                                </div>
                             </div>
                         </transition>
                     </div>
@@ -266,12 +346,51 @@ function selectCountry(code) {
 .cosmic-alert-nebula {
     box-shadow: 0 0 10px 0 #33c3f077, 0 0 8px #9b87f511;
 }
-/* .cosmic-focus-meteor:focus {
-    --tw-ring-color: #7e69ab88;
-    box-shadow: 0 0 6px 2px #9b87f533, 0 1px 0 #33c3f055;
-    background: linear-gradient(80deg, #1f293740 80%, #33c3f009 100%);
-    border-color: #7e69ab !important;
-} */
+
+/* Improved dropdown positioning */
+.cosmic-country-dropdown {
+    position: absolute;
+    left: 0;
+    z-index: 100;
+    width: 56;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    border-color: var(--color-secondary, #33C3F0);
+    background-color: var(--color-content-bg, #1F2937);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+    max-width: 240px;
+}
+
+.cosmic-dropdown-bottom {
+    top: calc(100% + 0.5rem);
+}
+
+.cosmic-dropdown-top {
+    bottom: calc(100% + 0.5rem);
+}
+
+.cosmic-dropdown-mobile {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    padding: 1rem;
+    max-height: 60vh;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    background-color: var(--color-header-bg, #111827);
+}
+
+.cosmic-dropdown-mobile button {
+    padding: 0.75rem;
+}
+
 .animate-orbit-satellite {
     animation: orbit-satellite 2.2s linear infinite;
 }
