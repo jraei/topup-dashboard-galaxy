@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -55,7 +54,7 @@ const totalAmount = computed(() => {
 
 const handleServiceSelection = (service) => {
     selectedService.value = service;
-    
+
     // Auto-scroll to payment section with delay to ensure rendering
     nextTick(() => {
         setTimeout(() => {
@@ -67,19 +66,22 @@ const handleServiceSelection = (service) => {
 // Scroll to payment section function
 const scrollToPaymentSection = () => {
     if (!paymentSectionRef.value) return;
-    
+
     const isInView = isElementInViewport(paymentSectionRef.value);
     if (isInView) return; // Don't scroll if already in view
-    
+
     // Smooth scroll to payment section with offset
     const offset = 32; // 32px above the component
-    const top = paymentSectionRef.value.getBoundingClientRect().top + window.pageYOffset - offset;
-    
+    const top =
+        paymentSectionRef.value.getBoundingClientRect().top +
+        window.pageYOffset -
+        offset;
+
     window.scrollTo({
         top,
-        behavior: 'smooth'
+        behavior: "smooth",
     });
-    
+
     // Highlight payment section with pulsing glow
     highlightPaymentSection();
 };
@@ -90,17 +92,19 @@ const isElementInViewport = (el) => {
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        rect.bottom <=
+            (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <=
+            (window.innerWidth || document.documentElement.clientWidth)
     );
 };
 
 // Highlight payment section with pulsing glow
 const highlightPaymentSection = () => {
     if (!paymentSectionRef.value) return;
-    
+
     paymentSectionHighlight.value = true;
-    
+
     // Remove highlight after animation (3 pulses ≈ 1500ms)
     setTimeout(() => {
         paymentSectionHighlight.value = false;
@@ -168,21 +172,24 @@ const setupStickyObserver = () => {
         );
         footerObserver.observe(footerElement);
     }
-    
+
     // Contact section observer (to unstick when scrolling past)
     if (contactSectionRef.value) {
         const contactObserver = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     // When contact form is in view and we've scrolled past its top
-                    if (entry.isIntersecting && entry.boundingClientRect.top <= navbarHeight.value) {
+                    if (
+                        entry.isIntersecting &&
+                        entry.boundingClientRect.top <= navbarHeight.value
+                    ) {
                         isSidebarSticky.value = false;
                     }
                 });
             },
-            { 
+            {
                 threshold: [0, 0.25, 0.5, 0.75, 1],
-                rootMargin: `-${navbarHeight.value}px 0px 0px 0px`
+                rootMargin: `-${navbarHeight.value}px 0px 0px 0px`,
             }
         );
         contactObserver.observe(contactSectionRef.value);
@@ -337,7 +344,6 @@ const initPriceAnimations = () => {
             <div class="absolute inset-0 z-0">
                 <CosmicParticles />
             </div>
-
             <div
                 class="relative z-10 grid grid-cols-1 mx-auto max-w-7xl lg:grid-cols-6 lg:gap-6"
             >
@@ -359,7 +365,12 @@ const initPriceAnimations = () => {
                         @update:quantity="handleQuantityUpdate"
                     />
                     <!-- Payment section with ref for scrolling and highlighting -->
-                    <div ref="paymentSectionRef" :class="{'cosmic-highlight-pulse': paymentSectionHighlight}">
+                    <div
+                        ref="paymentSectionRef"
+                        :class="{
+                            'cosmic-highlight-pulse': paymentSectionHighlight,
+                        }"
+                    >
                         <PaymentSelector
                             :static-methods="staticMethods"
                             :dynamic-methods="dynamicMethods"
@@ -489,11 +500,13 @@ const initPriceAnimations = () => {
 }
 
 @keyframes payment-highlight-pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0;
         transform: scale(0.98);
     }
-    25%, 75% {
+    25%,
+    75% {
         opacity: 0.8;
         transform: scale(1.01);
     }

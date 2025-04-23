@@ -35,9 +35,9 @@ const positionDropdown = () => {
     const triggerRect = triggerRef.value.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
+
     const dropdownRect = dropdownRef.value.getBoundingClientRect();
-    
+
     let top = triggerRect.bottom + 4; // Default position below button
     let left = triggerRect.left;
 
@@ -115,7 +115,7 @@ onUnmounted(() => {
             <div
                 v-show="open"
                 ref="dropdownRef"
-                class="w-48 bg-white border rounded-md shadow-lg border-primary/60 dark:bg-gray-700 will-change-transform"
+                class="w-48 border rounded-md shadow-lg bg-secondary/20 backdrop-blur border-primary/60 will-change-transform"
                 :style="dropdownStyles"
             >
                 <slot name="content" />

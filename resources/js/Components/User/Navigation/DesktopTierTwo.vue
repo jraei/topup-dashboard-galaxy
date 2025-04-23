@@ -3,12 +3,21 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { Link } from "@inertiajs/vue3";
 import NavLink from "@/Components/NavLink.vue";
 import CosmicIcon from "./CosmicIcon.vue";
+import Dropdown from "@/Components/Dropdown.vue";
+import DropdownLink from "@/Components/DropdownLink.vue";
 
 const props = defineProps({
     navLinks: {
         type: Array,
         required: true,
     },
+    user: {
+        type: Object,
+    },
+});
+
+const isAuthenticated = computed(() => {
+    return !!props.user;
 });
 
 const activeDropdown = ref(null);
@@ -249,25 +258,71 @@ const getIconName = (emojiName) => {
 
             <!-- Right: Auth Buttons -->
             <div class="flex items-center space-x-3">
-                <Link
-                    :href="route('login')"
-                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-200 transition-all rounded-full bg-dark/card hover:bg-primary-hover/50 hover:text-white"
-                >
-                    <span class="mr-1.5">
-                        <CosmicIcon name="login" size="md" />
-                    </span>
-                    <span>Login</span>
-                </Link>
+                {{ console.log(props.user) }}
+                <template v-if="!isAuthenticated">
+                    <Link
+                        :href="route('login')"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-gray-200 transition-all rounded-full bg-dark/card hover:bg-primary-hover/50 hover:text-white"
+                    >
+                        <span class="mr-1.5">
+                            <CosmicIcon name="login" size="md" />
+                        </span>
+                        <span>Login</span>
+                    </Link>
 
-                <Link
-                    :href="route('register')"
-                    class="flex items-center px-4 py-2 text-sm font-medium text-white transition-all bg-transparent rounded-full hover:bg-primary-hover/50"
-                >
-                    <span class="mr-1.5">
-                        <CosmicIcon name="register" size="md" />
-                    </span>
-                    <span>Register</span>
-                </Link>
+                    <Link
+                        :href="route('register')"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-white transition-all bg-transparent rounded-full hover:bg-primary-hover/50"
+                    >
+                        <span class="mr-1.5">
+                            <CosmicIcon name="register" size="md" />
+                        </span>
+                        <span>Register</span>
+                    </Link>
+                </template>
+
+                <template v-else>
+                    <div class="relative ms-3">
+                        <Dropdown align="right" width="48">
+                            <template #trigger>
+                                <span class="inline-flex rounded-md">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 transition duration-150 ease-in-out border border-transparent rounded-md text-primary-text/80 hover:text-primary focus:outline-none"
+                                    >
+                                        {{ props.user.username }}
+
+                                        <svg
+                                            class="ms-2 -me-0.5 h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </span>
+                            </template>
+
+                            <template #content>
+                                <DropdownLink :href="route('profile.edit')">
+                                    Profile
+                                </DropdownLink>
+                                <DropdownLink
+                                    :href="route('logout')"
+                                    method="post"
+                                    as="button"
+                                >
+                                    Log Out
+                                </DropdownLink>
+                            </template>
+                        </Dropdown>
+                    </div>
+                </template>
             </div>
         </div>
     </div>

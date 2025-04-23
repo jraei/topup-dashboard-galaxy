@@ -1,4 +1,3 @@
-
 <template>
     <div
         class="p-4 border-t shadow-lg rounded-2xl bg-dark-card/40 backdrop-blur-sm border-secondary/20"
@@ -57,8 +56,8 @@
                         {{ formattedPrice(paymentFee) }}
                     </div>
                     <transition name="fade">
-                        <div 
-                            v-if="paymentInfo.feeType === 'percentage'" 
+                        <div
+                            v-if="paymentInfo.feeType === 'percentage'"
                             class="text-xs text-secondary animate-fade-in"
                         >
                             (+{{ paymentInfo.fee }}% fee)
@@ -216,28 +215,28 @@ const formattedPrice = (price) => {
 </script>
 
 <style scoped>
-.fade-enter-active, 
+.fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 
-.fade-enter-from, 
+.fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+    animation: fade-in 0.3s ease-out forwards;
 }
 </style>

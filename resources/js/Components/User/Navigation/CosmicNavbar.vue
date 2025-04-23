@@ -4,6 +4,10 @@ import DesktopTierOne from "./DesktopTierOne.vue";
 import DesktopTierTwo from "./DesktopTierTwo.vue";
 import MobileBreadcrumbs from "./MobileBreadcrumbs.vue";
 import CosmicStarfield from "./CosmicStarfield.vue";
+import { usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+const user = page.props.auth.user;
 
 const isMobileMenuOpen = ref(false);
 const isScrolled = ref(false);
@@ -89,7 +93,7 @@ const navLinks = [
                 <!-- Desktop Two-Tier Navigation (md and above) -->
                 <div class="hidden md:block">
                     <DesktopTierOne :is-scrolled="isScrolled" />
-                    <DesktopTierTwo :nav-links="navLinks" />
+                    <DesktopTierTwo :nav-links="navLinks" :user />
                 </div>
 
                 <!-- Mobile Navigation (below md) -->
@@ -99,6 +103,7 @@ const navLinks = [
                         :toggle-menu="toggleMobileMenu"
                         :close-menu="closeMobileMenu"
                         :nav-links="navLinks"
+                        :user
                     />
                 </div>
             </div>

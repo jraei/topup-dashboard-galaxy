@@ -1,10 +1,9 @@
-
 <script setup>
 import { ref } from "vue";
 import Modal from "@/Components/Modal.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import CosmicCard from "@/Components/Order/CosmicCard.vue";
-
+import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 const props = defineProps({
     inputFields: Array,
     produk: Object,
@@ -15,6 +14,9 @@ const savedIdForFuture = ref(false);
 </script>
 
 <template>
+    <div class="absolute inset-0 z-0">
+        <CosmicParticles />
+    </div>
     <CosmicCard :title="'Masukkan Data Akun'" :step-number="1">
         <form class="relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -35,8 +37,7 @@ const savedIdForFuture = ref(false);
                         <!-- Text/Number Input -->
                         <input
                             v-if="
-                                field.type === 'text' ||
-                                field.type === 'number'
+                                field.type === 'text' || field.type === 'number'
                             "
                             :type="field.type"
                             :id="`field_${field.id}`"
@@ -75,10 +76,7 @@ const savedIdForFuture = ref(false);
                 <!-- Save ID Checkbox -->
                 <div class="flex items-center">
                     <Checkbox v-model:checked="savedIdForFuture" class="" />
-                    <label
-                        for="saveId"
-                        class="ml-2 text-sm text-primary-text"
-                    >
+                    <label for="saveId" class="ml-2 text-sm text-primary-text">
                         Simpan ID untuk pembelian berikutnya
                     </label>
                 </div>
