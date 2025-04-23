@@ -15,6 +15,14 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    createable: {
+        type: Boolean,
+        default: true,
+    },
+    editable: {
+        type: Boolean,
+        default: true,
+    },
     pagination: {
         type: Object,
         default: () => ({ current_page: 1, per_page: 10, total: 0 }),
@@ -131,10 +139,12 @@ watch(
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-lg bg-dark-card">
+    <div
+        class="overflow-hidden bg-transparent border shadow border-secondary/20 rounded-2xl"
+    >
         <!-- Table Header with Search -->
         <div
-            class="flex flex-col items-center justify-between p-4 space-y-4 border-b border-gray-700 bg-dark-lighter sm:flex-row sm:space-y-0"
+            class="flex flex-col items-center justify-between p-4 space-y-4 border-b border-primary/30 sm:flex-row sm:space-y-0"
         >
             <h2 class="text-lg font-semibold text-white">
                 <slot name="title">Data Table</slot>
@@ -167,11 +177,12 @@ watch(
                         v-model="searchQuery"
                         type="text"
                         placeholder="Search..."
-                        class="block w-full py-2 pl-10 pr-3 text-gray-200 placeholder-gray-400 border rounded-lg border-secondary/50 bg-dark-sidebar focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        class="block w-full py-2 pl-10 pr-3 text-gray-200 placeholder-gray-400 border rounded-lg border-secondary/50 bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                 </div>
 
-                <slot name="addButton">
+                <!-- show add button when createable is true -->
+                <slot name="addButton" v-if="createable">
                     <button
                         class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
                     >
@@ -197,8 +208,8 @@ watch(
 
         <!-- Table Body -->
         <div class="overflow-x-auto max-w-[90vw]">
-            <table class="w-full divide-y divide-gray-700 min-w-max">
-                <thead class="bg-dark-lighter">
+            <table class="w-full divide-y divide-primary/30 min-w-max">
+                <thead class="">
                     <tr>
                         <!-- Tambahkan Kolom "ID" sebagai ID dari loop -->
                         <th
@@ -255,19 +266,22 @@ watch(
                                 </div>
                             </div>
                         </th>
+                        <!-- show action column when editable is true -->
+
                         <th
                             scope="col"
                             class="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-300 uppercase"
+                            v-if="editable"
                         >
                             Actions
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-700 bg-dark-card">
+                <tbody class="divide-y divide-primary/30">
                     <tr
                         v-for="(item, index) in data"
                         :key="index"
-                        class="transition-colors hover:bg-dark-lighter"
+                        class="transition-colors hover:bg-secondary/30"
                     >
                         <!-- Kolom Nomor Urut (ID dari Looping) -->
                         <td class="px-6 py-4 text-gray-200 whitespace-nowrap">
@@ -298,6 +312,7 @@ watch(
                         </td>
                         <td
                             class="px-6 py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap"
+                            v-if="editable"
                         >
                             <slot name="actions" :item="item">
                                 <button
@@ -331,7 +346,7 @@ watch(
                             <div class="flex flex-col items-center">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="w-12 h-12 mb-4 text-gray-500"
+                                    class="w-12 h-12 mb-4 text-primary"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -343,10 +358,10 @@ watch(
                                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                                     />
                                 </svg>
-                                <p class="text-lg text-gray-400">
+                                <p class="text-lg text-primary">
                                     No data found
                                 </p>
-                                <p class="mt-1 text-sm text-gray-500">
+                                <p class="mt-1 text-sm text-primary">
                                     <span v-if="searchQuery"
                                         >Try adjusting your search query</span
                                     >

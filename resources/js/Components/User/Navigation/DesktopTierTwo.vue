@@ -14,10 +14,18 @@ const props = defineProps({
     user: {
         type: Object,
     },
+    userRole: {
+        type: String,
+    },
 });
 
 const isAuthenticated = computed(() => {
     return !!props.user;
+});
+
+// check is user admin
+const isAdmin = computed(() => {
+    return props.userRole === "admin";
 });
 
 const activeDropdown = ref(null);
@@ -258,7 +266,6 @@ const getIconName = (emojiName) => {
 
             <!-- Right: Auth Buttons -->
             <div class="flex items-center space-x-3">
-                {{ console.log(props.user) }}
                 <template v-if="!isAuthenticated">
                     <Link
                         :href="route('login')"
@@ -325,6 +332,16 @@ const getIconName = (emojiName) => {
                             </template>
                         </Dropdown>
                     </div>
+                    <Link
+                        :href="route('admin.dashboard')"
+                        class="flex items-center px-4 py-2 space-x-2 text-sm font-medium transition-all bg-transparent rounded-full text-white/90 hover:bg-primary-hover/50"
+                        v-if="isAdmin"
+                    >
+                        <span>Admin</span>
+                        <span class="mr-1.5">
+                            <CosmicIcon name="login" size="md" />
+                        </span>
+                    </Link>
                 </template>
             </div>
         </div>

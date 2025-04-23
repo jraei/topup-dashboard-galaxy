@@ -8,6 +8,7 @@ import { usePage } from "@inertiajs/vue3";
 
 const page = usePage();
 const user = page.props.auth.user;
+const userRole = page.props.auth.role;
 
 const isMobileMenuOpen = ref(false);
 const isScrolled = ref(false);
@@ -93,7 +94,7 @@ const navLinks = [
                 <!-- Desktop Two-Tier Navigation (md and above) -->
                 <div class="hidden md:block">
                     <DesktopTierOne :is-scrolled="isScrolled" />
-                    <DesktopTierTwo :nav-links="navLinks" :user />
+                    <DesktopTierTwo :nav-links="navLinks" :user :userRole />
                 </div>
 
                 <!-- Mobile Navigation (below md) -->
@@ -104,6 +105,7 @@ const navLinks = [
                         :close-menu="closeMobileMenu"
                         :nav-links="navLinks"
                         :user
+                        :userRole
                     />
                 </div>
             </div>

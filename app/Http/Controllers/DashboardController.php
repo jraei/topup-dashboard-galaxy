@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deposit;
+use App\Models\PayMethod;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -38,27 +39,27 @@ class DashboardController extends Controller
     public function topup(Request $request)
     {
         $user = $request->user();
+
+        // siapkan payment methods dari model PayMethod
+        $payMethods = PayMethod::where('status', 'active')->get();
         return Inertia::render('Dashboard/Topup', [
             'balance' => $user->saldo,
-            // You will fill payment methods here in next step
+            'payMethods' => $payMethods
         ]);
     }
 
     public function transactions()
     {
-        // Will pass transactions data here in the future
         return Inertia::render('Dashboard/Transactions');
     }
 
     public function mutations()
     {
-        // Will pass mutation history here in the future
         return Inertia::render('Dashboard/Mutations');
     }
 
     public function affiliate()
     {
-        // Will pass affiliate data here in the future
         return Inertia::render('Dashboard/Affiliate');
     }
 }

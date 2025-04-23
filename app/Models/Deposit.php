@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -65,11 +64,11 @@ class Deposit extends Model
         // Search filter (search invoice, amount, etc)
         $search = $request->input('search');
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 // Search by deposit_id, provider_reference, or amount
                 $q->where('deposit_id', 'like', "%$search%")
-                  ->orWhere('provider_reference', 'like', "%$search%")
-                  ->orWhere('amount', 'like', "%$search%");
+                    ->orWhere('provider_reference', 'like', "%$search%")
+                    ->orWhere('amount', 'like', "%$search%");
             });
         }
 

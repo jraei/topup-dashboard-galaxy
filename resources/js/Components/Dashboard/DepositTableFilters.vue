@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, watch } from "vue";
 import { usePage } from "@inertiajs/vue3";
@@ -48,29 +47,41 @@ watch(localFilters, () => {
 <template>
     <div class="flex flex-wrap items-end gap-3 mb-4 animate-fade-in">
         <div>
-            <label class="block text-xs font-semibold text-secondary mb-1">Status</label>
-            <select 
-                v-model="localFilters.status"
-                class="bg-dark-sidebar border border-primary/40 text-white rounded px-3 py-2 focus:ring-primary focus:border-primary shadow-sm"
+            <label class="block mb-1 text-xs font-semibold text-secondary"
+                >Status</label
             >
-                <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            <select
+                v-model="localFilters.status"
+                class="px-3 py-2 text-white border rounded-lg shadow-sm bg-secondary/20 border-primary/40 focus:ring-primary focus:border-primary"
+            >
+                <option
+                    v-for="opt in statusOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                >
+                    {{ opt.label }}
+                </option>
             </select>
         </div>
         <div>
-            <label class="block text-xs font-semibold text-secondary mb-1">Tanggal Awal</label>
+            <label class="block mb-1 text-xs font-semibold text-secondary"
+                >Tanggal Awal</label
+            >
             <input
                 type="date"
                 v-model="localFilters.date_start"
-                class="bg-dark-sidebar border border-primary/40 text-white rounded px-3 py-2 focus:ring-primary focus:border-primary shadow-sm"
+                class="px-3 py-2 text-white border rounded-lg shadow-sm bg-secondary/20 border-primary/40 focus:ring-primary focus:border-primary"
                 max="9999-12-31"
             />
         </div>
         <div>
-            <label class="block text-xs font-semibold text-secondary mb-1">Tanggal Akhir</label>
+            <label class="block mb-1 text-xs font-semibold text-secondary"
+                >Tanggal Akhir</label
+            >
             <input
                 type="date"
                 v-model="localFilters.date_end"
-                class="bg-dark-sidebar border border-primary/40 text-white rounded px-3 py-2 focus:ring-primary focus:border-primary shadow-sm"
+                class="px-3 py-2 text-white border rounded-lg shadow-sm bg-secondary/20 border-primary/40 focus:ring-primary focus:border-primary"
                 max="9999-12-31"
             />
         </div>

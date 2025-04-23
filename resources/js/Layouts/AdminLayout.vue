@@ -57,7 +57,7 @@ const toggleDropdown = (dropdown) => {
             >
                 <!-- Logo section -->
                 <div class="flex items-center justify-center px-4 mb-8">
-                    <Link :href="route('admin.dashboard')">
+                    <Link :href="route('index')">
                         <ApplicationLogo
                             class="w-12 h-12 fill-current text-primary"
                         />

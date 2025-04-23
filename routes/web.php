@@ -144,4 +144,5 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/transactions', [DashboardController::class, 'transactions'])->name('dashboard.transactions');
     Route::get('/mutations', [DashboardController::class, 'mutations'])->name('dashboard.mutations');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
+    Route::get('/topup', [DashboardController::class, 'topup'])->name('dashboard.topup');
 });

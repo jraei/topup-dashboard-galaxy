@@ -8,6 +8,7 @@ import {
     BanknoteArrowUp,
     CreditCard,
     Handshake,
+    CircleDollarSign,
 } from "lucide-vue-next";
 const props = defineProps({
     collapsed: Boolean,
@@ -57,12 +58,18 @@ const currentRoute = computed(() => page.url);
                     :href="route('dashboard.balance')"
                     :class="[
                         'flex items-center px-4 py-2 rounded-lg transition-all font-medium gap-3 group',
-                        route().current('dashboard.balance')
+                        route().current('dashboard.balance') ||
+                        route().current('dashboard.topup')
                             ? 'bg-gradient-to-r from-primary/50 to-secondary/40 text-white ring-2 ring-primary/70 animate-pulse'
                             : 'text-primary-text/80 hover:bg-primary/10 hover:text-secondary',
                     ]"
                 >
-                    <img src="/favicon.ico" class="w-7 h-7" />
+                    <!-- <img src="/favicon.ico" class="w-7 h-7" /> -->
+                    <component
+                        :is="CircleDollarSign"
+                        class="w-6 h-6"
+                        aria-hidden="true"
+                    />
                     <span v-if="!props.collapsed" class="text-base"
                         >NaelCoin</span
                     >
