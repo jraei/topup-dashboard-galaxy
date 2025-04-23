@@ -319,6 +319,9 @@ const getIconName = (emojiName) => {
                                 >
                                     Log Out
                                 </DropdownLink>
+                                <DropdownLink :href="route('dashboard')">
+                                    Dashboard
+                                </DropdownLink>
                             </template>
                         </Dropdown>
                     </div>

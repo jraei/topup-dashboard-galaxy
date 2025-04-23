@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -14,6 +13,11 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard/Index');
     }
 
+    public function balance()
+    {
+        // Will pass balance data here in the future
+        return Inertia::render('Dashboard/Balance');
+    }
     public function transactions()
     {
         // Will pass transactions data here in the future

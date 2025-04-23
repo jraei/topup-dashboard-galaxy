@@ -46,9 +46,7 @@ Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('ord
 // Add a route for voucher validation (we'll implement this later)
 Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher'])->name('vouchers.validate');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -142,6 +140,7 @@ require __DIR__ . '/auth.php';
 // Dashboard routes - use auth middleware
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/balance', [DashboardController::class, 'balance'])->name('dashboard.balance');
     Route::get('/transactions', [DashboardController::class, 'transactions'])->name('dashboard.transactions');
     Route::get('/mutations', [DashboardController::class, 'mutations'])->name('dashboard.mutations');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
