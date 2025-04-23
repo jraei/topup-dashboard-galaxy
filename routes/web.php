@@ -1,4 +1,3 @@
-
 <?php
 
 use Inertia\Inertia;
@@ -27,6 +26,7 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,3 +138,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+// Dashboard routes - use auth middleware
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/transactions', [DashboardController::class, 'transactions'])->name('dashboard.transactions');
+    Route::get('/mutations', [DashboardController::class, 'mutations'])->name('dashboard.mutations');
+    Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
+});
