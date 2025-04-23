@@ -1,3 +1,4 @@
+
 <?php
 
 use Inertia\Inertia;
@@ -45,13 +46,11 @@ Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('ord
 // Add a route for voucher validation (we'll implement this later)
 Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher'])->name('vouchers.validate');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // User Dashboard core + sections
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/transactions', [\App\Http\Controllers\DashboardController::class, 'transactions'])->name('dashboard.transactions');
-    Route::get('/dashboard/mutations', [\App\Http\Controllers\DashboardController::class, 'mutations'])->name('dashboard.mutations');
-    Route::get('/dashboard/affiliate', [\App\Http\Controllers\DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
