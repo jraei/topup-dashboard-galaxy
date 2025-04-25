@@ -49,7 +49,7 @@ class AdminController extends Controller
 
         // $appearanceSettings = WebConfig::getColorPaletteAttribute();
 
-        $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'api_private_key', 'status')->get();
+        $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'api_private_key', 'balance', 'status')->get();
 
         return Inertia::render('Admin/WebConfigs', [
             'generalSettings' => $generalSettings,

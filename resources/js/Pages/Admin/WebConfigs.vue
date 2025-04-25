@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, useForm } from "@inertiajs/vue3";
+import { Head, router, useForm, usePage } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { ref, computed, watch } from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
@@ -13,6 +13,8 @@ const props = defineProps({
     providers: Array,
     errors: Object,
 });
+
+const page = usePage();
 
 const activeTab = ref("general");
 
@@ -60,15 +62,34 @@ const appearanceForm = useForm({
 const apiForm = useForm({
     providers: props.providers.reduce((acc, provider) => {
         acc[provider.id] = {
+            id: provider.id,
             api_username: provider.api_username || "",
             api_key: provider.api_key || "",
             api_private_key: provider.api_private_key || "",
+            balance: provider.balance || 0,
             status: provider.status || "active",
             provider_name: provider.provider_name,
         };
         return acc;
     }, {}),
 });
+
+// Get balance provider
+const getBalanceProvider = (providerId) => {
+    router.post(route("providers.getBalancesByProvider", providerId), {
+        preserveScroll: true,
+    });
+};
+
+watch(
+    () => page.props.flash.status,
+    (status) => {
+        if (status?.balance && status?.provider_id) {
+            const providerId = status.provider_id;
+            apiForm.providers[providerId].balance = status.balance;
+        }
+    }
+);
 
 // Security form
 const securityForm = useForm({
@@ -1294,7 +1315,13 @@ const deleteLogo = (field) => {
                                             }"
                                             class="px-2 py-1 ml-3 text-xs text-white rounded-full"
                                         >
-                                            {{ provider.status }}
+                                            {{
+                                                provider.provider_name ==
+                                                "digiflazz"
+                                                    ? "Rp " +
+                                                      provider.balance.toLocaleString()
+                                                    : "RM " + provider.balance
+                                            }}
                                         </span>
                                     </h4>
 
@@ -1457,6 +1484,16 @@ const deleteLogo = (field) => {
                                                 class="mt-1"
                                             />
                                         </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <p
+                                            class="px-4 py-2 mt-4 rounded-lg cursor-pointer bg-primary text-primary-text"
+                                            @click="
+                                                getBalanceProvider(provider.id)
+                                            "
+                                        >
+                                            Get Balance
+                                        </p>
                                     </div>
                                 </div>
                             </div>

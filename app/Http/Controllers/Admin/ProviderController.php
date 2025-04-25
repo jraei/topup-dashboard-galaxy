@@ -115,4 +115,22 @@ class ProviderController extends Controller
             $service->save();
         }
     }
+
+
+    // get balance from digiflazzController
+    public function getBalancesByProvider(Provider $provider)
+    {
+        if ($provider->provider_name == 'digiflazz') {
+            $digiflazz = new DigiflazzController();
+            $balance = $digiflazz->getDigiflazzBalance();
+            $provider->update(['balance' => $balance->deposit]);
+            return back()->with('status', [
+                'type' => 'success',
+                'action' => 'Success',
+                'text' => 'Balance has been updated!',
+                'balance' => $balance->deposit,
+                'provider_id' => $provider->id,
+            ]);
+        }
+    }
 }

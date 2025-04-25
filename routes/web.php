@@ -101,6 +101,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Provider Management
     Route::resource('/providers', ProviderController::class);
     Route::patch('/providers/{id}/rate-kurs', [ProviderController::class, 'updateRateKurs'])->name('providers.updateRateKurs');
+    Route::post('providers/getBalances/{provider}', [ProviderController::class, 'getBalancesByProvider'])->name('providers.getBalancesByProvider');
 
     // Profit Produk routes
     Route::resource('profit-produks', ProfitProdukController::class);
@@ -134,6 +135,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // Pembayaran Management (Payments)
     Route::resource('pembayarans', PembayaranController::class)->except(['create', 'edit', 'update', 'store']);
+
+    // Digiflazz
+
 });
 
 require __DIR__ . '/auth.php';

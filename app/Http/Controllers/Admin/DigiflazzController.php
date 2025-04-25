@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Gonon\Digiflazz\Digiflazz;
 use Gonon\Digiflazz\PriceList;
 use App\Http\Controllers\Controller;
+use Gonon\Digiflazz\Balance;
 
 class DigiflazzController extends Controller
 {
@@ -19,6 +20,14 @@ class DigiflazzController extends Controller
     {
         $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
         Digiflazz::initDigiflazz($digiflazz->api_username, $digiflazz->api_key);
+    }
+
+    public function getDigiflazzBalance()
+    {
+        $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
+        $balance = Balance::getBalance();
+
+        return $balance;
     }
 
     public function getDigiflazzService()
