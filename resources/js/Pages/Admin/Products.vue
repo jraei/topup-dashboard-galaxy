@@ -60,6 +60,75 @@ const columns = [
     },
 ];
 
+// Provider selection
+const selectedProvider = ref(props.filters?.provider_id || "");
+
+watch(
+    () => selectedProvider.value,
+    (newValue) => {
+        router.get(
+            route("products.index"),
+            {
+                provider_id: newValue,
+                search: props.filters?.search,
+                sort: props.filters?.sort,
+                direction: props.filters?.direction,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            }
+        );
+    }
+);
+
+const getServicesFromAPI = () => {
+    if (!selectedProvider.value) {
+        proxy.$showSwalConfirm({
+            title: "Error",
+            text: "Please select a provider first",
+            icon: "error",
+        });
+        return;
+    }
+
+    isLoading.value = true;
+    router.post(
+        route("products.getProductsByProvider", selectedProvider.value),
+        {},
+        {
+            onFinish: () => {
+                isLoading.value = false;
+            },
+        }
+    );
+};
+
+// Delete services by provider
+const deleteServicesByProvider = () => {
+    if (!selectedProvider.value) {
+        proxy.$showSwalConfirm({
+            title: "Error",
+            text: "Please select a provider first",
+            icon: "error",
+        });
+        return;
+    }
+
+    proxy.$showSwalConfirm({
+        title: "Warning",
+        text: `Are you sure you want to delete all services from this provider?`,
+        icon: "warning",
+        confirmButtonText: "Yes, delete all",
+        onConfirm: () => {
+            router.delete(route("services.deleteLayanan"), {
+                data: { provider_id: selectedProvider.value },
+                preserveScroll: true,
+            });
+        },
+    });
+};
+
 const showViewModal = ref(false);
 const selectedData = ref(null);
 const isLoading = ref(false);
@@ -85,6 +154,7 @@ const handleView = async (item) => {
 };
 
 const handleEdit = (item) => {
+    imagePreviews.value.thumbnail = null;
     openEditForm(item);
 };
 
@@ -225,6 +295,103 @@ const handleFileUpload = (event, field) => {
                 <li>{{ error }}</li>
             </ul>
         </div>
+
+        <!-- Provider selection and action buttons -->
+        <div class="p-4 mb-4 rounded-lg bg-dark-card">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex-grow max-w-xs">
+                    <label
+                        for="provider_filter"
+                        class="block mb-1 text-sm font-medium text-gray-300"
+                        >Select Provider</label
+                    >
+                    <select
+                        id="provider_filter"
+                        v-model="selectedProvider"
+                        class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                        <option value="">All Providers</option>
+                        <option
+                            v-for="provider in provider_list"
+                            :key="provider.id"
+                            :value="provider.id"
+                        >
+                            {{ provider.provider_name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                    <button
+                        @click="getServicesFromAPI"
+                        class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+                        :disabled="isLoading"
+                    >
+                        <svg
+                            v-if="isLoading"
+                            class="w-5 h-5 animate-spin"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            ></circle>
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                        </svg>
+                        <svg
+                            v-else
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                        <span>Get Products from API</span>
+                    </button>
+
+                    <button
+                        v-if="selectedProvider"
+                        @click="deleteServicesByProvider"
+                        class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 bg-red-600 rounded-lg shadow-lg hover:bg-red-700"
+                        :disabled="isLoading"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                        </svg>
+                        <span>Delete Products</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div
             class="w-full border rounded-lg shadow-lg border-primary/40 bg-dark-card"
         >

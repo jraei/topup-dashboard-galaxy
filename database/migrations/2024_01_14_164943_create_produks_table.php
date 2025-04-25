@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('deskripsi_game')->nullable();
             $table->text('petunjuk_field')->nullable();
             $table->string('status')->default('active');
-            $table->string('thumbnail');
+            $table->string('thumbnail')->nullable();
             $table->string('banner')->nullable();
             $table->timestamps();
         });

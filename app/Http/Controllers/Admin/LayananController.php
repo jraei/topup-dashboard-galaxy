@@ -7,16 +7,12 @@ use App\Models\Produk;
 use App\Models\Layanan;
 use App\Models\Provider;
 use Illuminate\Http\Request;
-use Gonon\Digiflazz\Digiflazz;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 
 class LayananController extends Controller
 {
-    public function __construct()
-    {
-        Digiflazz::initDigiflazz(env('DIGIFLAZZ_USERNAME'), env('DIGIFLAZZ_APIKEY'));
-    }
+
 
     public function index(Request $request)
     {
@@ -176,12 +172,17 @@ class LayananController extends Controller
     /**
      * Get services from API and store to database
      */
-    public function getService()
+    public function getServicesByProvider(Provider $provider)
     {
-        $digiflazz = new DigiflazzController();
-        $digiflazz->getDigiflazzService();
+        // Get services from API
+        if ($provider->provider_name == 'digiflazz') {
+            $digiflazz = new DigiflazzController();
+            $affectedRow = $digiflazz->getDigiflazzService();
 
-        return back()->with('success', 'Berhasil Menambahkan Layanan!');
+            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedRow . ' services have been added or updated!']);
+        } else {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+        }
     }
 
     /**

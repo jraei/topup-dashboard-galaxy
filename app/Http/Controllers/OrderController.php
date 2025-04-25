@@ -30,6 +30,7 @@ class OrderController extends Controller
         // Normal services (excluding flashsale items)
         $services = $produk->layanan()
             ->whereNotIn('id', $excludedLayananIds)
+            ->orderBy('harga_beli_idr', 'asc')
             ->get()
             ->map(function ($service) {
                 preg_match('/(\d+)/', $service->nama_layanan, $matches);
@@ -68,7 +69,7 @@ class OrderController extends Controller
                 $q->where('stok_tersedia', '>', 0)
                     ->orWhereNull('stok_tersedia');
             })
-
+            ->orderBy('harga_flashsale', 'asc')
             ->get()
             ->filter(function ($item) {
                 $layanan = $item->layanan;
@@ -101,7 +102,8 @@ class OrderController extends Controller
             'qris' => [
                 'nama' => 'QRIS (Semua Pembayaran)',
                 'gambar' => PayMethod::where('tipe', 'QRIS')->first()?->gambar,
-                'fee' => PayMethod::where('tipe', 'QRIS')->first()?->fee,
+                'fee_fixed' => PayMethod::where('tipe', 'QRIS')->first()?->fee_fixed,
+                'fee_percent' => PayMethod::where('tipe', 'QRIS')->first()?->fee_percent,
                 'fee_type' => PayMethod::where('tipe', 'QRIS')->first()?->fee_type,
             ]
         ];
@@ -117,7 +119,8 @@ class OrderController extends Controller
                         'id' => $method->id,
                         'nama' => $method->nama,
                         'tipe' => $method->tipe,
-                        'fee' => $method->fee,
+                        'fee_fixed' => $method->fee_fixed,
+                        'fee_percent' => $method->fee_percent,
                         'fee_type' => $method->fee_type,
                         'gambar' => $method->gambar,
                         'is_recommended' => $method->keterangan && str_contains(strtolower($method->keterangan), 'recommended'),

@@ -27,31 +27,44 @@ class TripayController extends Controller
 
         $data = json_decode($result->getBody()->getContents(), true)['data'];
 
+        // affected
+        $affectedRow = 0;
 
         foreach ($data as $method) {
             $method = collect($method);
-            $methodExist = PayMethod::where('kode', $method['code'])->where('sistem', 'Tripay')->first();
-            if (!$methodExist) {
-                // masukkan data ke dalam db
-                PayMethod::create([
+
+            // Ambil nilai fee flat dan percent dari API
+            $fixed = $method['total_fee']['flat'];
+            $percent = (float) $method['total_fee']['percent'];
+
+            if ($fixed > 0 && $percent == 0) {
+                $feeType = 'fixed';
+            } else if ($fixed == 0 && $percent > 0) {
+                $feeType = 'percent';
+            } else if ($fixed > 0 && $percent > 0) {
+                $feeType = 'mixed';
+            } else {
+                $feeType = 'none';
+            }
+
+            // update or Create
+            PayMethod::updateOrCreate(
+                ['kode' => $method['code'], 'payment_provider' => 'Tripay'],
+                [
+                    "nama" => $method['name'],
                     "kode" => $method['code'],
                     "tipe" => $method['group'],
-                    "metode" => $method['name'],
-                    "sistem" => "Tripay",
+                    "payment_provider" => $provider['provider_name'],
                     "gambar" => $method['icon_url'],
                     "keterangan" => $method['name'],
-                    "active" => $method['active']
-                ]);
-            } else {
-                // jika ada layanan sebelumnya, update harganya
-                $methodExist->update([
-                    "kode" => $method['code'],
-                    "tipe" => $method['group'],
-                    "metode" => $method['name'],
-                    "gambar" => $method['icon_url'],
-                    'active' => ($method['active'] === true ? true : false)
-                ]);
-            }
+                    "fee_fixed" => $fixed,
+                    "fee_percent" => $percent,
+                    "fee_type" => $feeType,
+                    "status" => $method['active'] ? 'active' : 'inactive'
+                ]
+            );
+            $affectedRow++;
         }
+        return $affectedRow;
     }
 }

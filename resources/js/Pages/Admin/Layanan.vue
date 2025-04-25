@@ -112,13 +112,10 @@ const getServicesFromAPI = () => {
     }
 
     isLoading.value = true;
-    router.get(
-        route("services.getService"),
+    router.post(
+        route("services.getServicesByProvider", selectedProvider.value),
         {
-            provider_id: selectedProvider.value,
-        },
-        {
-            onFinish: () => {
+            onSuccess: () => {
                 isLoading.value = false;
             },
         }
@@ -176,6 +173,7 @@ const handleView = async (item) => {
 };
 
 const handleEdit = (item) => {
+    imagePreviews.value.thumbnail = null;
     openEditForm(item);
 };
 

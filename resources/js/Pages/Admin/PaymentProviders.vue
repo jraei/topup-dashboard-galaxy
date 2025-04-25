@@ -96,8 +96,8 @@ const updateProvider = () => {
 const getPaymentMethods = (provider) => {
     isMethodLoading.value = true;
 
-    router.get(
-        route("payment-providers.get-methods", provider.id),
+    router.post(
+        route("payment-providers.get-methods-by-provider", provider.id),
         {},
         {
             preserveScroll: true,
@@ -189,7 +189,7 @@ const togglePrivateKeyVisibility = () => {
                             <template #actions="{ item }">
                                 <button
                                     @click="editProvider(item)"
-                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-white transition-colors rounded-md bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-white transition-colors rounded-md md:text-sm bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +209,7 @@ const togglePrivateKeyVisibility = () => {
                                 </button>
                                 <button
                                     @click="getPaymentMethods(item)"
-                                    class="inline-flex items-center px-2 py-1 ml-2 text-xs font-medium text-white transition-colors rounded-md bg-secondary hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
+                                    class="inline-flex items-center px-2 py-1 ml-2 text-xs font-medium text-white transition-colors rounded-md md:text-sm bg-secondary hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
                                     :disabled="isMethodLoading"
                                 >
                                     <svg

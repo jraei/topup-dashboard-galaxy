@@ -1,6 +1,6 @@
 <template>
     <div
-        class="p-4 border-t shadow-lg rounded-2xl bg-dark-card/40 backdrop-blur-sm border-secondary/20"
+        class="p-4 border shadow-lg rounded-2xl bg-primary/20 backdrop-blur-sm border-secondary/50"
     >
         <h3 class="mb-3 text-xl font-semibold text-white">Order Summary</h3>
 
@@ -36,18 +36,19 @@
             <!-- Payment method fee -->
             <div
                 v-if="paymentInfo"
-                class="flex items-center justify-between p-3 mb-3 rounded-lg bg-primary/5"
+                class="flex items-center justify-between p-3 mb-3 border rounded-lg bg-primary/10 border-secondary/20"
             >
                 <div>
                     <h4 class="font-medium text-white">
-                        {{ paymentInfo.methodLabel }} Fee
+                        {{ paymentInfo.methodLabel }}
                     </h4>
+
                     <transition name="fade">
                         <p
-                            v-if="paymentInfo.feeType === 'percentage'"
+                            v-if="paymentInfo.feeType === 'percent'"
                             class="text-sm text-secondary animate-fade-in"
                         >
-                            {{ paymentInfo.fee }}% of order total
+                            {{ paymentInfo.fee_percent }}% of order total
                         </p>
                     </transition>
                 </div>
@@ -57,10 +58,17 @@
                     </div>
                     <transition name="fade">
                         <div
-                            v-if="paymentInfo.feeType === 'percentage'"
+                            v-if="paymentInfo.feeType === 'percent'"
                             class="text-xs text-secondary animate-fade-in"
                         >
-                            (+{{ paymentInfo.fee }}% fee)
+                            (+{{ paymentInfo.fee_percent }}% fee)
+                        </div>
+                        <div
+                            v-else-if="paymentInfo.feeType === 'mixed'"
+                            class="text-xs text-secondary animate-fade-in"
+                        >
+                            ({{ paymentInfo.fee_percent }}% + Rp
+                            {{ paymentInfo.fee_fixed }} fee)
                         </div>
                     </transition>
                 </div>
@@ -69,7 +77,7 @@
             <!-- Voucher discount -->
             <div
                 v-if="voucher"
-                class="flex items-center justify-between p-3 mb-3 rounded-lg bg-secondary/10"
+                class="flex items-center justify-between p-3 mb-3 border rounded-lg bg-primary/10 border-secondary/20"
             >
                 <div>
                     <h4 class="font-medium text-white">
@@ -96,7 +104,7 @@
 
             <!-- Total -->
             <div
-                class="flex items-center justify-between p-3 mb-5 rounded-lg bg-secondary/10"
+                class="flex items-center justify-between p-3 mb-5 border rounded-lg bg-secondary/10 border-primary/20"
             >
                 <h4 class="font-bold text-white">Total Payment</h4>
                 <div class="text-xl font-bold text-white">
@@ -117,11 +125,11 @@
             </button>
         </div>
         <div v-else class="py-4 space-y-4 text-center">
-            <div class="p-6 space-y-4 rounded-lg animate-pulse bg-primary/5">
-                <div class="w-3/4 h-5 mx-auto rounded bg-primary/10"></div>
-                <div class="w-1/2 h-8 mx-auto rounded bg-primary/10"></div>
+            <div class="p-6 space-y-4 rounded-lg animate-pulse bg-primary/10">
+                <div class="w-3/4 h-5 mx-auto rounded bg-primary/30"></div>
+                <div class="w-1/2 h-8 mx-auto rounded bg-primary/30"></div>
             </div>
-            <p class="text-gray-500">Please select a service to continue</p>
+            <p class="text-secondary">Please select a service to continue</p>
         </div>
     </div>
 </template>
@@ -147,7 +155,8 @@ defineEmits(["checkout"]);
 
 const basePrice = computed(() => {
     if (!props.selectedService) return 0;
-    return props.selectedService.harga_jual * props.quantity;
+    const value = props.selectedService.harga_jual * props.quantity;
+    return Math.ceil(value);
 });
 
 // Calculate voucher discount
@@ -180,18 +189,26 @@ const voucherDiscount = computed(() => {
 const paymentFee = computed(() => {
     if (!props.paymentInfo || !props.selectedService) return 0;
 
-    const price = basePrice.value - voucherDiscount.value;
+    const price = basePrice.value;
 
+    let fee = 0;
     if (props.paymentInfo.feeType === "fixed") {
-        return props.paymentInfo.fee;
+        fee = props.paymentInfo.fee_fixed;
+    } else if (props.paymentInfo.feeType === "percent") {
+        fee = (price * props.paymentInfo.fee_percent) / 100;
     } else {
-        return (price * props.paymentInfo.fee) / 100;
+        fee =
+            (price * props.paymentInfo.fee_percent) / 100 +
+            props.paymentInfo.fee_fixed;
     }
+    return fee;
 });
 
 const totalPrice = computed(() => {
     if (!props.selectedService) return 0;
-    return basePrice.value + paymentFee.value - voucherDiscount.value;
+
+    const total = basePrice.value + paymentFee.value - voucherDiscount.value;
+    return total;
 });
 
 const canSubmit = computed(() => {
@@ -210,7 +227,8 @@ const submitMessage = computed(() => {
 
 const formattedPrice = (price) => {
     if (price === 0 || price === undefined || price === null) return "Rp 0";
-    return `Rp ${price.toLocaleString()}`;
+    const ceilPrice = Math.ceil(price);
+    return `Rp ${ceilPrice.toLocaleString()}`;
 };
 </script>
 

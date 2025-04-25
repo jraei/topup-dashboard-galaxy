@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Gonon\Digiflazz\Digiflazz;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\DigiflazzController;
 
 class ProdukController extends Controller
 {
@@ -22,6 +21,7 @@ class ProdukController extends Controller
         $search = $request->input('search');
         $sort = $request->input('sort', 'id');
         $direction = $request->input('direction', 'asc');
+        $provider_filter = $request->input('provider_id');
 
         // Validate the sort field to prevent SQL injection
         $allowedSortFields = ['nama', 'brand', 'kategori_id', 'provider_id', 'validasi_id', 'status'];
@@ -31,6 +31,11 @@ class ProdukController extends Controller
 
         // Start query
         $query = Produk::query();
+
+        // Apply provider filter if provided
+        if ($provider_filter) {
+            $query->where('provider_id', $provider_filter);
+        }
 
         // Apply search if provided
         if ($search) {
@@ -62,7 +67,8 @@ class ProdukController extends Controller
             'filters' => [
                 'search' => $search,
                 'sort' => $sort,
-                'direction' => $direction
+                'direction' => $direction,
+                'provider_id' => $provider_filter
             ]
         ]);
     }
@@ -75,7 +81,7 @@ class ProdukController extends Controller
     public function store(Request $request)
     {
         $product = $request->validate([
-            'nama' => 'required|min:5',
+            'nama' => 'required|min:1',
             'developer' => 'required',
             'brand' => 'required',
             'kategori_id' => 'required|numeric',
@@ -126,7 +132,7 @@ class ProdukController extends Controller
         $produk = Produk::findOrFail($id);
         // update data berdasarkan id
         $rules = [
-            'nama' => 'required|min:5',
+            'nama' => 'required|min:1',
             'developer' => 'required',
             'brand' => 'required',
             'kategori_id' => 'required|numeric',
@@ -208,14 +214,16 @@ class ProdukController extends Controller
     }
 
 
-    public function getProduk()
+    public function getProductsByProvider(Provider $provider)
     {
-        try {
+        // Get Products from API
+        if ($provider->provider_name == 'digiflazz') {
             $digiflazz = new DigiflazzController();
-            $digiflazz->getDigiflazzProduk();
-            return back()->with('success', 'Berhasil menambahkan produk!');
-        } catch (Exception $e) {
-            return back()->withErrors($e->getMessage());
+            $affectedArray = $digiflazz->getDigiflazzProduk();
+
+            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['game'] . ' games & ' . $affectedArray['pulsa'] . ' pulsa have been added or updated!']);
+        } else {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
         }
     }
 }

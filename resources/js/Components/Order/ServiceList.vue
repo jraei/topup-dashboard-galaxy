@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed } from "vue";
 import CosmicCard from "./CosmicCard.vue";
@@ -72,26 +71,6 @@ const flashsaleServiceGroups = computed(() => {
 <template>
     <CosmicCard title="Select Nominal" :stepNumber="2">
         <div class="space-y-6">
-            <!-- Regular Services -->
-            <div v-if="regularServices.length > 0" class="space-y-3">
-                <div class="flex items-center space-x-2">
-                    <ShoppingBag class="w-5 h-5 text-secondary" />
-                    <h4 class="text-white">Best Seller</h4>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                    <ServiceCard
-                        v-for="service in regularServices"
-                        :key="service.id"
-                        :service="service"
-                        :isSelected="
-                            selectedService && selectedService.id === service.id
-                        "
-                        @select="selectService"
-                    />
-                </div>
-            </div>
-
             <!-- Flashsale Services -->
             <div
                 v-for="group in flashsaleServiceGroups"
@@ -114,6 +93,26 @@ const flashsaleServiceGroups = computed(() => {
                             selectedService && selectedService.id === service.id
                         "
                         :isFlashsale="true"
+                        @select="selectService"
+                    />
+                </div>
+            </div>
+
+            <!-- Regular Services -->
+            <div v-if="regularServices.length > 0" class="space-y-3">
+                <div class="flex items-center space-x-2">
+                    <ShoppingBag class="w-5 h-5 text-secondary" />
+                    <h4 class="text-white">Best Seller</h4>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+                    <ServiceCard
+                        v-for="service in regularServices"
+                        :key="service.id"
+                        :service="service"
+                        :isSelected="
+                            selectedService && selectedService.id === service.id
+                        "
                         @select="selectService"
                     />
                 </div>

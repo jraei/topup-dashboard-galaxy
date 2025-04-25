@@ -20,7 +20,14 @@ const props = defineProps({
 const emit = defineEmits(["select"]);
 
 const selectService = () => {
-    emit("select", props.service);
+    const service = { ...props.service }; // clone supaya tidak ubah aslinya
+
+    // Jika sedang flashsale dan ada diskon, gunakan harga flashsale
+    if (hasDiscount.value) {
+        service.harga_jual = servicePrice.value; // ganti harga_jual
+    }
+
+    emit("select", service); // kirim ke parent
 };
 
 const hasDiscount = computed(() => {
@@ -43,9 +50,13 @@ const discountPercentage = computed(() => {
 
 const servicePrice = computed(() => {
     if (props.isFlashsale && props.service.flashSaleItem) {
-        return props.service.flashSaleItem.harga_flashsale || 0;
+        return Math.ceil(props.service.flashSaleItem.harga_flashsale || 0);
     }
-    return props.service.harga_jual;
+    return Math.ceil(props.service.harga_jual);
+});
+
+const hargaJual = computed(() => {
+    return Math.ceil(props.service.harga_jual).toLocaleString();
 });
 
 // Decide if we have a thumbnail to display
@@ -112,7 +123,7 @@ const hasThumbnail = computed(() => {
                                     : 'text-primary-text/80 text-xs md:text-sm mt-1',
                             ]"
                         >
-                            Rp {{ service.harga_jual.toLocaleString() }}
+                            Rp {{ hargaJual }}
                         </span>
                     </div>
 

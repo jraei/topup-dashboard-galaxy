@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Exception;
 use App\Models\Produk;
 use App\Models\Layanan;
+use App\Models\Kategori;
 use App\Models\Provider;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class DigiflazzController extends Controller
     {
         $res = PriceList::getPrePaid();
 
+        $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
+        $affectedRows = 0;
 
         foreach (Produk::get() as $produk) {
             foreach ($res as $data) {
@@ -31,125 +34,121 @@ class DigiflazzController extends Controller
                 $produk = collect($produk);
                 if (Str::upper($data['brand']) == Str::upper($produk['brand'])) {
 
-                    $layananExist = Layanan::where('kode_produk', $data['buyer_sku_code'])->first();
+                    $layananExist = Layanan::where('kode_layanan', $data['buyer_sku_code'])->first();
                     $params = [
                         "produk_id" => $produk['id'],
-                        "provider" =>  "digiflazz",
-                        "layanan" => $data['product_name'],
-                        "kode_produk" => $data['buyer_sku_code'],
+                        "provider_id" =>  $digiflazz->id,
+                        "kode_layanan" => $data['buyer_sku_code'],
+                        "nama_layanan" => $data['product_name'],
                         "harga_beli" => $data['price'],
-                        "status" => ($data['seller_product_status'] === true ? "available" : "unavailable")
+                        "status" => ($data['seller_product_status'] === true ? "active" : "inactive")
                     ];
-
-                    // set harga
-                    if ($data['category'] == "Games") {
-                        $price = [
-                            "harga_guest" => round($data['price'] + ($data['price'] * env('PROFIT_GAMES_GUEST') / 100)),
-                            "harga_basic" => round($data['price'] + ($data['price'] * env('PROFIT_GAMES_BASIC') / 100)),
-                            "harga_premium" => round($data['price'] + ($data['price'] * env('PROFIT_GAMES_PREMIUM') / 100)),
-                            "harga_h2h" => round($data['price'] + ($data['price'] * env('PROFIT_GAMES_H2H') / 100)),
-                        ];
-                    } else if ($data['category'] == "Pulsa") {
-                        $price = [
-                            "harga_guest" => round($data['price'] + env('PROFIT_PULSA_GUEST')),
-                            "harga_basic" => round($data['price'] + env('PROFIT_PULSA_BASIC')),
-                            "harga_premium" => round($data['price'] + env('PROFIT_PULSA_PREMIUM')),
-                            "harga_h2h" => round($data['price'] + env('PROFIT_PULSA_H2H')),
-                        ];
-                    } else if ($data['category'] == "E-Money") {
-                        $price = [
-                            "harga_guest" => round($data['price'] + env('PROFIT_EMONEY_GUEST')),
-                            "harga_basic" => round($data['price'] + env('PROFIT_EMONEY_BASIC')),
-                            "harga_premium" => round($data['price'] + env('PROFIT_EMONEY_PREMIUM')),
-                            "harga_h2h" => round($data['price'] + env('PROFIT_EMONEY_H2H')),
-                        ];
-                    }
-
-                    // Merge params
-                    $mergedParams = array_merge($params, $price);
-
 
                     // cek layanan sudah ada apa belum
                     if (!$layananExist) {
                         // masukkan data ke dalam db
-                        Layanan::create($mergedParams);
+                        Layanan::create($params);
+                        $affectedRows++; // Increment saat insert
+
                     } else {
                         // jika ada layanan sebelumnya, update harganya
                         $layananExist->update([
-                            'harga' => $data['price'],
-                            'status' => ($data['seller_product_status'] === true ? "available" : "unavailable")
+                            'harga_beli' => $data['price'],
+                            'status' => ($data['seller_product_status'] === true ? "active" : "inactive")
                         ]);
+                        $affectedRows++; // Increment saat update
+
                     }
                 }
             }
         }
+        return $affectedRows; // Kembalikan jumlah row yang terpengaruh
     }
 
     public function getDigiflazzProduk()
     {
+        $provider = Provider::where('provider_name', 'digiflazz')->first();
 
-        $res = \Gonon\Digiflazz\PriceList::getPrePaid(); // Prepaid product
+        if (!$provider) {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+        }
+
+        $res = \Gonon\Digiflazz\PriceList::getPrePaid(); // Produk prabayar dari API
 
         $arrGame = [];
         $arrPulsa = [];
 
-        foreach ($res as $game) {
-            $game = collect($game);
-            if ($game['category'] == "Games") {
-                array_push($arrGame, $game['brand']);
-            } else if ($game['category'] == "Pulsa") {
-                array_push($arrPulsa, $game['brand']);
+        foreach ($res as $item) {
+            if ($item->category === 'Games') {
+                $arrGame[] = $item->brand;
+            } elseif ($item->category === 'Pulsa') {
+                $arrPulsa[] = $item->brand;
             }
         }
 
+        // Developer mapping
+        $developerList = [
+            "Mobile Legends" => "Moonton",
+            "Mobile Legends: Bang Bang" => "Moonton",
+            "Free Fire" => "Garena",
+            "PUBG Mobile" => "Tencent",
+            "PUBG" => "Tencent",
+            "Call of Duty Mobile" => "Activision",
+            "Call of Duty" => "Activision",
+            "Fortnite" => "Epic Games",
+            "Valorant" => "Riot Games",
+            "Clash of Clans" => "Supercell",
+            "Clash Royale" => "Supercell",
+            // Tambahkan sesuai kebutuhan
+        ];
 
+        // Ambil kategori id dari tabel kategoris
+        $gameKategori = Kategori::firstOrCreate(['kategori_name' => 'Top Up']);
+        $pulsaKategori = Kategori::firstOrCreate(['kategori_name' => 'Pulsa']);
 
-        foreach (array_unique($arrGame) as $game) {
+        // Counter
+        $affected = [
+            'game' => 0,
+            'pulsa' => 0,
+        ];
 
-            try {
-                $isExist = Produk::where('brand', $game)->first();
+        // Tambahkan produk game
+        foreach (array_unique($arrGame) as $gameBrand) {
+            // $game = Produk::where('brand', $gameBrand)->first();
+            $developer = $developerList[$gameBrand] ?? 'Unknown';
 
-                if (!$isExist) {
-                    Produk::create([
-                        "nama" => $game,
-                        "brand" => $game,
-                        "kelompok" => "1",
-                        "tipe" => "game",
-                        "slug" => Str::slug($game, '-'),
-                        "thumbnail" => "null"
-                    ]);
-                } else {
-                    $isExist->update([
-                        "nama" => $game,
-                        "brand" => $game,
-                    ]);
-                }
-            } catch (Exception $e) {
-                throw new Exception("Gagal menambahkan produk GAME digiflazz! Pesan: " . $e->getMessage());
-            }
+            Produk::updateOrCreate(
+                ['brand' => $gameBrand],
+                [
+                    "nama" => $gameBrand,
+                    "developer" => $developer,
+                    "kategori_id" => $gameKategori->id,
+                    "brand" => $gameBrand,
+                    "provider_id" => $provider->id,
+                    "slug" => Str::slug($gameBrand, '-'),
+                    "status" => 'active',
+                ]
+            );
+            $affected['game']++;
         }
 
-        foreach (array_unique($arrPulsa) as $pulsa) {
-            try {
-                $isExist = Produk::where('brand', $pulsa)->first();
-                if (!$isExist) {
-                    Produk::create([
-                        "nama" => $pulsa,
-                        "brand" => $pulsa,
-                        "kelompok" => "1",
-                        "tipe" => "pulsa",
-                        "slug" => Str::slug($pulsa, '-'),
-                        "thumbnail" => "null",
-                    ]);
-                } else {
-                    $isExist->update([
-                        "nama" => $pulsa,
-                        "brand" => $pulsa,
-                    ]);
-                }
-            } catch (\Exception $e) {
-                throw new Exception("Gagal menambahkan produk PULSA digiflazz! Pesan: " . $e->getMessage());
-            }
+        // Tambahkan produk pulsa
+        foreach (array_unique($arrPulsa) as $pulsaBrand) {
+            Produk::updateOrCreate(
+                ['brand' => $pulsaBrand],
+                [
+                    "nama" => $pulsaBrand,
+                    "developer" => $pulsaBrand,
+                    "kategori_id" => $pulsaKategori->id,
+                    "brand" => $pulsaBrand,
+                    "provider_id" => $provider->id,
+                    "slug" => Str::slug($pulsaBrand, '-'),
+                    "status" => 'active',
+                ]
+            );
+            $affected['pulsa']++;
         }
+
+        return $affected;
     }
 }

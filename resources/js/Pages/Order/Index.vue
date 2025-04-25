@@ -37,7 +37,7 @@ const sidebarRef = ref(null);
 const isSidebarSticky = ref(false);
 const footerVisible = ref(false);
 const navbarHeight = ref(64);
-const paymentSectionRef = ref(null);
+const orderQuantityRef = ref(null);
 const contactSectionRef = ref(null);
 const paymentInfo = ref(null);
 const selectedPayment = ref(null);
@@ -65,15 +65,15 @@ const handleServiceSelection = (service) => {
 
 // Scroll to payment section function
 const scrollToPaymentSection = () => {
-    if (!paymentSectionRef.value) return;
+    if (!orderQuantityRef.value) return;
 
-    const isInView = isElementInViewport(paymentSectionRef.value);
+    const isInView = isElementInViewport(orderQuantityRef.value);
     if (isInView) return; // Don't scroll if already in view
 
     // Smooth scroll to payment section with offset
-    const offset = 32; // 32px above the component
+    const offset = 150; // 32px above the component
     const top =
-        paymentSectionRef.value.getBoundingClientRect().top +
+        orderQuantityRef.value.getBoundingClientRect().top +
         window.pageYOffset -
         offset;
 
@@ -101,7 +101,7 @@ const isElementInViewport = (el) => {
 
 // Highlight payment section with pulsing glow
 const highlightPaymentSection = () => {
-    if (!paymentSectionRef.value) return;
+    if (!orderQuantityRef.value) return;
 
     paymentSectionHighlight.value = true;
 
@@ -154,102 +154,8 @@ const handleCheckout = () => {
     paymentInfo.value = null;
 };
 
-// Optimized sticky sidebar using IntersectionObserver
-const setupStickyObserver = () => {
-    if (!sidebarRef.value) return;
-
-    // Footer observer
-    const footerElement = document.querySelector("footer");
-    if (footerElement) {
-        const footerObserver = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    footerVisible.value = entry.isIntersecting;
-                    updateStickyState();
-                });
-            },
-            { threshold: 0.1 }
-        );
-        footerObserver.observe(footerElement);
-    }
-
-    // Contact section observer (to unstick when scrolling past)
-    if (contactSectionRef.value) {
-        const contactObserver = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    // When contact form is in view and we've scrolled past its top
-                    if (
-                        entry.isIntersecting &&
-                        entry.boundingClientRect.top <= navbarHeight.value
-                    ) {
-                        isSidebarSticky.value = false;
-                    }
-                });
-            },
-            {
-                threshold: [0, 0.25, 0.5, 0.75, 1],
-                rootMargin: `-${navbarHeight.value}px 0px 0px 0px`,
-            }
-        );
-        contactObserver.observe(contactSectionRef.value);
-    }
-
-    updateStickyState();
-};
-
-const isLargeScreen = () => {
-    return window.innerWidth >= 1024;
-};
-
-const updateStickyState = () => {
-    if (!sidebarRef.value || !isLargeScreen()) {
-        isSidebarSticky.value = false;
-        return;
-    }
-
-    const sidebarRect = sidebarRef.value.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-
-    if (
-        sidebarRect.top <= navbarHeight.value + 10 &&
-        !footerVisible.value &&
-        sidebarRect.bottom <= viewportHeight
-    ) {
-        if (!isSidebarSticky.value) {
-            isSidebarSticky.value = true;
-        }
-    } else {
-        if (isSidebarSticky.value) {
-            isSidebarSticky.value = false;
-        }
-    }
-};
-
-const debounce = (fn, delay) => {
-    let timer = null;
-    return function (...args) {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-            fn(...args);
-        }, delay);
-    };
-};
-
-const debouncedScroll = debounce(updateStickyState, 50); // Reduced from 100ms to 50ms for better responsiveness
-
 onMounted(() => {
-    window.addEventListener("scroll", debouncedScroll, { passive: true });
-    window.addEventListener("resize", debouncedScroll, { passive: true });
-    nextTick(() => {
-        setupStickyObserver();
-    });
     initPriceAnimations();
-});
-
-onUnmounted(() => {
-    window.removeEventListener("scroll", debouncedScroll);
-    window.removeEventListener("resize", debouncedScroll);
 });
 
 const initPriceAnimations = () => {
@@ -338,9 +244,7 @@ const initPriceAnimations = () => {
             <ProductInfoPanel :produk="produk" :min-price="0" />
         </section>
 
-        <section
-            class="relative px-4 py-8 overflow-hidden md:pt-20 bg-content_background"
-        >
+        <section class="relative px-4 py-8 md:pt-20 bg-content_background">
             <div class="absolute inset-0 z-0">
                 <CosmicParticles />
             </div>
@@ -358,31 +262,35 @@ const initPriceAnimations = () => {
                         :flashsale-events="flashsaleEvents"
                         @select-service="handleServiceSelection"
                     />
-                    <QuantitySelector
-                        :disabled="!selectedService"
-                        :max-quantity="1000"
-                        :initial-quantity="quantity"
-                        @update:quantity="handleQuantityUpdate"
-                    />
-                    <!-- Payment section with ref for scrolling and highlighting -->
                     <div
-                        ref="paymentSectionRef"
+                        ref="orderQuantityRef"
                         :class="{
                             'cosmic-highlight-pulse': paymentSectionHighlight,
                         }"
                     >
-                        <PaymentSelector
-                            :static-methods="staticMethods"
-                            :dynamic-methods="dynamicMethods"
-                            :selected-service="selectedService"
-                            :selected-payment="selectedPayment"
-                            :base-price="
-                                selectedService ? selectedService.harga_jual : 0
-                            "
-                            @update:selectedPayment="handlePaymentChange"
-                            @update:fee="handleFeeChange"
+                        <QuantitySelector
+                            :disabled="!selectedService"
+                            :max-quantity="1000"
+                            :initial-quantity="quantity"
+                            @update:quantity="handleQuantityUpdate"
                         />
                     </div>
+                    <!-- Payment section with ref for scrolling and highlighting -->
+
+                    <PaymentSelector
+                        :static-methods="staticMethods"
+                        :dynamic-methods="dynamicMethods"
+                        :selected-service="selectedService"
+                        :selected-payment="selectedPayment"
+                        :base-price="
+                            selectedService ? selectedService.harga_jual : 0
+                        "
+                        :quantity="quantity"
+                        :voucher="selectedVoucher"
+                        @update:selectedPayment="handlePaymentChange"
+                        @update:fee="handleFeeChange"
+                    />
+
                     <VoucherSection
                         :active-vouchers="activeVouchers"
                         :total-amount="totalAmount"
@@ -402,13 +310,7 @@ const initPriceAnimations = () => {
                 <div class="space-y-4 lg:col-span-2">
                     <div
                         ref="sidebarRef"
-                        :class="[
-                            'space-y-4 transition-all duration-300',
-                            {
-                                'lg:sticky lg:top-[74px] cosmic-sticky':
-                                    isSidebarSticky,
-                            },
-                        ]"
+                        class="sticky space-y-4 transition-all duration-300 top-36"
                     >
                         <HelpContact :wa-number="waNumber" />
                         <CheckoutSummary

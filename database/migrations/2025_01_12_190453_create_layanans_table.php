@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('kode_layanan')->unique();
             $table->string('nama_layanan');
             $table->string('gambar')->nullable();
-            $table->float('harga_beli')->default(0);
+            $table->decimal('harga_beli', 15, 2)->default(0);
             $table->bigInteger('harga_beli_idr')->default(0);
             $table->string('catatan')->nullable();
             $table->string('status')->default('active');

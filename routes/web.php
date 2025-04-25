@@ -91,10 +91,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Placeholder routes for all other admin pages
     Route::resource('/categories', KategoriController::class);
     Route::resource('/products', ProdukController::class);
+    Route::post('/services/getService/{provider}', [ProdukController::class, 'getProductsByProvider'])->name('products.getProductsByProvider');
 
     // Service Management
     Route::resource('/services', LayananController::class);
-    Route::get('/services/getService', [LayananController::class, 'getService'])->name('services.getService');
+    Route::post('/services/getServices/{provider}', [LayananController::class, 'getServicesByProvider'])->name('services.getServicesByProvider');
     Route::delete('/services/deleteLayanan', [LayananController::class, 'deleteLayanan'])->name('services.deleteLayanan');
 
     // Provider Management
@@ -115,7 +116,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/payment-providers', [PaymentProviderController::class, 'index'])->name('admin.payment-providers');
     Route::patch('/payment-providers/{id}', [PaymentProviderController::class, 'update'])->name('payment-providers.update');
-    Route::get('/payment-providers/{id}/methods', [PayMethodController::class, 'getMethod'])->name('payment-providers.get-methods');
+    Route::post('/payment-providers/getMethods/{id}', [PayMethodController::class, 'getMethodsByProvider'])->name('payment-providers.get-methods-by-provider');
 
     // Flash Sale Events
     Route::resource('flashsale-events', FlashsaleEventController::class);

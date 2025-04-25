@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use App\Models\PaymentProvider;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\TripayController;
 
 class PayMethodController extends Controller
 {
@@ -162,10 +161,15 @@ class PayMethodController extends Controller
         return to_route('pay-methods.index')->with('status', ['type' => 'success', 'action' => 'Success', 'text' => 'Payment Method has been deleted!']);
     }
 
-    public function getMethod()
+    public function getMethodsByProvider($id)
     {
-        $tripay = new TripayController();
-        $tripay->getTripayMethod();
-        return back()->with('success', 'Berhasil menambahkan payment method!');
+        $payProvider = PaymentProvider::find($id);
+        if ($payProvider->provider_name == 'Tripay') {
+            $tripay = new TripayController();
+            $affectedRows = $tripay->getTripayMethod();
+            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedRows . ' tripay methods has been added or updated.']);
+        } else {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+        }
     }
 }
