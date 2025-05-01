@@ -44,10 +44,13 @@ Route::get('/', [IndexController::class, 'index'])->name('index');
 
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
 
-// Add a route for voucher validation (we'll implement this later)
+// Add a route for voucher validation
 Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher'])->name('vouchers.validate');
 
-
+// Two-phase order processing routes
+Route::post('/order/check-username', [OrderController::class, 'checkUsername'])->name('order.check-username');
+Route::post('/order/validate', [OrderController::class, 'validateOrder'])->name('order.validate');
+Route::post('/order/process', [OrderController::class, 'processOrder'])->name('order.process');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
