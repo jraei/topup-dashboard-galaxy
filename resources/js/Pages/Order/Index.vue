@@ -1,5 +1,6 @@
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 import ProductBanner from "@/Components/Order/ProductBanner.vue";
@@ -14,7 +15,10 @@ import ContactForm from "@/Components/Order/ContactForm.vue";
 import VoucherSection from "@/Components/Order/VoucherSection.vue";
 import ProductDescription from "@/Components/Order/ProductDescription.vue";
 import FaqSection from "@/Components/Order/FaqSection.vue";
+import OrderConfirmationModal from "@/Components/Order/OrderConfirmationModal.vue";
 import { useToast } from "@/Composables/useToast";
+import { usePersistedAccount } from "@/Composables/usePersistedAccount";
+import axios from "axios";
 
 const props = defineProps({
     produk: Object,
@@ -30,21 +34,41 @@ const props = defineProps({
     faqs: Array,
 });
 
+// Centralized state management
 const selectedService = ref(null);
 const quantity = ref(1);
-const { toast } = useToast();
-const sidebarRef = ref(null);
-const isSidebarSticky = ref(false);
-const footerVisible = ref(false);
-const navbarHeight = ref(64);
-const orderQuantityRef = ref(null);
-const contactSectionRef = ref(null);
 const paymentInfo = ref(null);
 const selectedPayment = ref(null);
-const contactData = ref({ email: "", phone: "", country: "ID" });
+const contactData = ref({ email: "", phone: "", country: "ID", countryCode: "62" });
 const selectedVoucher = ref(null);
-const paymentSectionHighlight = ref(false);
+const formData = ref({});
+const { toast } = useToast();
 
+// For OrderConfirmationModal
+const showConfirmationModal = ref(false);
+const confirmationData = ref(null);
+const isProcessingOrder = ref(false);
+
+// UI related refs
+const sidebarRef = ref(null);
+const orderQuantityRef = ref(null);
+const contactSectionRef = ref(null);
+const paymentSectionHighlight = ref(false);
+const hasSavedData = ref(false);
+
+const { saveAccountData, getAccountData } = usePersistedAccount();
+
+// When form data is updated from UserDataCard
+const handleFormDataUpdate = (data) => {
+    formData.value = { ...data };
+};
+
+// When saved data is loaded in UserDataCard
+const handleSavedDataLoaded = (loaded) => {
+    hasSavedData.value = loaded;
+};
+
+// Total amount calculation for voucher validation
 const totalAmount = computed(() => {
     if (!selectedService.value) return 0;
 
@@ -131,7 +155,9 @@ const handleVoucherUpdate = (voucher) => {
     selectedVoucher.value = voucher;
 };
 
-const handleCheckout = () => {
+// Process order button from CheckoutSummary
+const handleProcessOrder = () => {
+    // Validation checks
     if (!selectedService.value) {
         toast.error("Please select a service first");
         return;
@@ -144,14 +170,177 @@ const handleCheckout = () => {
         toast.error("Please enter a valid WhatsApp number");
         return;
     }
-    toast.success(
-        `Processing ${quantity.value} x ${
-            selectedService.value.nama_layanan
-        } with ${paymentInfo.value?.methodLabel ?? "payment"}`
-    );
-    contactData.value = { email: "", phone: "", country: "ID" };
+    if (!formData.value || Object.keys(formData.value).length === 0) {
+        toast.error("Please enter account information");
+        return;
+    }
+
+    // Prepare order data for confirmation
+    const paymentMethodName = paymentInfo.value?.methodLabel || "Unknown payment method";
+    const basePrice = selectedService.value.flashSaleItem?.is_active 
+        ? selectedService.value.flashSaleItem.harga_flashsale 
+        : selectedService.value.harga_jual;
+    
+    const voucherDiscount = calculateVoucherDiscount();
+    const paymentFee = calculatePaymentFee(basePrice * quantity.value - voucherDiscount);
+    const finalPrice = (basePrice * quantity.value) - voucherDiscount + paymentFee;
+
+    // Save account data if we have form data
+    if (props.produk && formData.value) {
+        const slug = slugify(props.produk.nama_produk);
+        saveAccountData(slug, formData.value);
+    }
+
+    confirmationData.value = {
+        serviceName: selectedService.value.nama_layanan,
+        serviceId: selectedService.value.id,
+        quantity: quantity.value,
+        basePrice: basePrice,
+        voucherDiscount: voucherDiscount,
+        paymentMethodName: paymentMethodName,
+        paymentMethod: selectedPayment.value,
+        paymentFee: paymentFee,
+        finalPrice: finalPrice,
+        contactEmail: contactData.value.email,
+        contactPhone: contactData.value.phone,
+        countryCode: contactData.value.countryCode,
+        accountData: formData.value,
+        voucher: selectedVoucher.value?.code,
+        checkUsername: props.produk.validasi_id !== 'tidak',
+        validationId: props.produk.validasi_id
+    };
+
+    showConfirmationModal.value = true;
+};
+
+// Utility function to slugify text
+const slugify = (text) => {
+    return text
+        .toString()
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .trim();
+};
+
+// Calculate voucher discount
+const calculateVoucherDiscount = () => {
+    if (!selectedVoucher.value || !selectedService.value) return 0;
+
+    const basePrice = selectedService.value.flashSaleItem?.is_active 
+        ? selectedService.value.flashSaleItem.harga_flashsale 
+        : selectedService.value.harga_jual;
+    
+    const totalBase = basePrice * quantity.value;
+    let discount = 0;
+
+    if (selectedVoucher.value.discount_type === 'fixed') {
+        discount = selectedVoucher.value.discount_value;
+    } else {
+        discount = (totalBase * selectedVoucher.value.discount_value) / 100;
+
+        if (selectedVoucher.value.max_discount && discount > selectedVoucher.value.max_discount) {
+            discount = selectedVoucher.value.max_discount;
+        }
+    }
+
+    return Math.min(discount, totalBase);
+};
+
+// Calculate payment fee
+const calculatePaymentFee = (amount) => {
+    if (!paymentInfo.value) return 0;
+
+    const {
+        fee_fixed = 0,
+        fee_percent = 0,
+        feeType = "none",
+    } = paymentInfo.value;
+
+    let fee = 0;
+
+    if (feeType === "fixed") {
+        fee = fee_fixed;
+    } else if (feeType === "percent") {
+        fee = amount * (fee_percent / 100);
+    } else if (feeType === "mixed") {
+        fee = fee_fixed + amount * (fee_percent / 100);
+    }
+
+    return Math.ceil(fee);
+};
+
+// Handle confirmation from modal
+const handleOrderConfirmed = async (confirmedData) => {
+    if (isProcessingOrder.value) return;
+    isProcessingOrder.value = true;
+
+    try {
+        // Phase 1: Order confirmation
+        const confirmResponse = await axios.post('/api/order/confirm', {
+            layanan_id: confirmedData.serviceId,
+            input_id: confirmedData.accountData.user_id,
+            input_zone: confirmedData.accountData.zone_id || confirmedData.accountData.server_id,
+            quantity: confirmedData.quantity,
+            payment_method: confirmedData.paymentMethod,
+            email: confirmedData.contactEmail,
+            phone: confirmedData.contactPhone,
+            country_code: confirmedData.countryCode,
+            voucher_code: confirmedData.voucher,
+        });
+
+        if (confirmResponse.data.status === 'success') {
+            // Phase 2: Process order
+            const processResponse = await axios.post('/api/order/process', {
+                layanan_id: confirmedData.serviceId,
+                input_id: confirmedData.accountData.user_id,
+                input_zone: confirmedData.accountData.zone_id || confirmedData.accountData.server_id,
+                nickname: confirmedData.username || '',
+                quantity: confirmedData.quantity,
+                payment_method: confirmedData.paymentMethod,
+                email: confirmedData.contactEmail,
+                phone: confirmedData.contactPhone,
+                country_code: confirmedData.countryCode,
+                voucher_code: confirmedData.voucher,
+            });
+
+            if (processResponse.data.status === 'success') {
+                toast.success('Order placed successfully!');
+                
+                // Handle redirect if needed
+                if (processResponse.data.redirect && processResponse.data.payment_url) {
+                    window.location.href = processResponse.data.payment_url;
+                    return;
+                }
+                
+                // Reset form after successful submission
+                resetForm();
+            } else {
+                toast.error(processResponse.data.message || 'Error processing your order');
+            }
+        } else {
+            toast.error(confirmResponse.data.message || 'Error confirming your order');
+        }
+    } catch (error) {
+        console.error('Order processing error:', error);
+        toast.error(error.response?.data?.message || 'Error processing your order');
+    } finally {
+        isProcessingOrder.value = false;
+        showConfirmationModal.value = false;
+    }
+};
+
+// Reset form after successful order
+const resetForm = () => {
+    selectedService.value = null;
+    quantity.value = 1;
     selectedPayment.value = null;
     paymentInfo.value = null;
+    selectedVoucher.value = null;
+    contactData.value = { email: "", phone: "", country: "ID", countryCode: "62" };
+    formData.value = {};
+    confirmationData.value = null;
 };
 
 onMounted(() => {
@@ -255,6 +444,8 @@ const initPriceAnimations = () => {
                     <UserDataCard
                         :input-fields="inputFields"
                         :produk="produk"
+                        @update:formData="handleFormDataUpdate"
+                        @saved-data-loaded="handleSavedDataLoaded"
                     />
                     <ServiceList
                         :services="layanans"
@@ -322,7 +513,8 @@ const initPriceAnimations = () => {
                             :payment-info="paymentInfo"
                             :contact="contactData"
                             :voucher="selectedVoucher"
-                            @checkout="handleCheckout"
+                            :input-form-data="formData"
+                            @process-order="handleProcessOrder"
                         />
                     </div>
                 </div>
@@ -335,6 +527,14 @@ const initPriceAnimations = () => {
                 <FaqSection :faqs="faqs" />
             </div>
         </section>
+
+        <!-- Order Confirmation Modal -->
+        <OrderConfirmationModal
+            :show-modal="showConfirmationModal"
+            :order-data="confirmationData"
+            @close="showConfirmationModal = false"
+            @confirmed="handleOrderConfirmed"
+        />
     </GuestLayout>
 </template>
 

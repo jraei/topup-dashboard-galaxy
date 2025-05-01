@@ -1,3 +1,4 @@
+
 <template>
     <CosmicCard :title="'Order Summary'">
         <div class="space-y-4">
@@ -114,9 +115,9 @@
 
                 <div class="flex items-center justify-between">
                     <span class="text-xs text-gray-400">WhatsApp:</span>
-                    <span class="text-sm font-semibold text-white">{{
-                        contact.phone
-                    }}</span>
+                    <span class="text-sm font-semibold text-white">
+                        +{{ contact.countryCode || '62' }} {{ contact.phone }}
+                    </span>
                 </div>
 
                 <div
@@ -161,14 +162,6 @@
                     class="absolute inset-0 transition-transform duration-700 bg-gradient-to-r from-primary/0 via-secondary/20 to-primary/0 cosmic-shine"
                 ></div>
             </button>
-
-            <!-- Order Confirmation Modal -->
-            <OrderConfirmationModal
-                :show-modal="showConfirmationModal"
-                :order-data="orderData"
-                @close="showConfirmationModal = false"
-                @confirmed="handleOrderConfirmed"
-            />
         </div>
     </CosmicCard>
 </template>
@@ -176,7 +169,6 @@
 <script setup>
 import { ref, computed } from "vue";
 import CosmicCard from "@/Components/Order/CosmicCard.vue";
-import OrderConfirmationModal from "@/Components/Order/OrderConfirmationModal.vue";
 import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
@@ -191,13 +183,11 @@ const props = defineProps({
     paymentInfo: Object,
     contact: Object,
     voucher: Object,
+    inputFormData: Object,
 });
 
-const emit = defineEmits(["checkout"]);
+const emit = defineEmits(["process-order"]);
 const { toast } = useToast();
-
-const showConfirmationModal = ref(false);
-const orderData = ref(null);
 
 // Computed values
 const basePrice = computed(() => {
@@ -275,7 +265,9 @@ const isOrderReady = computed(() => {
         props.selectedPayment &&
         props.contact &&
         props.contact.phone &&
-        props.contact.phone.length >= 7
+        props.contact.phone.length >= 7 &&
+        props.inputFormData && 
+        Object.keys(props.inputFormData).length > 0
     );
 });
 
@@ -294,33 +286,14 @@ const handleOrderProcess = () => {
             toast.error("Please select a payment method");
         } else if (!props.contact?.phone || props.contact.phone.length < 7) {
             toast.error("Please enter a valid WhatsApp number");
+        } else if (!props.inputFormData || Object.keys(props.inputFormData).length === 0) {
+            toast.error("Please fill in all required account information");
         }
         return;
     }
 
-    // Prepare order data for confirmation
-    orderData.value = {
-        layanan_id: props.selectedService.id,
-        input_id: document.getElementById("field_uid")?.value || "",
-        input_zone: document.getElementById("field_zone")?.value || "",
-        quantity: props.quantity,
-        payment_method: props.selectedPayment,
-        email: props.contact.email,
-        phone: props.contact.phone,
-        voucher_code: props.voucher?.code || null,
-    };
-
-    if (props.selectedService.flashSaleItem) {
-        orderData.value.flashsale_item_id =
-            props.selectedService.flashSaleItem.id;
-    }
-
-    // Show confirmation modal
-    showConfirmationModal.value = true;
-};
-
-const handleOrderConfirmed = (response) => {
-    emit("checkout", response);
+    // Emit event to parent component to handle order process
+    emit("process-order");
 };
 </script>
 
