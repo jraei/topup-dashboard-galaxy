@@ -7,21 +7,29 @@ use ZerosDev\TriPay\Client;
 use Illuminate\Http\Request;
 use ZerosDev\TriPay\Merchant;
 use App\Models\PaymentProvider;
+use ZerosDev\TriPay\Transaction;
 use App\Http\Controllers\Controller;
+use ZerosDev\TriPay\Support\Helper;
 
 class TripayController extends Controller
 {
-    public function getTripayMethod()
+    protected $config;
+    public function __construct()
     {
-        $provider = PaymentProvider::where('provider_name', 'Tripay')->get()[0];
-        $config = [
+        $provider = PaymentProvider::where('provider_name', 'Tripay')->first();
+
+        $this->config =  [
             "mode" => 'development',
             "merchant_code" => $provider['kode_merchant'],
             "api_key" => $provider['api_key'],
             "private_key" => $provider['private_key'],
             "guzzle_options" => []
         ];
-        $client = new Client($config);
+    }
+    public function getTripayMethod()
+    {
+        $provider = PaymentProvider::where('provider_name', 'Tripay')->first();
+        $client = new Client($this->config);
         $merchant = new Merchant($client);
         $result = $merchant->paymentChannels();
 
@@ -66,5 +74,38 @@ class TripayController extends Controller
             $affectedRow++;
         }
         return $affectedRow;
+    }
+
+    public function createTransaction(array $data)
+    {
+        $client = new Client($this->config);
+        $transaction = new Transaction($client);
+
+        $result = $transaction->addOrderItem(
+            $data['item'],
+            $data['price'],
+            $data['quantity']
+        )
+            ->create([
+                'method' => $data['method'],
+                'merchant_ref' => $data['merchant_ref'],
+                'customer_name' => $data['customer_name'],
+                'customer_email' => $data['customer_email'],
+                'customer_phone' => $data['customer_phone'],
+                'expired_time' => Helper::makeTimestamp('1 DAY')
+            ]);
+
+        $response = json_decode($result->getBody()->getContents(), true);
+        return $response;
+    }
+
+
+    public function getTransactionDetail($reference)
+    {
+        $client = new Client($this->config);
+        $transaction = new Transaction($client);
+        $result = $transaction->detail($reference);
+        $data = json_decode($result->getBody()->getContents(), true);
+        return $data;
     }
 }

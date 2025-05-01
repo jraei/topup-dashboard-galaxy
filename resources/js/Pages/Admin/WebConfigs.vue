@@ -84,9 +84,12 @@ const getBalanceProvider = (providerId) => {
 watch(
     () => page.props.flash.status,
     (status) => {
-        if (status?.balance && status?.provider_id) {
+        if (status?.provider_id && status?.status) {
             const providerId = status.provider_id;
-            apiForm.providers[providerId].balance = status.balance;
+            if (status?.balance) {
+                apiForm.providers[providerId].balance = status.balance;
+            }
+            apiForm.providers[providerId].status = status.status;
         }
     }
 );

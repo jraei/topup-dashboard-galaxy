@@ -46,12 +46,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Kategori::create([
-            "kategori_name" => "Game Mobile"
+            "kategori_name" => "Top Up"
         ]);
-        Kategori::create([
-            "kategori_name" => "Game PC"
-        ]);
-
 
         Provider::create([
             "provider_name" => "digiflazz",
@@ -60,9 +56,15 @@ class DatabaseSeeder extends Seeder
         ]);
         Provider::create([
             "provider_name" => "moogold",
-            "api_username" => "figojugqYaVg",
-            "api_key" => "eeeufytr2c-jassstinnnn-justin7765eerf",
-            "api_private_key" => 'x'
+            "api_username" => "rubennatanael36@gmail.com",
+            "api_key" => "e5c552e32e2b0df880d3f2e60d91001c",
+            "api_private_key" => '3bfDmtIhPp'
+        ]);
+        Provider::create([
+            "provider_name" => "checkUsername",
+            "api_username" => "rubennatanael36@gmail.com",
+            "api_key" => "e5c552e32e2b0df880d3f2e60d91001c",
+            "api_private_key" => '3bfDmtIhPp'
         ]);
 
         Produk::create([

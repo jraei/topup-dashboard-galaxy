@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Produk;
-use App\Models\PayMethod;
 use App\Models\Voucher;
+use App\Models\PayMethod;
+use App\Models\Pembelian;
 use App\Models\WebConfig;
 use Illuminate\Http\Request;
 use App\Models\FlashsaleItem;
 use App\Models\ItemThumbnail;
 use App\Models\FlashsaleEvent;
+use App\Http\Controllers\MoogoldController;
 
 class OrderController extends Controller
 {
@@ -33,17 +35,27 @@ class OrderController extends Controller
             ->orderBy('harga_beli_idr', 'asc')
             ->get()
             ->map(function ($service) {
+                // Cari angka dari nama_layanan
                 preg_match('/(\d+)/', $service->nama_layanan, $matches);
-                $quantity = $matches[1] ?? null;
+                $quantity = isset($matches[1]) ? (int)$matches[1] : null;
+
+                $thumbnail = null;
+                if ($quantity !== null) {
+                    $thumbnail = ItemThumbnail::findThumbnailForQuantity($service->produk_id, $quantity);
+                }
+
+                // Kalau gagal dapet thumbnail dari quantity, fallback ke default
+                if (!$thumbnail) {
+                    $thumbnail = ItemThumbnail::where('produk_id', $service->produk_id)
+                        ->default()
+                        ->first();
+                }
 
                 return array_merge($service->toArray(), [
-                    'thumbnail' => $service->gambar
-                        ?: ItemThumbnail::findThumbnailForQuantity(
-                            $service->produk_id,
-                            $quantity
-                        )?->image_url
+                    'thumbnail' => $thumbnail?->image_url
                 ]);
             });
+
 
         // Get active flashsale events related to this product
         $flashsaleEvents = FlashsaleEvent::whereHas('layanan', function ($q) use ($produk) {
@@ -189,5 +201,37 @@ class OrderController extends Controller
             'activeVouchers' => $activeVouchers,
             'faqs' => $faqs,
         ]);
+    }
+
+    public function processOrder(Request $request)
+    {
+        $moogold = new MoogoldController();
+        $orderId = (string) $this->generateUniqueOrderId();
+        $result = $moogold->createTransaction([
+            'category_id' => 1,
+            'order_id' => $orderId,
+            'service_id' => '2362438',
+            'quantity' => 1,
+            'user_id' => '99200298',
+            'server' => '2514'
+        ]);
+        return $result;
+    }
+
+    protected function generateUniqueOrderId()
+    {
+        do {
+            $prefix = 'N'; // bisa diganti "M", "X", dll
+            $timestamp = now()->format('dmHis'); // d=day, m=month, H=hour, i=minute, s=second
+            $random = mt_rand(100, 999); // random 3 digit
+            $orderId = $prefix . $timestamp . $random;
+        } while ($this->orderIdExists($orderId));
+
+        return $orderId;
+    }
+
+    protected function orderIdExists($orderId)
+    {
+        return Pembelian::where('order_id', $orderId)->exists();
     }
 }

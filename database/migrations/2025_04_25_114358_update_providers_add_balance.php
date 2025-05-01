@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('providers', function (Blueprint $table) {
             $table->bigInteger('balance')->default(0)->after('api_private_key');
+            $table->string('base_url')->nullable()->after('balance');
         });
     }
 

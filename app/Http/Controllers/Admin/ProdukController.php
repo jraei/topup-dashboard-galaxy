@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Gonon\Digiflazz\Digiflazz;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\MoogoldController;
 
 class ProdukController extends Controller
 {
@@ -222,6 +223,11 @@ class ProdukController extends Controller
             $affectedArray = $digiflazz->getDigiflazzProduk();
 
             return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['game'] . ' games & ' . $affectedArray['pulsa'] . ' pulsa have been added or updated!']);
+        } else if ($provider->provider_name == 'moogold') {
+            $moogold = new MoogoldController();
+            $affectedArray = $moogold->getMoogoldProducts();
+
+            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['success'] . ' products successfully and ' . $affectedArray['failed'] . ' failed to be added!']);
         } else {
             return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
         }

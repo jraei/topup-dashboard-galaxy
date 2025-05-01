@@ -9,6 +9,7 @@ use App\Models\Provider;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\MoogoldController;
 
 class LayananController extends Controller
 {
@@ -180,6 +181,11 @@ class LayananController extends Controller
             $affectedRow = $digiflazz->getDigiflazzService();
 
             return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedRow . ' services have been added or updated!']);
+        } else if ($provider->provider_name == 'moogold') {
+            $moogold = new MoogoldController();
+            $affectedArray = $moogold->getMoogoldServices();
+
+            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['success'] . ' services successfully and ' . $affectedArray['failed'] . ' failed to be added!']);
         } else {
             return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
         }

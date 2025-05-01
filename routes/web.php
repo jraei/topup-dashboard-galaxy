@@ -4,10 +4,12 @@ use Inertia\Inertia;
 use App\Models\Banner;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\IndexController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ProdukController;
@@ -26,7 +28,6 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
-use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// Route::get('moogold/product', [MoogoldController::class, 'getMoogoldProducts'])->name('moogold.balance');
+// Route::get('moogold/services', [MoogoldController::class, 'getMoogoldServices'])->name('moogold.balance');
+Route::get('moogold/order', [OrderController::class, 'processOrder'])->name('order.request');
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
@@ -135,9 +140,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // Pembayaran Management (Payments)
     Route::resource('pembayarans', PembayaranController::class)->except(['create', 'edit', 'update', 'store']);
-
-    // Digiflazz
-
 });
 
 require __DIR__ . '/auth.php';

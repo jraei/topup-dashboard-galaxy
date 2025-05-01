@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('developer')->nullable();
             $table->string('brand');
             $table->foreignId('kategori_id')->constrained('kategoris');
-            $table->string('slug')->unique();
+            $table->string('slug')->unique()->nullable();
             $table->foreignId('provider_id')->constrained('providers');
             $table->string('validasi_id')->default('tidak');
             $table->text('deskripsi_game')->nullable();

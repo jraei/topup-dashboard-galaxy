@@ -13,6 +13,8 @@ use Gonon\Digiflazz\Digiflazz;
 use Gonon\Digiflazz\PriceList;
 use App\Http\Controllers\Controller;
 use Gonon\Digiflazz\Balance;
+use Gonon\Digiflazz\Exceptions\ApiException;
+use Gonon\Digiflazz\Transaction;
 
 class DigiflazzController extends Controller
 {
@@ -24,10 +26,38 @@ class DigiflazzController extends Controller
 
     public function getDigiflazzBalance()
     {
-        $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
-        $balance = Balance::getBalance();
+        try {
+            $balance = Balance::getBalance();
 
-        return $balance;
+            return collect([
+                'status' => true,
+                'data' => $balance->deposit
+            ]);
+        } catch (\Exception $e) {
+            logger()->error("Failed to get balance: " . $e->getMessage());
+            return  collect([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+            // return $balance->deposit;
+        }
+    }
+
+    public function createTransaction(array $data)
+    {
+        // try catch
+        try {
+            $params = [
+                'buyer_sku_code' => $data['kode_layanan'],
+                'customer_no' => $data['customer_phone'],
+                'ref_id' => $data['ref_id']
+            ];
+            $result = Transaction::createTransaction($params);
+
+            return $result;
+        } catch (ApiException $e) {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => $e->getMessage()]);
+        }
     }
 
     public function getDigiflazzService()
@@ -36,8 +66,9 @@ class DigiflazzController extends Controller
 
         $digiflazz = Provider::where('provider_name', 'digiflazz')->first();
         $affectedRows = 0;
+        $activeProducts = Produk::where('provider_id', $digiflazz->id)->where('status', 'active')->get();
 
-        foreach (Produk::get() as $produk) {
+        foreach ($activeProducts as $produk) {
             foreach ($res as $data) {
                 $data = collect($data);
                 $produk = collect($produk);

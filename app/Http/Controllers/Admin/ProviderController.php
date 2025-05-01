@@ -7,6 +7,7 @@ use App\Models\Layanan;
 use App\Models\Provider;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\MoogoldController;
 
 class ProviderController extends Controller
 {
@@ -122,15 +123,59 @@ class ProviderController extends Controller
     {
         if ($provider->provider_name == 'digiflazz') {
             $digiflazz = new DigiflazzController();
-            $balance = $digiflazz->getDigiflazzBalance();
-            $provider->update(['balance' => $balance->deposit]);
-            return back()->with('status', [
-                'type' => 'success',
-                'action' => 'Success',
-                'text' => 'Balance has been updated!',
-                'balance' => $balance->deposit,
-                'provider_id' => $provider->id,
-            ]);
+            $data = $digiflazz->getDigiflazzBalance();
+            if ($data['status']) {
+                $balance = $data['data'];
+                $provider->update([
+                    'balance' => $balance,
+                    'status' => 'active'
+                ]);
+                return back()->with('status', [
+                    'type' => 'success',
+                    'action' => 'Success',
+                    'text' => 'Balance has been updated!',
+                    'balance' => $balance,
+                    'status' => 'active',
+                    'provider_id' => $provider->id,
+
+                ]);
+            } else {
+                $provider->update(['status' => 'inactive']);
+                return back()->with('status', [
+                    'type' => 'error',
+                    'action' => 'Request Error',
+                    'text' => $data['message'],
+                    'provider_id' => $provider->id,
+                    'status' => 'inactive'
+                ]);
+            }
+        } else if ($provider->provider_name == 'moogold') {
+            $moogold = new MoogoldController();
+            $data = $moogold->getMoogoldBalance();
+            if ($data['status']) {
+                $balance = $data['data'];
+                $provider->update([
+                    'balance' => $balance,
+                    'status' => 'active'
+                ]);
+                return back()->with('status', [
+                    'type' => 'success',
+                    'action' => 'Success',
+                    'text' => 'Balance has been updated!',
+                    'balance' => $balance,
+                    'status' => 'active',
+                    'provider_id' => $provider->id,
+                ]);
+            } else {
+                $provider->update(['status' => 'inactive']);
+                return back()->with('status', [
+                    'type' => 'error',
+                    'action' => 'Request Error',
+                    'text' => $data['message'],
+                    'status' => 'inactive',
+                    'provider_id' => $provider->id
+                ]);
+            }
         }
     }
 }

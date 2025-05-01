@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0ef5cf38adaa333f08c3a384bfab8dc",
+    "content-hash": "b95a0e5f68458ee496ac4e3b8c95cfa3",
     "packages": [
         {
             "name": "brick/math",
@@ -1962,6 +1962,56 @@
                 }
             ],
             "time": "2024-09-21T08:32:55+00:00"
+        },
+        {
+            "name": "medboubazine/moogold",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Medboubazine/MooGold.git",
+                "reference": "07688b15ab2ba14753a2d921226880f610a3ed65"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Medboubazine/MooGold/zipball/07688b15ab2ba14753a2d921226880f610a3ed65",
+                "reference": "07688b15ab2ba14753a2d921226880f610a3ed65",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": ">=7.0",
+                "illuminate/support": ">=10.0"
+            },
+            "require-dev": {
+                "symfony/error-handler": "^7.1",
+                "symfony/var-dumper": ">=6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Medboubazine\\Moogold\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Medboubazine",
+                    "email": "mohamedtorino161@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "MooGold API Helper",
+            "keywords": [
+                "moogold",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/Medboubazine/MooGold/issues",
+                "source": "https://github.com/Medboubazine/MooGold/tree/1.0.2"
+            },
+            "time": "2024-10-19T18:42:18+00:00"
         },
         {
             "name": "monolog/monolog",
