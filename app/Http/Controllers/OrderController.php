@@ -212,7 +212,7 @@ class OrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'layanan_id' => 'required|exists:layanans,id',
-            'input_id' => 'required|string',
+            // 'input_id' => 'required|string',
             'input_zone' => 'nullable|string',
             'quantity' => 'required|integer|min:1',
             'payment_method' => 'required',
@@ -231,7 +231,7 @@ class OrderController extends Controller
 
         $layanan = \App\Models\Layanan::with('produk')->findOrFail($request->layanan_id);
         $produk = $layanan->produk;
-        
+
         // Check if it's a flashsale item
         $flashsaleItem = null;
         if ($request->has('flashsale_item_id')) {
@@ -262,7 +262,7 @@ class OrderController extends Controller
                 // Calculate base price
                 $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
                 $basePrice = $basePrice * $request->quantity;
-                
+
                 // Check minimum purchase requirement
                 if ($voucher->min_purchase && $basePrice < $voucher->min_purchase) {
                     return response()->json([
@@ -270,41 +270,43 @@ class OrderController extends Controller
                         'message' => 'Minimum purchase for voucher not met',
                     ], 422);
                 }
-                
+
                 // Calculate discount
                 if ($voucher->discount_type === 'fixed') {
                     $voucherDiscount = $voucher->discount_value;
                 } else {
                     $voucherDiscount = ($basePrice * $voucher->discount_value) / 100;
-                    
+
                     // Apply max discount cap if exists
                     if ($voucher->max_discount && $voucherDiscount > $voucher->max_discount) {
                         $voucherDiscount = $voucher->max_discount;
                     }
                 }
-                
+
                 // Ensure discount doesn't exceed the base price
                 $voucherDiscount = min($voucherDiscount, $basePrice);
+                // Math ceil to avoid rounding errors
+                $voucherDiscount = ceil($voucherDiscount);
             }
         }
 
         // Get username if validation is required
         $username = null;
         $validationError = null;
-        if ($produk->validasi_id === 'ya') {
+        if ($produk->validasi_id !== 'tidak') {
             try {
                 $usernameController = new CheckUsernameController();
                 $data = [
                     'game' => $produk->validasi_id,
                     'user_id' => $request->input_id
                 ];
-                
+
                 if ($request->input_zone) {
                     $data['zone_id'] = $request->input_zone;
                 }
-                
+
                 $response = $usernameController->getAccountUsername($data);
-                
+
                 if ($response->getStatusCode() === 200) {
                     $responseData = json_decode($response->getContent(), true);
                     $username = $responseData['username'] ?? null;
@@ -319,15 +321,17 @@ class OrderController extends Controller
 
         // Calculate total price
         $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
+        $basePrice = ceil($basePrice);
         $totalPrice = $basePrice * $request->quantity - $voucherDiscount;
-        
+
         // Calculate fees based on payment method
         $paymentInfo = $this->calculatePaymentFees($request->payment_method, $totalPrice);
         $finalPrice = $paymentInfo['finalPrice'];
-        
+
         // Check profit safeguard
         $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
-        if ($totalPrice <= $hargaBeli) {
+
+        if ($finalPrice <= $hargaBeli) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid price calculation',
@@ -404,7 +408,7 @@ class OrderController extends Controller
                 ->where('status', 'active')
                 ->where('layanan_id', $request->layanan_id)
                 ->first();
-                
+
             if ($flashsaleItem) {
                 if ($flashsaleItem->stok_tersedia !== null && $flashsaleItem->stok_tersedia <= 0) {
                     return response()->json([
@@ -412,7 +416,7 @@ class OrderController extends Controller
                         'message' => 'Flash sale item out of stock',
                     ], 400);
                 }
-                
+
                 $flashsaleDiscount = $layanan->harga_jual - $flashsaleItem->harga_flashsale;
             }
         }
@@ -433,7 +437,7 @@ class OrderController extends Controller
                 // Calculate base price (with flashsale discount already applied if applicable)
                 $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
                 $basePrice = $basePrice * $request->quantity;
-                
+
                 // Check minimum purchase requirement
                 if ($voucher->min_purchase && $basePrice < $voucher->min_purchase) {
                     return response()->json([
@@ -441,19 +445,19 @@ class OrderController extends Controller
                         'message' => 'Minimum purchase for voucher not met',
                     ], 422);
                 }
-                
+
                 // Calculate discount
                 if ($voucher->discount_type === 'fixed') {
                     $voucherDiscount = $voucher->discount_value;
                 } else {
                     $voucherDiscount = ($basePrice * $voucher->discount_value) / 100;
-                    
+
                     // Apply max discount cap if exists
                     if ($voucher->max_discount && $voucherDiscount > $voucher->max_discount) {
                         $voucherDiscount = $voucher->max_discount;
                     }
                 }
-                
+
                 // Ensure discount doesn't exceed the base price
                 $voucherDiscount = min($voucherDiscount, $basePrice);
             }
@@ -462,11 +466,11 @@ class OrderController extends Controller
         // Calculate total price
         $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
         $totalPrice = $basePrice * $request->quantity - $voucherDiscount;
-        
+
         // Calculate fees based on payment method
         $paymentInfo = $this->calculatePaymentFees($request->payment_method, $totalPrice);
         $finalPrice = $paymentInfo['finalPrice'];
-        
+
         // Check profit safeguard
         $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
         if ($totalPrice <= $hargaBeli) {
@@ -512,7 +516,7 @@ class OrderController extends Controller
             $moogold = new MoogoldController();
             $retryCount = 0;
             $apiResult = null;
-            
+
             do {
                 try {
                     $apiResult = $moogold->createTransaction([
@@ -523,7 +527,7 @@ class OrderController extends Controller
                         'user_id' => $request->input_id,
                         'server' => $request->input_zone
                     ]);
-                    
+
                     if ($apiResult && isset($apiResult['status']) && $apiResult['status'] === 'success') {
                         break;
                     }
@@ -532,25 +536,25 @@ class OrderController extends Controller
                         // Refund user's balance on final failure
                         $user->saldo += $finalPrice;
                         $user->save();
-                        
+
                         // Update order status
                         $pembelian->status = 'failed';
                         $pembelian->save();
-                        
+
                         return response()->json([
                             'status' => 'error',
                             'message' => 'Failed to process order after multiple attempts',
                         ], 500);
                     }
                 }
-                
+
                 $retryCount++;
             } while ($retryCount < 3);
-            
+
             // Update order status
             $pembelian->status = 'processing';
             $pembelian->save();
-            
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Order processed successfully',
@@ -565,7 +569,7 @@ class OrderController extends Controller
             $pembayaran->payment_method = $paymentInfo['methodType'];
             $pembayaran->status = 'pending';
             $pembayaran->save();
-            
+
             // Redirect to payment gateway or return payment link
             return response()->json([
                 'status' => 'success',
@@ -586,14 +590,14 @@ class OrderController extends Controller
         $fee = 0;
         $methodName = '';
         $methodType = '';
-        
+
         if ($paymentMethod['type'] === 'saldo') {
             $methodName = 'NaelCoin';
             $methodType = 'saldo';
         } elseif ($paymentMethod['type'] === 'qris') {
             $methodName = 'QRIS';
             $methodType = 'qris';
-            
+
             $qris = PayMethod::where('tipe', 'QRIS')->first();
             if ($qris) {
                 if ($qris->fee_type === 'fixed') {
@@ -613,7 +617,7 @@ class OrderController extends Controller
             if ($payMethod) {
                 $methodName = $payMethod->nama;
                 $methodType = $payMethod->tipe;
-                
+
                 if ($payMethod->fee_type === 'fixed') {
                     $fee = $payMethod->fee_fixed;
                     $finalPrice += $fee;
@@ -626,7 +630,7 @@ class OrderController extends Controller
                 }
             }
         }
-        
+
         return [
             'finalPrice' => ceil($finalPrice), // Round up to nearest integer
             'fee' => ceil($fee),
@@ -690,7 +694,7 @@ class OrderController extends Controller
             $discount = $voucher->discount_value;
         } else {
             $discount = ($request->amount * $voucher->discount_value) / 100;
-            
+
             // Apply max discount cap if exists
             if ($voucher->max_discount && $discount > $voucher->max_discount) {
                 $discount = $voucher->max_discount;
