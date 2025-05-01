@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Provider;
 use GuzzleHttp\Client;
 use Illuminate\Http\Response;
-use Illuminate\Http\Request;
 
 class CheckUsernameController extends Controller
 {
@@ -63,20 +62,5 @@ class CheckUsernameController extends Controller
                 'message' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    /**
-     * Public API endpoint to check username
-     */
-    public function checkUsername(Request $request)
-    {
-        $request->validate([
-            'game' => 'required|string',
-            'user_id' => 'required|string',
-            'zone_id' => 'nullable|string',
-        ]);
-
-        $data = $request->only(['game', 'user_id', 'zone_id']);
-        return $this->getAccountUsername($data);
     }
 }

@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('nickname')->nullable()->comment('Player nickname');
             $table->string('input_id')->comment('Player ID, Server ID, etc.');
             $table->string('input_zone')->nullable()->comment('Zone ID, Server name, etc.');
-            $table->string('country_code')->default('62')->comment('Phone country code');
             $table->bigInteger('price');
             $table->bigInteger('profit');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled'])->default('pending');

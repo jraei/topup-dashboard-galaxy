@@ -3,7 +3,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CheckUsernameController;
+use App\Models\Produk;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,5 +20,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Order username validation endpoint
-Route::post('/order/check-username', [CheckUsernameController::class, 'checkUsername']);
+// Product search endpoint
+Route::get('/search/products', function (Request $request) {
+    $query = $request->input('query');
+    
+    if (empty($query) || strlen($query) < 2) {
+        return response()->json([]);
+    }
+    
+    $products = Produk::where('nama', 'LIKE', "%{$query}%")
+                      ->where('status', 'active')
+                      ->take(5)
+                      ->get(['id', 'nama', 'thumbnail']);
+    
+    return response()->json($products);
+})->name('api.search.products');
