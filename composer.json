@@ -16,7 +16,6 @@
         "laravel/tinker": "^2.8",
         "medboubazine/moogold": "^1.0",
         "nurfaizfy/digiflazz-php-library": "^1.0",
-        "tightenco/ziggy": "^2.0",
         "zerosdev/tripay-sdk-php": "^1.0"
     },
     "require-dev": {
