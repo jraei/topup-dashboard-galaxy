@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -5,15 +6,23 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Provider;
 use GuzzleHttp\Client;
+use Illuminate\Http\Response;
 
 class CheckUsernameController extends Controller
 {
-
     public function getAccountUsername(array $data)
     {
         $provider = Provider::where('provider_name', 'checkUsername')->first();
+        
+        if (!$provider) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Username checking provider not configured'
+            ], 404);
+        }
+        
         $api_key = $provider->api_key;
-        $base_url =  $provider->base_url;
+        $base_url = $provider->base_url;
 
         $client = new Client([
             // Base URI is used with relative requests
@@ -31,20 +40,27 @@ class CheckUsernameController extends Controller
                 $params['zone_id'] = $data['zone_id'];
             }
 
-            $response = $client->request('POST', [
+            $response = $client->request('POST', '', [
                 'form_params' => $params
             ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
+            $responseData = json_decode($response->getBody()->getContents(), true);
             // check if status success
-            if ($data['status'] != 'success') {
-                return response()->json(['status' => $data['status'], 'message' => $data['message'] ?? ''], 500);
+            if ($responseData['status'] != 'success') {
+                return response()->json([
+                    'status' => $responseData['status'], 
+                    'message' => $responseData['message'] ?? 'Account validation failed'
+                ], Response::HTTP_BAD_REQUEST);
             }
-            $username = $data['result']['username'];
+            
+            $username = $responseData['result']['username'] ?? null;
 
-            return response()->json(['username' => $username]);
+            return response()->json(['status' => 'success', 'username' => $username]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error', 
+                'message' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -44,10 +44,10 @@ Route::get('/', [IndexController::class, 'index'])->name('index');
 
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
 
-// Add a route for voucher validation (we'll implement this later)
+// Order Processing Routes
+Route::post('/order/confirm', [OrderController::class, 'confirmOrder'])->name('order.confirm');
+Route::post('/order/process', [OrderController::class, 'processOrder'])->name('order.process');
 Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher'])->name('vouchers.validate');
-
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -153,3 +153,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
     Route::get('/topup', [DashboardController::class, 'topup'])->name('dashboard.topup');
 });
+
+// Payment routes
+Route::get('/payment/{order_id}', function ($order_id) {
+    // Placeholder for payment page redirect
+    return Inertia::render('Payment/Show', [
+        'order_id' => $order_id
+    ]);
+})->name('payment.show');

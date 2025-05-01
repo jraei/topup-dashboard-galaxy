@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -14,6 +15,7 @@ return new class extends Migration
         Schema::create('pembelians', function (Blueprint $table) {
             $table->id();
             $table->string('order_id')->unique();
+            $table->string('reference_id')->nullable();
             $table->string('order_type')->default('game');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('layanan_id')->constrained('layanans');
@@ -23,6 +25,9 @@ return new class extends Migration
             $table->bigInteger('price');
             $table->bigInteger('profit');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled'])->default('pending');
+            $table->string('order_phase')->nullable()->comment('For tracking progress');
+            $table->json('status_log')->nullable()->comment('Log of status changes');
+            $table->json('callback_data')->nullable();
             $table->timestamps();
         });
     }
