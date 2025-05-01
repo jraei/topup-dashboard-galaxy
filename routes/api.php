@@ -4,7 +4,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Produk;
-use App\Http\Controllers\Admin\CheckUsernameController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,23 +35,3 @@ Route::get('/search/products', function (Request $request) {
     
     return response()->json($products);
 })->name('api.search.products');
-
-// Username validation endpoint
-Route::post('/check-username', function (Request $request) {
-    $validator = Validator::make($request->all(), [
-        'game' => 'required|string',
-        'user_id' => 'required|string',
-        'zone_id' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $controller = new CheckUsernameController();
-    return $controller->getAccountUsername($request->all());
-})->name('api.check.username');

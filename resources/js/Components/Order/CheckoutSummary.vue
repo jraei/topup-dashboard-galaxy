@@ -1,4 +1,3 @@
-
 <template>
     <CosmicCard :title="'Order Summary'">
         <div class="space-y-4">
@@ -162,6 +161,14 @@
                     class="absolute inset-0 transition-transform duration-700 bg-gradient-to-r from-primary/0 via-secondary/20 to-primary/0 cosmic-shine"
                 ></div>
             </button>
+
+            <!-- Order Confirmation Modal -->
+            <OrderConfirmationModal
+                :show-modal="showConfirmationModal"
+                :order-data="orderData"
+                @close="showConfirmationModal = false"
+                @confirmed="handleOrderConfirmed"
+            />
         </div>
     </CosmicCard>
 </template>
@@ -169,6 +176,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import CosmicCard from "@/Components/Order/CosmicCard.vue";
+import OrderConfirmationModal from "@/Components/Order/OrderConfirmationModal.vue";
 import { useToast } from "@/Composables/useToast";
 
 const props = defineProps({
@@ -183,12 +191,13 @@ const props = defineProps({
     paymentInfo: Object,
     contact: Object,
     voucher: Object,
-    accountData: Object,
-    accountUsername: String,
 });
 
 const emit = defineEmits(["checkout"]);
 const { toast } = useToast();
+
+const showConfirmationModal = ref(false);
+const orderData = ref(null);
 
 // Computed values
 const basePrice = computed(() => {
@@ -289,26 +298,29 @@ const handleOrderProcess = () => {
         return;
     }
 
-    // Prepare order data for confirmation - we'll emit this to parent component
-    const orderData = {
+    // Prepare order data for confirmation
+    orderData.value = {
         layanan_id: props.selectedService.id,
-        account_id: props.accountData?.user_id,
-        server_id: props.accountData?.server_id || props.accountData?.zone_id,
-        nickname: props.accountUsername,
+        input_id: document.getElementById("field_uid")?.value || "",
+        input_zone: document.getElementById("field_zone")?.value || "",
         quantity: props.quantity,
         payment_method: props.selectedPayment,
         email: props.contact.email,
         phone: props.contact.phone,
-        country_code: props.contact.country,
         voucher_code: props.voucher?.code || null,
     };
 
     if (props.selectedService.flashSaleItem) {
-        orderData.flashsale_item_id = props.selectedService.flashSaleItem.id;
+        orderData.value.flashsale_item_id =
+            props.selectedService.flashSaleItem.id;
     }
 
-    // Emit checkout event with orderData to parent component
-    emit("checkout", orderData);
+    // Show confirmation modal
+    showConfirmationModal.value = true;
+};
+
+const handleOrderConfirmed = (response) => {
+    emit("checkout", response);
 };
 </script>
 
