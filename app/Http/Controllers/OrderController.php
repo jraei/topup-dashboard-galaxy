@@ -14,6 +14,7 @@ use App\Models\ItemThumbnail;
 use App\Models\FlashsaleEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cookie;
 use App\Http\Controllers\MoogoldController;
 use App\Http\Controllers\Admin\CheckUsernameController;
 
@@ -354,7 +355,8 @@ class OrderController extends Controller
                 'final_price' => $finalPrice,
                 'contact' => [
                     'email' => $request->email,
-                    'phone' => $request->phone
+                    'phone' => $request->phone,
+                    'country_code' => $request->country_code ?? null
                 ]
             ]
         ]);
@@ -461,6 +463,14 @@ class OrderController extends Controller
                 // Ensure discount doesn't exceed the base price
                 $voucherDiscount = min($voucherDiscount, $basePrice);
             }
+        }
+
+        // Additional validation for international phone numbers
+        if (!$request->has('country_code') && strpos($request->phone, '+') !== 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Country code is required for phone number'
+            ], 422);
         }
 
         // Calculate total price
@@ -715,6 +725,35 @@ class OrderController extends Controller
                 'max_discount' => $voucher->max_discount,
             ],
         ]);
+    }
+
+    /**
+     * Save account data to cookie for future use
+     */
+    private function saveAccountToCookie(Request $request, Produk $produk)
+    {
+        if (!$produk || !$produk->slug) return;
+        
+        // Prepare account data
+        $accountData = [
+            'user_id' => $request->input_id,
+        ];
+        
+        // Add zone/server if provided
+        if ($request->input_zone) {
+            $accountData['server_id'] = $request->input_zone;
+        }
+        
+        // Get existing accounts from cookie
+        $gameAccounts = json_decode(Cookie::get('game_accounts', '{}'), true);
+        
+        // Add or update this product's account data
+        $gameAccounts[$produk->slug] = [
+            'account_data' => $accountData
+        ];
+        
+        // Save to cookie with 30-day expiration
+        Cookie::queue('game_accounts', json_encode($gameAccounts), 60 * 24 * 30);
     }
 
     protected function generateUniqueOrderId()
