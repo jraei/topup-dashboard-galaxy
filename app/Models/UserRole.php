@@ -15,7 +15,7 @@ class UserRole extends Model
 
     protected $casts = [
         'permissions' => 'json',
-        'is_system' => 'boolean',
+        'is_default' => 'boolean',
     ];
 
     public function users(): HasMany
