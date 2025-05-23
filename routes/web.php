@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\PayMethodController;
 use App\Http\Controllers\Admin\PembelianController;
 use App\Http\Controllers\Admin\PembayaranController;
+use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\ProfitProdukController;
 use App\Http\Controllers\Admin\FlashsaleItemController;
 use App\Http\Controllers\Admin\ItemThumbnailController;
@@ -32,7 +33,6 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -134,6 +134,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // pay method management
     Route::resource('pay-methods', PayMethodController::class);
+
+    // User Role Management
+    Route::resource('user-roles', UserRoleController::class);
+    Route::patch('user-roles/{userRole}/toggle-default', [UserRoleController::class, 'toggleDefault'])->name('user-roles.toggle-default');
 
     // User Management
     Route::resource('users', UserController::class);
