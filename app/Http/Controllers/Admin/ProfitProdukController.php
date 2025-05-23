@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -175,6 +176,84 @@ class ProfitProdukController extends Controller
             'action' => 'Success',
             'text' => 'Profit Setting has been deleted!'
         ]);
+    }
+
+    /**
+     * Bulk create or update profit settings for multiple products
+     */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'exists:produks,id',
+            'user_roles_id' => 'required|exists:user_roles,id',
+            'type' => 'required|in:percent,multiplier',
+            'value' => 'required|numeric|min:0.01'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $created = 0;
+            $skipped = 0;
+            $errors = [];
+
+            foreach ($validated['product_ids'] as $productId) {
+                // Check if setting already exists
+                $existingProfit = ProfitProduk::where('produk_id', $productId)
+                    ->where('user_roles_id', $validated['user_roles_id'])
+                    ->first();
+
+                if ($existingProfit) {
+                    $skipped++;
+                    continue;
+                }
+
+                try {
+                    ProfitProduk::create([
+                        'produk_id' => $productId,
+                        'user_roles_id' => $validated['user_roles_id'],
+                        'type' => $validated['type'],
+                        'value' => $validated['value']
+                    ]);
+                    $created++;
+                } catch (\Exception $e) {
+                    $product = Produk::find($productId);
+                    $errors[] = "Failed to create profit setting for product: " . ($product->nama ?? "ID {$productId}");
+                }
+            }
+
+            if (!empty($errors)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bulk operation failed',
+                    'errors' => $errors
+                ], 422);
+            }
+
+            DB::commit();
+
+            $message = "Bulk operation completed: {$created} created";
+            if ($skipped > 0) {
+                $message .= ", {$skipped} skipped (already exists)";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'stats' => [
+                    'created' => $created,
+                    'skipped' => $skipped
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create bulk profit settings: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

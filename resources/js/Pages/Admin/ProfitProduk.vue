@@ -7,6 +7,7 @@ import Modal from "@/Components/Modal.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import Pagination from "@/Components/Pagination.vue";
 import PricePreview from "@/Components/PricePreview.vue";
+import BulkAssignModal from "@/Components/Admin/ProfitProduk/BulkAssignModal.vue";
 import axios from "axios";
 
 const props = defineProps({
@@ -74,6 +75,9 @@ const columns = [
 const showViewModal = ref(false);
 const selectedProfitProduk = ref(null);
 const isLoading = ref(false);
+
+// Bulk assign modal state
+const showBulkModal = ref(false);
 
 // Handle view action
 const handleView = async (item) => {
@@ -227,6 +231,15 @@ const calculatePrice = (basePrice) => {
     }
 };
 
+// Bulk assign functions
+const openBulkModal = () => {
+    showBulkModal.value = true;
+};
+
+const closeBulkModal = () => {
+    showBulkModal.value = false;
+};
+
 // Watch for product changes to load services
 watch(
     () => currentProfitProduk.value?.produk_id,
@@ -264,26 +277,48 @@ watch(
                 <template #title> Profit Product Settings </template>
 
                 <template #addButton>
-                    <button
-                        @click="openAddForm"
-                        class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <div class="flex space-x-2">
+                        <button
+                            @click="openBulkModal"
+                            class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover hover:shadow-glow-secondary"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                        </svg>
-                        <span>Add Profit Setting</span>
-                    </button>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                />
+                            </svg>
+                            <span>Bulk Assign</span>
+                        </button>
+                        <button
+                            @click="openAddForm"
+                            class="flex items-center px-4 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-primary hover:bg-primary-hover hover:shadow-glow-primary"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                            </svg>
+                            <span>Add Profit Setting</span>
+                        </button>
+                    </div>
                 </template>
 
                 <template #actions="{ item }">
@@ -339,6 +374,14 @@ watch(
 
         <!-- Price Preview Component -->
         <PricePreview :products="products" />
+
+        <!-- Bulk Assign Modal -->
+        <BulkAssignModal
+            :show="showBulkModal"
+            :products="products"
+            :roles="roles"
+            @close="closeBulkModal"
+        />
 
         <!-- Add/Edit Form Modal -->
         <div
