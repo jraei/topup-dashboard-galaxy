@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\ProviderController;
+use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\PayMethodController;
 use App\Http\Controllers\Admin\PembelianController;
 use App\Http\Controllers\Admin\PembayaranController;
@@ -93,9 +94,6 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
     Route::get('/topup', [DashboardController::class, 'topup'])->name('dashboard.topup');
 });
-
-// Route::get('moogold/product', [MoogoldController::class, 'getMoogoldProducts'])->name('moogold.balance');
-// Route::get('moogold/services', [MoogoldController::class, 'getMoogoldServices'])->name('moogold.balance');
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
@@ -198,6 +196,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // Pembayaran Management (Payments)
     Route::resource('pembayarans', PembayaranController::class)->except(['create', 'edit', 'update', 'store']);
+
+    // User Role Management
+    Route::get('/user-roles', [UserRoleController::class, 'index'])->name('user-roles.index');
+    Route::post('/user-roles', [UserRoleController::class, 'store'])->name('user-roles.store');
+    Route::delete('/user-roles/{userRole}', [UserRoleController::class, 'destroy'])->name('user-roles.destroy');
+    Route::patch('/user-roles/{userRole}/toggle-default', [UserRoleController::class, 'toggleDefault'])->name('user-roles.toggle-default');
 });
 
 require __DIR__ . '/auth.php';

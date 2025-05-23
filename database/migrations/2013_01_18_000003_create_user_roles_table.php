@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\DB;
@@ -19,14 +20,15 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('permissions')->nullable();
             $table->boolean('is_default')->default(false);
+            $table->boolean('is_system')->default(false);
             $table->timestamps();
         });
 
         // Insert default roles
         DB::table('user_roles')->insert([
-            ['role_name' => 'admin', 'display_name' => 'Administrator', 'is_default' => false, 'created_at' => now(), 'updated_at' => now()],
-            ['role_name' => 'basic', 'display_name' => 'Basic User', 'is_default' => false, 'created_at' => now(), 'updated_at' => now()],
-            ['role_name' => 'guest', 'display_name' => 'Guest User', 'is_default' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['role_name' => 'admin', 'display_name' => 'Administrator', 'is_default' => false, 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['role_name' => 'basic', 'display_name' => 'Basic User', 'is_default' => false, 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['role_name' => 'guest', 'display_name' => 'Guest User', 'is_default' => true, 'is_system' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 
