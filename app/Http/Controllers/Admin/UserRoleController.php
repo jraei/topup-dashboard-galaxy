@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\Admin;
@@ -63,8 +62,8 @@ class UserRoleController extends Controller
         UserRole::create($validated);
 
         return to_route('user-roles.index')->with('status', [
-            'type' => 'success', 
-            'action' => 'Success', 
+            'type' => 'success',
+            'action' => 'Success',
             'text' => 'New User Role has been created!'
         ]);
     }
@@ -106,7 +105,7 @@ class UserRoleController extends Controller
                 if (!$userRole->is_default) {
                     // First, remove default status from current default role
                     UserRole::where('is_default', true)->update(['is_default' => false]);
-                    
+
                     // Set this role as default
                     $userRole->update(['is_default' => true]);
                 } else {
@@ -115,7 +114,7 @@ class UserRoleController extends Controller
                     if ($defaultCount <= 1) {
                         throw new \Exception('At least one default role must exist!');
                     }
-                    
+
                     $userRole->update(['is_default' => false]);
                 }
             });
@@ -125,7 +124,6 @@ class UserRoleController extends Controller
                 'action' => 'Success',
                 'text' => 'Default role status updated successfully!'
             ]);
-
         } catch (\Exception $e) {
             return back()->with('status', [
                 'type' => 'error',

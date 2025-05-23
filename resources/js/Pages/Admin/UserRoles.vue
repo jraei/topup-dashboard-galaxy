@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, getCurrentInstance } from "vue";
 import { Head, router } from "@inertiajs/vue3";
@@ -47,15 +46,21 @@ const handleDelete = (item) => {
 };
 
 const handleToggleDefault = (item) => {
-    const action = item.is_default ? "remove default status from" : "set as default";
-    
+    const action = item.is_default
+        ? "remove default status from"
+        : "set as default";
+
     proxy.$showSwalConfirm({
         title: `Toggle Default Role`,
         text: `Are you sure you want to ${action} this role?`,
         onConfirm: () => {
-            router.patch(route("user-roles.toggle-default", item.id), {}, {
-                preserveScroll: true,
-            });
+            router.patch(
+                route("user-roles.toggle-default", item.id),
+                {},
+                {
+                    preserveScroll: true,
+                }
+            );
         },
     });
 };
@@ -167,7 +172,11 @@ const saveDataForm = () => {
                                         @click="handleToggleDefault(item)"
                                         class="block w-full px-4 py-2 text-sm text-left text-gray-300 hover:bg-dark-lighter hover:text-primary"
                                     >
-                                        {{ item.is_default ? "Remove Default" : "Set as Default" }}
+                                        {{
+                                            item.is_default
+                                                ? "Remove Default"
+                                                : "Set as Default"
+                                        }}
                                     </button>
                                     <button
                                         @click="handleDelete(item)"
