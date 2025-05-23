@@ -167,10 +167,20 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('providers/getBalances/{provider}', [ProviderController::class, 'getBalancesByProvider'])->name('providers.getBalancesByProvider');
     Route::post('providers/syncHargaLayanan', [ProviderController::class, 'syncHargaLayanan'])->name('providers.syncHargaLayanan');
 
+    Route::get('/profit-preview', [ProfitProdukController::class, 'preview'])->name('profit-produks.preview');
+
+    // Product Input Field Management
+    Route::resource('produk-input-fields', ProdukInputFieldController::class)->names('admin.produk-input-fields');
+    Route::post('produk-input-fields/update-order', [ProdukInputFieldController::class, 'updateOrder'])->name('admin.produk-input-fields.update-order');
+
+    // Product Input Option Management
+    Route::resource('produk-input-options', ProdukInputOptionController::class)->names('admin.produk-input-options');
+    Route::post('produk-input-options/bulk', [ProdukInputOptionController::class, 'bulkStore'])->name('admin.produk-input-options.bulk-store');
+
     // Profit Produk routes
-    Route::resource('profit-produks', App\Http\Controllers\Admin\ProfitProdukController::class);
-    Route::post('profit-produks/bulk-store', [App\Http\Controllers\Admin\ProfitProdukController::class, 'bulkStore'])->name('profit-produks.bulk-store');
-    Route::post('profit-produks/preview', [App\Http\Controllers\Admin\ProfitProdukController::class, 'preview'])->name('profit-produks.preview');
+    Route::resource('profit-produks', ProfitProdukController::class);
+    Route::post('profit-produks/bulk-store', [ProfitProdukController::class, 'bulkStore'])->name('profit-produks.bulk-store');
+    Route::post('profit-produks/preview', [ProfitProdukController::class, 'preview'])->name('profit-produks.preview');
 
     Route::get('/payment-providers', [PaymentProviderController::class, 'index'])->name('admin.payment-providers');
     Route::patch('/payment-providers/{id}', [PaymentProviderController::class, 'update'])->name('payment-providers.update');

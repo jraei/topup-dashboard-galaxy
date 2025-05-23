@@ -45,6 +45,27 @@ const columns = [
         label: "Jumlah Diskon",
     },
     {
+        key: "usage_count",
+        label: "Jumlah terpakai",
+    },
+    {
+        key: "usage_limit",
+        label: "Limit penggunaan",
+    },
+    {
+        key: "is_public",
+        label: "Visibility",
+        format: (value) => {
+            const statusClasses = value
+                ? "bg-green-500/20 text-green-400"
+                : "bg-red-500/20 text-red-400";
+
+            const result = value ? "Public" : "Private";
+
+            return `<span class="${statusClasses} px-2 py-1 rounded-xl text-xs">${result}</span>`;
+        },
+    },
+    {
         key: "status",
         label: "Status",
         format: (value) => {
@@ -470,21 +491,21 @@ const saveDataForm = () => {
                                 </select>
                             </div>
 
-                            <div class="sm:col-span-2">
+                            <div class="">
                                 <label
-                                    for="description"
+                                    for="is_public"
                                     class="block mb-1 text-sm font-medium text-gray-300"
-                                    >Deskripsi Voucher
-                                    <span class="text-red-500">(Opsional)</span>
+                                    >Visibility
                                 </label>
-                                <input
-                                    id="description"
-                                    v-model="currentData.description"
-                                    type="text"
+                                <select
+                                    id="is_public"
+                                    name="is_public"
+                                    v-model="currentData.is_public"
                                     class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="Deskripsi Voucher"
-                                    name="description"
-                                />
+                                >
+                                    <option value="1">Public</option>
+                                    <option value="0">Private</option>
+                                </select>
                             </div>
                         </div>
                         <div

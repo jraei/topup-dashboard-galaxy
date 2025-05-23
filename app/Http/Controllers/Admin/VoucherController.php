@@ -18,7 +18,7 @@ class VoucherController extends Controller
         $direction = $request->input('direction', 'asc');
 
         // Validate the sort field to prevent SQL injection
-        $allowedSortFields = ['id', 'code', 'description', 'discount_type', 'min_purchase', 'max_discount', 'usage_limit', 'status'];
+        $allowedSortFields = ['id', 'code', 'description', 'discount_type', 'min_purchase', 'max_discount', 'usage_limit', 'status', 'is_public'];
         if (!in_array($sort, $allowedSortFields)) {
             $sort = 'id';
         }
@@ -56,6 +56,8 @@ class VoucherController extends Controller
                     'min_purchase' => $voucher->min_purchase,
                     'max_discount' => $voucher->max_discount,
                     'usage_limit' => $voucher->usage_limit,
+                    'usage_count' => $voucher->usage_count,
+                    'is_public' => $voucher->is_public,
                     'status' => $voucher->status,
                     'start_date' => $voucher->start_date
                         ? Carbon::parse($voucher->start_date)->timezone(config('app.timezone'))->format('Y-m-d\TH:i')
@@ -89,7 +91,8 @@ class VoucherController extends Controller
             'discount_type' => 'required',
             'discount_value' => 'required|numeric',
             'min_purchase' => 'required|numeric',
-            'status' => 'required'
+            'status' => 'required',
+            'is_public' => 'required'
         ];
 
         if ($request->max_discount) {
@@ -137,6 +140,7 @@ class VoucherController extends Controller
             'discount_type' => 'required',
             'discount_value' => 'required|numeric',
             'min_purchase' => 'required|numeric',
+            'is_public' => 'required',
             'status' => 'required'
         ];
 
