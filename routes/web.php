@@ -60,6 +60,11 @@ Route::get('/leaderboard', [IndexController::class, 'leaderboard'])->name('leade
 Route::get('/cek-transaksi', [IndexController::class, 'cekTransaksi'])->name('cek-transaksi');
 Route::get('/term-of-service', [IndexController::class, 'termOfService'])->name('term-of-service');
 
+// API Documentation
+Route::get('/api-docs', function () {
+    return Inertia::render('ApiDocs');
+})->name('api-docs');
+
 // Order Processing Routes
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
 Route::post('/order/confirm', [OrderController::class, 'confirmOrder'])->name('order.confirm');
@@ -72,7 +77,6 @@ Route::get('/order/invoice/{order_id}', [OrderController::class, 'invoice'])->na
 Route::get('/getMoogold', [CronjobController::class, 'getMoogold'])->name('cronjob.getMoogold');
 Route::get('/getDigiflazz', [CronjobController::class, 'getDigiflazz'])->name('cronjob.getDigiflazz');
 Route::get('/statusMoogold', [CronjobController::class, 'statusMoogold'])->name('cronjob.statusMoogold');
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -99,9 +103,6 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
     Route::get('/topup', [DashboardController::class, 'topup'])->name('dashboard.topup');
 });
-
-// Route::get('moogold/product', [MoogoldController::class, 'getMoogoldProducts'])->name('moogold.balance');
-// Route::get('moogold/services', [MoogoldController::class, 'getMoogoldServices'])->name('moogold.balance');
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
