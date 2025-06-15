@@ -357,7 +357,12 @@ const getTimelineStatus = (event) => {
                 </template>
             </DataTable>
             <!-- Pagination component -->
-            <Pagination :links="flashsaleEvents.links" />
+            <Pagination
+                :links="props.flashsaleEvents.links"
+                :currentPage="props.flashsaleEvents.current_page"
+                :perPage="props.flashsaleEvents.per_page"
+                :totalEntries="props.flashsaleEvents.total"
+            />
         </div>
 
         <!-- Add/Edit Flash Sale Event Modal -->

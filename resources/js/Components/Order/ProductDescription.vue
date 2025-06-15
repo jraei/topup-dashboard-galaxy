@@ -1,6 +1,6 @@
 <template>
     <div class="w-full mb-8">
-        <CosmicCard title="Game Description">
+        <CosmicCard title="Deskripsi Produk">
             <div class="relative z-10 overflow-hidden">
                 <!-- Nebula background effect -->
                 <div

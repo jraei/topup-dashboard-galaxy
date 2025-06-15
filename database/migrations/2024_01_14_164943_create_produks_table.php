@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('nama');
             $table->string('developer')->nullable();
             $table->string('reference')->comment('3rd party code')->nullable();
-            $table->foreignId('kategori_id')->constrained('kategoris');
+            $table->foreignId('kategori_id')->nullable()->constrained('kategoris')->nullOnDelete();
             $table->integer('moogold_order_category')->nullable();
             $table->string('slug')->unique()->nullable();
-            $table->foreignId('provider_id')->constrained('providers');
+            $table->foreignId('provider_id')->nullable()->constrained('providers')->nullOnDelete();
             $table->string('validasi_id')->default('tidak');
             $table->text('deskripsi_game')->nullable();
             $table->text('petunjuk_field')->nullable();

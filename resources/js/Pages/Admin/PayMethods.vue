@@ -266,7 +266,12 @@ const handleFileUpload = (event, field) => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.payMethods.links" />
+            <Pagination
+                :links="props.payMethods.links"
+                :currentPage="props.payMethods.current_page"
+                :perPage="props.payMethods.per_page"
+                :totalEntries="props.payMethods.total"
+            />
         </div>
 
         <!-- Modified Form Modal -->

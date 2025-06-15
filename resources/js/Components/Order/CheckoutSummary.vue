@@ -1,30 +1,28 @@
 <template>
-    <CosmicCard :title="'Order Summary'">
+    <CosmicCard :title="'Ringkasan Pesanan'">
         <div class="space-y-4">
             <!-- Order Summary -->
             <div class="space-y-3 rounded-lg">
-                <h3 class="text-sm font-medium text-secondary">
-                    Selected Service
-                </h3>
+                <h3 class="text-sm font-medium text-secondary">Pesanan anda</h3>
 
                 <!-- Selected Service Details -->
                 <div v-if="selectedService" class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-400">Service:</span>
+                        <span class="text-xs text-gray-400">Layanan:</span>
                         <span class="text-sm font-semibold text-white">{{
                             selectedService.nama_layanan
                         }}</span>
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-400">Quantity:</span>
+                        <span class="text-xs text-gray-400">Kuantitas:</span>
                         <span class="text-sm font-semibold text-white"
                             >{{ quantity }}x</span
                         >
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-400">Base Price:</span>
+                        <span class="text-xs text-gray-400">Harga pokok:</span>
                         <span class="text-sm font-semibold text-white"
                             >Rp {{ formatPrice(basePrice) }}</span
                         >
@@ -35,7 +33,7 @@
                         class="flex items-center px-4 py-3 rounded-lg bg-primary/10"
                     >
                         <span class="text-sm text-primary"
-                            >Please select a service first</span
+                            >Tolong pilih layanan terlebih dahulu!</span
                         >
                     </div>
                 </div>
@@ -58,7 +56,7 @@
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        Voucher Discount:
+                        Diskon voucher:
                     </span>
                     <span class="text-sm font-semibold text-green-400"
                         >-Rp {{ formatPrice(voucherDiscount) }}</span
@@ -70,7 +68,9 @@
                     v-if="selectedService && selectedPayment"
                     class="flex items-center justify-between"
                 >
-                    <span class="text-xs text-gray-400">Payment Method:</span>
+                    <span class="text-xs text-gray-400"
+                        >Metode pembayaran:</span
+                    >
                     <span class="text-sm font-semibold text-white">{{
                         paymentInfo?.methodLabel || "Not selected"
                     }}</span>
@@ -109,7 +109,7 @@
                 class="p-4 space-y-2 border rounded-lg bg-primary/10 border-secondary/20"
             >
                 <h3 class="text-sm font-medium text-primary">
-                    Contact Information
+                    Informasi Kontak
                 </h3>
 
                 <div class="flex items-center justify-between">
@@ -138,7 +138,7 @@
                     'w-full py-3 font-bold transition-all rounded-lg focus:outline-none focus:ring-2 relative overflow-hidden',
                     isOrderReady && !isValidating
                         ? 'bg-primary text-white hover:bg-primary-hover focus:ring-primary/50 shadow-glow-primary'
-                        : 'bg-gray-600/50 text-gray-400 cursor-not-allowed',
+                        : 'bg-primary/20 text-gray-400 cursor-not-allowed',
                 ]"
             >
                 <div class="relative z-10 flex items-center justify-center">
@@ -164,7 +164,7 @@
                         ></path>
                     </svg>
                     {{
-                        isValidating ? "Validating Account..." : "Process Order"
+                        isValidating ? "Memvalidasi Akun..." : "Proses Pesanan"
                     }}
                     <svg
                         v-if="!isOrderReady && !isValidating"

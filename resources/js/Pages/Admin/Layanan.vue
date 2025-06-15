@@ -122,14 +122,14 @@ const getServicesFromAPI = () => {
     );
 };
 
-const syncPrices = () => {
-    isLoading.value = true;
-    router.post(route("providers.syncHargaLayanan"), {
-        onSuccess: () => {
-            isLoading.value = false;
-        },
-    });
-};
+// const syncPrices = () => {
+//     isLoading.value = true;
+//     router.post(route("providers.syncHargaLayanan"), {
+//         onSuccess: () => {
+//             isLoading.value = false;
+//         },
+//     });
+// };
 
 // Delete services by provider
 const deleteServicesByProvider = () => {
@@ -148,10 +148,12 @@ const deleteServicesByProvider = () => {
         icon: "warning",
         confirmButtonText: "Yes, delete all",
         onConfirm: () => {
-            router.delete(route("services.deleteLayanan"), {
-                data: { provider_id: selectedProvider.value },
-                preserveScroll: true,
-            });
+            router.delete(
+                route("services.deleteLayanans", selectedProvider.value),
+                {
+                    preserveScroll: true,
+                }
+            );
         },
     });
 };
@@ -361,6 +363,35 @@ const calculatedPriceIDR = computed(() => {
 
                 <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     <button
+                        v-if="selectedProvider"
+                        @click="
+                            openRateKursForm(
+                                providerList.find(
+                                    (p) => p.id == selectedProvider
+                                )
+                            )
+                        "
+                        class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover hover:shadow-glow-secondary"
+                        :disabled="isLoading"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <span>Update Rate</span>
+                    </button>
+
+                    <!-- <button
                         @click="syncPrices"
                         class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover hover:shadow-glow-secondary"
                         :disabled="isLoading"
@@ -401,37 +432,8 @@ const calculatedPriceIDR = computed(() => {
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                             />
                         </svg>
-                        <span>Sync Prices</span>
-                    </button>
-
-                    <button
-                        v-if="selectedProvider"
-                        @click="
-                            openRateKursForm(
-                                providerList.find(
-                                    (p) => p.id == selectedProvider
-                                )
-                            )
-                        "
-                        class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover hover:shadow-glow-secondary"
-                        :disabled="isLoading"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                        <span>Update Rate</span>
-                    </button>
+                        <span>Sync Rate</span>
+                    </button> -->
 
                     <button
                         @click="getServicesFromAPI"
@@ -474,7 +476,7 @@ const calculatedPriceIDR = computed(() => {
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                             />
                         </svg>
-                        <span>Get Services from API</span>
+                        <span>Sync Services</span>
                     </button>
 
                     <button
@@ -611,7 +613,12 @@ const calculatedPriceIDR = computed(() => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.services.links" />
+            <Pagination
+                :links="props.services.links"
+                :currentPage="props.services.current_page"
+                :perPage="props.services.per_page"
+                :totalEntries="props.services.total"
+            />
         </div>
 
         <!-- Service Form Modal -->

@@ -204,7 +204,12 @@ const handleFileUpload = (event, field) => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.banners.links" />
+            <Pagination
+                :links="props.banners.links"
+                :currentPage="props.banners.current_page"
+                :perPage="props.banners.per_page"
+                :totalEntries="props.banners.total"
+            />
         </div>
 
         <!-- Modified Form Modal -->

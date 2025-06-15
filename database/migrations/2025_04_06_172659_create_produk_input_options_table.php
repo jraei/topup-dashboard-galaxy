@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('produk_input_options', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_input_field_id')->constrained()->onDelete('cascade');
+            $table->foreignId('produk_input_field_id')->nullable()->constrained()->nullOnDelete();
             $table->string('label'); // Ditampilkan di select
             $table->string('value'); // Dikirm ke backend
             $table->timestamps();

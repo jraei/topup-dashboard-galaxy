@@ -1,24 +1,24 @@
 <script setup>
-import { ref, watch } from 'vue';
-import CosmicCard from './CosmicCard.vue';
-import { Plus, Minus } from 'lucide-vue-next';
+import { ref, watch } from "vue";
+import CosmicCard from "./CosmicCard.vue";
+import { Plus, Minus } from "lucide-vue-next";
 
 const props = defineProps({
     maxQuantity: {
         type: Number,
-        default: 1000
+        default: 1000,
     },
     initialQuantity: {
         type: Number,
-        default: 1
+        default: 1,
     },
     disabled: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 });
 
-const emit = defineEmits(['update:quantity']);
+const emit = defineEmits(["update:quantity"]);
 
 const quantity = ref(props.initialQuantity);
 const isInvalid = ref(false);
@@ -32,8 +32,8 @@ const validateQuantity = () => {
         quantity.value = props.maxQuantity;
         showError();
     }
-    
-    emit('update:quantity', quantity.value);
+
+    emit("update:quantity", quantity.value);
 };
 
 // Show error state with animation
@@ -55,42 +55,47 @@ const handleInputChange = (e) => {
 const increment = () => {
     if (props.disabled) return;
     quantity.value = Math.min(props.maxQuantity, quantity.value + 1);
-    emit('update:quantity', quantity.value);
+    emit("update:quantity", quantity.value);
 };
 
 const decrement = () => {
     if (props.disabled) return;
     quantity.value = Math.max(1, quantity.value - 1);
-    emit('update:quantity', quantity.value);
+    emit("update:quantity", quantity.value);
 };
 
 // Watch for initialQuantity changes
-watch(() => props.initialQuantity, (newVal) => {
-    if (newVal !== quantity.value) {
-        quantity.value = newVal;
+watch(
+    () => props.initialQuantity,
+    (newVal) => {
+        if (newVal !== quantity.value) {
+            quantity.value = newVal;
+        }
     }
-});
+);
 </script>
 
 <template>
-    <CosmicCard title="Purchase Quantity" :stepNumber="3">
+    <CosmicCard title="Kuantitas" :stepNumber="3">
         <div class="flex items-center justify-center w-full space-x-4">
             <!-- Decrement Button -->
             <button
                 @click="decrement"
                 :disabled="disabled || quantity <= 1"
                 class="flex items-center justify-center w-10 h-10 text-white transition-all rounded-full cosmic-button bg-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :class="{'opacity-50 cursor-not-allowed': disabled || quantity <= 1}"
+                :class="{
+                    'opacity-50 cursor-not-allowed': disabled || quantity <= 1,
+                }"
             >
                 <Minus class="w-5 h-5" />
-                <span class="sr-only">Decrease</span>
+                <span class="sr-only">Kurangi</span>
             </button>
-            
+
             <!-- Quantity Input -->
-            <div 
+            <div
                 :class="[
                     'relative w-24 h-12 overflow-hidden rounded-lg',
-                    isInvalid ? 'cosmic-input-error' : 'cosmic-input'
+                    isInvalid ? 'cosmic-input-error' : 'cosmic-input',
                 ]"
             >
                 <input
@@ -104,22 +109,25 @@ watch(() => props.initialQuantity, (newVal) => {
                     class="w-full h-full px-4 text-center text-white bg-transparent border border-secondary/30 focus:border-secondary focus:outline-none"
                 />
             </div>
-            
+
             <!-- Increment Button -->
             <button
                 @click="increment"
                 :disabled="disabled || quantity >= maxQuantity"
                 class="flex items-center justify-center w-10 h-10 text-white transition-all rounded-full cosmic-button bg-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                :class="{'opacity-50 cursor-not-allowed': disabled || quantity >= maxQuantity}"
+                :class="{
+                    'opacity-50 cursor-not-allowed':
+                        disabled || quantity >= maxQuantity,
+                }"
             >
                 <Plus class="w-5 h-5" />
-                <span class="sr-only">Increase</span>
+                <span class="sr-only">Tambah</span>
             </button>
         </div>
-        
+
         <!-- Max quantity message -->
         <p class="mt-3 text-xs text-center text-primary-text/70">
-            Maximum quantity: {{ maxQuantity }}
+            Kuantitas Maksimum: {{ maxQuantity }}
         </p>
     </CosmicCard>
 </template>
@@ -143,7 +151,7 @@ watch(() => props.initialQuantity, (newVal) => {
 }
 
 .cosmic-button::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -50%;
     left: -50%;
@@ -185,7 +193,8 @@ watch(() => props.initialQuantity, (newVal) => {
 }
 
 @keyframes supernova-pulse {
-    0%, 100% {
+    0%,
+    100% {
         box-shadow: 0 0 5px rgba(239, 68, 68, 0.4);
     }
     50% {
@@ -200,7 +209,7 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-input[type=number] {
+input[type="number"] {
     -moz-appearance: textfield;
 }
 </style>

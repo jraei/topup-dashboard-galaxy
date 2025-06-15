@@ -12,7 +12,7 @@
                 v-model="inputValue"
                 :required="field.required"
                 :name="field.name"
-                class="w-full px-4 py-2 text-white transition-colors border rounded-lg dynamic-input bg-secondary/20 border-secondary focus:outline-none"
+                class="w-full px-4 py-2 text-white transition-colors border rounded-lg dynamic-input bg-secondary/20 border-secondary focus:outline-none placeholder-secondary"
                 :class="[
                     errorMessage
                         ? 'border-red-500 focus:border-red-400'
@@ -28,20 +28,25 @@
                 v-model="inputValue"
                 :required="field.required"
                 :name="field.name"
-                class="w-full px-4 py-2 text-white transition-colors border rounded-lg dynamic-input bg-dark-lighter focus:outline-none"
+                class="w-full px-4 py-2 text-white transition-colors border rounded-lg dynamic-input bg-secondary/20 focus:outline-none"
                 :class="[
                     errorMessage
                         ? 'border-red-500 focus:border-red-400'
                         : 'border-secondary/30 focus:border-secondary',
                 ]"
             >
-                <option value="" disabled>
+                <option
+                    value=""
+                    disabled
+                    class="bg-secondary text-primary-text"
+                >
                     Select {{ field.label.toLowerCase() }}
                 </option>
                 <option
                     v-for="option in field.options"
                     :key="option.id"
                     :value="option.value"
+                    class="bg-secondary text-primary-text"
                 >
                     {{ option.label }}
                 </option>

@@ -3,14 +3,14 @@
         <div class="py-8 md:py-12">
             <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <!-- Page Header -->
-                <div class="mb-10 text-center">
+                <!-- <div class="mb-10 text-center">
                     <h1 class="mb-2 text-3xl font-bold text-white md:text-4xl">
                         Transaction Tracker
                     </h1>
                     <p class="text-gray-300">
                         Verify your cosmic purchase journey
                     </p>
-                </div>
+                </div> -->
 
                 <!-- Search Card -->
                 <CosmicSearchCard

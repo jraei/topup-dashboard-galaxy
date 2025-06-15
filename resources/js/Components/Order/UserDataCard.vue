@@ -1,191 +1,3 @@
-<template>
-    <CosmicCard title="Game Account" :step-number="1">
-        <!-- Quick Access Buttons - New Section -->
-        <div v-if="savedAccounts.length > 0" class="mb-4 space-y-2">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium text-gray-300">
-                    Saved Accounts
-                </h3>
-                <button
-                    v-if="savedAccounts.length > 0"
-                    @click="clearAllSavedAccounts"
-                    class="text-xs text-red-400 hover:text-red-300"
-                >
-                    Clear All
-                </button>
-            </div>
-
-            <div class="relative">
-                <div
-                    class="flex gap-2 pb-2 overflow-x-auto scrollbar-none cosmic-accounts-container"
-                    :class="{ 'justify-start': savedAccounts.length > 3 }"
-                >
-                    <button
-                        v-for="account in savedAccounts"
-                        :key="account.id"
-                        @click="loadAccount(account)"
-                        class="cosmic-account-btn flex-shrink-0 h-8 px-3 py-1 text-xs flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-transparent hover:border-primary/50 transition-all duration-300 relative group sm:h-10 sm:px-4 sm:py-1.5 sm:text-sm"
-                        :class="{
-                            'pulse-animation': pulsingAccountId === account.id,
-                        }"
-                    >
-                        <span
-                            class="max-w-[100px] truncate text-primary-text/70"
-                        >
-                            {{ getAccountDisplayName(account) }}
-                        </span>
-                        <span class="flex items-center text-xs text-gray-400">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="w-3 h-3 mr-0.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            {{ getTimeAgo(account.timestamp) }}
-                        </span>
-
-                        <!-- Hover tooltip with account data preview -->
-                        <!-- <div
-                            class="absolute z-20 invisible p-2 text-left transition-all duration-300 transform -translate-x-1/2 translate-y-2 rounded-md opacity-0 pointer-events-none bg-dark-card left-1/2 bottom-full w-44 shadow-cosmic group-hover:visible group-hover:opacity-100"
-                        >
-                            <div class="text-xs font-medium text-white">
-                                Account Details
-                            </div>
-                            <div v-if="account.fields" class="mt-1 space-y-0.5">
-                                <div
-                                    v-for="(value, key) in account.fields"
-                                    :key="key"
-                                    class="flex justify-between gap-2"
-                                >
-                                    <span
-                                        class="text-xs font-medium text-gray-400"
-                                        >{{ formatFieldName(key) }}</span
-                                    >
-                                    <span
-                                        class="text-xs text-white truncate max-w-[120px]"
-                                        >{{ value }}</span
-                                    >
-                                </div>
-                            </div>
-                            <div
-                                class="absolute w-2 h-2 transform rotate-45 -translate-x-1/2 bg-dark-card -bottom-1 left-1/2"
-                            ></div>
-                        </div> -->
-
-                        <!-- Delete button -->
-                        <!-- <button
-                            @click.stop="deleteSavedAccount(account.id)"
-                            class="absolute top-0 right-0 flex items-center justify-center w-4 h-4 text-white transition-opacity transform translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-red-500/80 hover:bg-red-500 group-hover:opacity-100"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="w-3 h-3"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M18 6L6 18M6 6l12 12"></path>
-                            </svg>
-                        </button> -->
-
-                        <!-- Meteor trail effect -->
-                        <!-- <div class="meteor-trail"></div> -->
-                    </button>
-                </div>
-
-                <!-- Scrolling indicators -->
-                <div
-                    v-if="savedAccounts.length > (isMobile ? 3 : 5)"
-                    class="absolute top-0 bottom-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-content_background to-transparent"
-                ></div>
-            </div>
-        </div>
-
-        <form @submit.prevent class="space-y-4">
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 space-x-4">
-                    <DynamicInput
-                        v-for="field in inputFields"
-                        :key="field.id"
-                        :field="field"
-                        :initial-value="getAccountValue(field.name)"
-                        :error="errors[field.name]"
-                        @update:value="handleInputUpdate"
-                    />
-                </div>
-            </div>
-
-            <div class="flex items-center mt-2">
-                <input
-                    type="checkbox"
-                    id="saveAccount"
-                    v-model="saveAccount"
-                    class="w-4 h-4 border-gray-600 rounded text-primary bg-dark-lighter focus:ring-primary/50"
-                />
-                <label for="saveAccount" class="ml-2 text-sm text-gray-300">
-                    Save this account for later
-                </label>
-            </div>
-
-            <div
-                v-if="hasLoadedData"
-                class="p-2 text-xs rounded-md text-secondary bg-secondary/10"
-            >
-                <span class="flex items-center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-4 h-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
-                    Account data loaded from previous session
-                </span>
-            </div>
-
-            <div
-                v-if="validationError"
-                class="p-3 text-sm text-red-300 border border-red-800 rounded-md bg-red-900/20"
-            >
-                <span class="flex items-center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-4 h-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
-                    {{ validationError }}
-                </span>
-            </div>
-        </form>
-    </CosmicCard>
-</template>
-
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import CosmicCard from "@/Components/Order/CosmicCard.vue";
@@ -194,6 +6,8 @@ import { useGameAccount } from "@/Composables/useGameAccount";
 import { useAccountValidation } from "@/Composables/useAccountValidation";
 import { useSavedAccounts } from "@/Composables/useSavedAccounts";
 import { useToast } from "@/Composables/useToast";
+import Modal from "@/Components/Modal.vue";
+import { Info } from "lucide-vue-next";
 
 const props = defineProps({
     inputFields: {
@@ -232,6 +46,7 @@ const errors = ref({});
 const savedAccounts = ref([]);
 const pulsingAccountId = ref(null);
 const isMobile = ref(window.innerWidth < 640);
+const openHelpModal = ref(false);
 
 // Load saved accounts on component mount
 onMounted(() => {
@@ -399,6 +214,232 @@ watch(
     }
 );
 </script>
+
+<template>
+    <CosmicCard title="Data Akun" :step-number="1">
+        <!-- Quick Access Buttons - New Section -->
+        <div v-if="savedAccounts.length > 0" class="mb-4 space-y-2">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-gray-300">
+                    Saved Accounts
+                </h3>
+                <button
+                    v-if="savedAccounts.length > 0"
+                    @click="clearAllSavedAccounts"
+                    class="text-xs text-red-400 hover:text-red-300"
+                >
+                    Clear All
+                </button>
+            </div>
+
+            <div class="relative">
+                <div
+                    class="flex gap-2 pb-2 overflow-x-auto scrollbar-none cosmic-accounts-container"
+                    :class="{ 'justify-start': savedAccounts.length > 3 }"
+                >
+                    <button
+                        v-for="account in savedAccounts"
+                        :key="account.id"
+                        @click="loadAccount(account)"
+                        class="cosmic-account-btn flex-shrink-0 h-8 px-3 py-1 text-xs flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-transparent hover:border-primary/50 transition-all duration-300 relative group sm:h-10 sm:px-4 sm:py-1.5 sm:text-sm"
+                        :class="{
+                            'pulse-animation': pulsingAccountId === account.id,
+                        }"
+                    >
+                        <span
+                            class="max-w-[100px] truncate text-primary-text/70"
+                        >
+                            {{ getAccountDisplayName(account) }}
+                        </span>
+                        <span class="flex items-center text-xs text-gray-400">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-3 h-3 mr-0.5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            {{ getTimeAgo(account.timestamp) }}
+                        </span>
+
+                        <!-- Hover tooltip with account data preview -->
+                        <!-- <div
+                            class="absolute z-20 invisible p-2 text-left transition-all duration-300 transform -translate-x-1/2 translate-y-2 rounded-md opacity-0 pointer-events-none bg-dark-card left-1/2 bottom-full w-44 shadow-cosmic group-hover:visible group-hover:opacity-100"
+                        >
+                            <div class="text-xs font-medium text-white">
+                                Account Details
+                            </div>
+                            <div v-if="account.fields" class="mt-1 space-y-0.5">
+                                <div
+                                    v-for="(value, key) in account.fields"
+                                    :key="key"
+                                    class="flex justify-between gap-2"
+                                >
+                                    <span
+                                        class="text-xs font-medium text-gray-400"
+                                        >{{ formatFieldName(key) }}</span
+                                    >
+                                    <span
+                                        class="text-xs text-white truncate max-w-[120px]"
+                                        >{{ value }}</span
+                                    >
+                                </div>
+                            </div>
+                            <div
+                                class="absolute w-2 h-2 transform rotate-45 -translate-x-1/2 bg-dark-card -bottom-1 left-1/2"
+                            ></div>
+                        </div> -->
+
+                        <!-- Delete button -->
+                        <!-- <button
+                            @click.stop="deleteSavedAccount(account.id)"
+                            class="absolute top-0 right-0 flex items-center justify-center w-4 h-4 text-white transition-opacity transform translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-red-500/80 hover:bg-red-500 group-hover:opacity-100"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-3 h-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M18 6L6 18M6 6l12 12"></path>
+                            </svg>
+                        </button> -->
+
+                        <!-- Meteor trail effect -->
+                        <!-- <div class="meteor-trail"></div> -->
+                    </button>
+                </div>
+
+                <!-- Scrolling indicators -->
+                <div
+                    v-if="savedAccounts.length > (isMobile ? 3 : 5)"
+                    class="absolute top-0 bottom-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-content_background to-transparent"
+                ></div>
+            </div>
+        </div>
+
+        <form @submit.prevent class="space-y-4">
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 space-x-4">
+                    <DynamicInput
+                        v-for="field in inputFields"
+                        :key="field.id"
+                        :field="field"
+                        :initial-value="getAccountValue(field.name)"
+                        :error="errors[field.name]"
+                        @update:value="handleInputUpdate"
+                    />
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center mt-2">
+                    <input
+                        type="checkbox"
+                        id="saveAccount"
+                        v-model="saveAccount"
+                        class="w-4 h-4 rounded border-primary text-primary bg-secondary/50 focus:ring-primary/50"
+                    />
+                    <label
+                        for="saveAccount"
+                        class="ml-2 text-xs md:text-sm text-primary-text/70"
+                    >
+                        Simpan akun untuk pembelian selanjutnya
+                    </label>
+                </div>
+
+                <div class="flex items-center">
+                    <Info
+                        class="inline-block w-6 h-6 cursor-pointer text-primary"
+                        @click="openHelpModal = true"
+                    />
+                </div>
+            </div>
+
+            <div
+                v-if="hasLoadedData"
+                class="p-2 text-xs rounded-md text-secondary bg-secondary/10"
+            >
+                <span class="flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-4 h-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    Account data loaded from previous session
+                </span>
+            </div>
+
+            <div
+                v-if="validationError"
+                class="p-3 text-sm text-red-300 border border-red-800 rounded-md bg-red-900/20"
+            >
+                <span class="flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-4 h-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    {{ validationError }}
+                </span>
+            </div>
+        </form>
+
+        <!-- Voucher Modal -->
+        <Modal
+            :show="openHelpModal"
+            @close="openHelpModal = false"
+            max-width="2xl"
+        >
+            <div
+                class="p-6 border shadow-xl rounded-2xl bg-content_background/30 border-secondary/20 backdrop-blur"
+            >
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white">Panduan</h2>
+                    <button
+                        @click="openHelpModal = false"
+                        class="text-gray-400 hover:text-white"
+                    >
+                        &times;
+                    </button>
+                </div>
+                <img
+                    :src="/storage/ + produk.petunjuk_field"
+                    alt="petunjuk field"
+                    class="max-w-full"
+                />
+            </div>
+        </Modal>
+    </CosmicCard>
+</template>
 
 <style scoped>
 /* Cosmic account buttons styling */

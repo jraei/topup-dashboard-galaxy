@@ -506,7 +506,12 @@ const rangeConflictDetected = computed(() => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.thumbnails.links" />
+            <Pagination
+                :links="props.thumbnails.links"
+                :currentPage="props.thumbnails.current_page"
+                :perPage="props.thumbnails.per_page"
+                :totalEntries="props.thumbnails.total"
+            />
         </div>
 
         <!-- Add/Edit Form Modal -->

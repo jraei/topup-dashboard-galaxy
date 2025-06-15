@@ -1,4 +1,3 @@
-
 <template>
     <div class="absolute inset-0 pointer-events-none starfield-container z-5">
         <canvas ref="canvasRef" class="absolute inset-0 w-full h-full"></canvas>
@@ -47,7 +46,7 @@ const isLowPower = computed(() => {
 // Determine star count based on device capability with 30% reduction
 const getStarCount = computed(() => {
     // 30% fewer stars in visible areas as requested
-    const reductionFactor = 0.7;
+    const reductionFactor = 0.3;
 
     if (isLowPower.value || isMobile.value)
         return Math.floor(50 * reductionFactor);
@@ -211,8 +210,10 @@ function drawStar(star) {
 
 function animate(timestamp = 0) {
     // Determine correct frame duration based on tab visibility
-    const currentFrameDuration = document.hidden ? throttledFrameDuration : frameDuration;
-    
+    const currentFrameDuration = document.hidden
+        ? throttledFrameDuration
+        : frameDuration;
+
     // Throttle frame rate for performance
     const elapsed = timestamp - lastTime;
 
@@ -221,14 +222,14 @@ function animate(timestamp = 0) {
 
         // Clear with proper alpha handling
         if (!canvasRef.value || !ctx) return;
-        
+
         ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
         // Draw all stars
         stars.forEach(drawStar);
 
         // Performance monitoring
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
             frameCount++;
             const drawTime = performance.now() - timestamp;
             if (drawTime > 5 && frameCount % 60 === 0) {

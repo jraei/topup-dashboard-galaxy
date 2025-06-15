@@ -344,7 +344,12 @@ const closeViewModal = () => {
             </DataTable>
 
             <!-- Pagination component -->
-            <Pagination :links="props.pembelians.links" />
+            <Pagination
+                :links="props.pembelians.links"
+                :currentPage="props.pembelians.current_page"
+                :perPage="props.pembelians.per_page"
+                :totalEntries="props.pembelians.total"
+            />
         </div>
 
         <!-- View Purchase Modal -->

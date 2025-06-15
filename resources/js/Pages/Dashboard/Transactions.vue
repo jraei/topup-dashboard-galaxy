@@ -54,7 +54,7 @@ const columns = [
     { key: "order_id", label: "Invoice" },
     {
         key: "layanan",
-        label: "Item",
+        label: "Layanan",
         format: (val) => {
             if (!val) return "Unknown";
             return val.length > 50
@@ -64,7 +64,7 @@ const columns = [
     },
     {
         key: "input_details",
-        label: "User Input",
+        label: "Target",
         format: (_, item) => {
             if (item.input_zone) {
                 return `${item.input_id} (${item.input_zone})`;
@@ -74,7 +74,17 @@ const columns = [
     },
     {
         key: "price",
-        label: "Price",
+        label: "Harga",
+        format: (val) => formatCurrency(val),
+    },
+    {
+        key: "quantity",
+        label: "Jumlah",
+        format: (val) => val + "x",
+    },
+    {
+        key: "total_price",
+        label: "Total",
         format: (val) => formatCurrency(val),
     },
     {
@@ -134,7 +144,9 @@ function formatDate(dateString) {
 
 <template>
     <GuestLayout>
-        <div class="flex min-h-screen mx-auto bg-transparent max-w-7xl">
+        <div
+            class="flex flex-col min-h-screen mx-auto bg-transparent max-w-7xl lg:flex-row"
+        >
             <DashboardSidebar />
             <div class="flex-1 p-2 sm:p-6">
                 <h1 class="mb-6 text-2xl font-bold text-white">

@@ -1,13 +1,11 @@
 <template>
-    <div
-        class="relative p-6 overflow-hidden shadow-lg rounded-xl bg-gradient-to-b from-primary/50 to-content_background/20 backdrop-blur-sm"
-    >
+    <div class="relative p-6 overflow-hidden backdrop-blur-sm">
         <div class="relative z-10">
             <h2 class="mb-4 text-2xl font-bold text-center text-white">
-                Track Your Cosmic Transaction
+                Lacak Transaksi
             </h2>
             <p class="mb-6 text-center text-secondary">
-                Enter your invoice ID to verify its status in the universe
+                Masukkan ID Transaksi untuk melihat detail transaksi
             </p>
 
             <div class="flex flex-col gap-3 sm:flex-row">

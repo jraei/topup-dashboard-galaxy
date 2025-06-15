@@ -33,8 +33,8 @@ const columns = [
         format: (_, item) => {
             return `
                 <div class="flex items-center space-x-2">
-                    <img src="/storage/${item.produk.thumbnail}" alt="${item.produk.nama}" class="object-cover w-8 h-8 rounded-sm">
-                    <span>${item.produk.nama}</span>
+                    <img src="/storage/${item.produk?.thumbnail}" alt="${item.produk?.nama}" class="object-cover w-8 h-8 rounded-sm">
+                    <span>${item.produk?.nama}</span>
                 </div>
             `;
         },
@@ -369,7 +369,12 @@ watch(
             </DataTable>
 
             <!-- Pagination component -->
-            <Pagination :links="props.profitProduks.links" />
+            <Pagination
+                :links="props.profitProduks.links"
+                :currentPage="props.profitProduks.current_page"
+                :perPage="props.profitProduks.per_page"
+                :totalEntries="props.profitProduks.total"
+            />
         </div>
 
         <!-- Price Preview Component -->

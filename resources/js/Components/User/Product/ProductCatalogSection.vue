@@ -17,7 +17,11 @@ const props = defineProps({
     },
 });
 
-const activeCategory = ref(null);
+const topupCategory = props.categories.filter(
+    (category) => category.kategori_name === "Top Up"
+)[0];
+
+const activeCategory = ref(topupCategory?.id || null);
 
 // Filtered products based on selected category
 const filteredProducts = computed(() => {
@@ -82,7 +86,7 @@ watch(
                     <h2
                         class="text-2xl font-bold md:text-2xl text-primary-text drop-shadow-glow"
                     >
-                        Product Catalog
+                        Katalog Produk
                     </h2>
                 </div>
 
@@ -115,9 +119,9 @@ watch(
             >
                 <button
                     @click="showMore"
-                    class="transition tw-px-6 tw-py-2 tw-bg-primary tw-text-white tw-rounded-lg tw-shadow hover:tw-bg-primary/90"
+                    class="px-6 py-2 text-xs transition bg-transparent rounded-lg shadow text-primary-text hover:bg-primary/90 lg:text-base"
                 >
-                    Show More
+                    Tampilkan Lainnya
                 </button>
             </div>
 

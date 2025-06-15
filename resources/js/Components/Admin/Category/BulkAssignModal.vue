@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from "vue";
 import Modal from "@/Components/Modal.vue";
 import axios from "axios";
 import CssCosmicParticles from "@/Components/User/Flashsale/CssCosmicParticles.vue";
+import ProductModalList from "./ProductModalList.vue";
+import { debounce } from "lodash";
 
 const props = defineProps({
     show: Boolean,
@@ -31,12 +33,14 @@ const isLowPowerDevice = ref(
         : isMobile.value
 );
 
+// define ref searchInput element
+
 // Computed properties
 const selectedCount = computed(() => selectedProducts.value.length);
 const hasSelectedProducts = computed(() => selectedCount.value > 0);
 
 // Load products
-const loadProducts = async () => {
+const loadProducts = debounce(async () => {
     isLoading.value = true;
     errorMessage.value = "";
 
@@ -68,7 +72,7 @@ const loadProducts = async () => {
     } finally {
         isLoading.value = false;
     }
-};
+}, 500);
 
 // Handle pagination
 const goToPage = (newPage) => {
@@ -198,6 +202,7 @@ watch(
 
 // Initialize
 onMounted(() => {
+    // input.value.focus();
     if (props.show) {
         loadProducts();
     }
@@ -339,6 +344,8 @@ onMounted(() => {
                             type="text"
                             class="w-full py-2 pl-10 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
                             placeholder="Search products..."
+                            ref="searchInput"
+                            autofocus
                             :disabled="isLoading"
                         />
                     </div>
@@ -401,108 +408,13 @@ onMounted(() => {
                     </div>
 
                     <!-- Products grid -->
-                    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div
-                            v-for="product in products"
-                            :key="product.id"
-                            class="relative p-3 overflow-hidden transition-all border rounded-lg cursor-pointer product-card"
-                            :class="[
-                                selectedProducts.includes(product.id)
-                                    ? product.kategori_id === category.id
-                                        ? 'bg-blue-500/20 border-blue-500/40 text-blue-400'
-                                        : 'bg-primary/20 border-primary/40 text-white'
-                                    : product.kategori_id === category.id
-                                    ? 'bg-blue-500/10 border-blue-500/30'
-                                    : 'bg-dark-lighter border-gray-700 hover:border-primary/30',
-                            ]"
-                            @click="toggleSelection(product.id)"
-                        >
-                            <!-- Cosmic glow effect -->
-                            <div
-                                v-if="
-                                    selectedProducts.includes(product.id) &&
-                                    !isLowPowerDevice
-                                "
-                                class="absolute inset-0 z-0 opacity-30"
-                            >
-                                <div class="cosmic-glow"></div>
-                            </div>
-
-                            <div class="relative z-10 flex">
-                                <!-- Product Image -->
-                                <div
-                                    class="flex items-center justify-center flex-shrink-0 w-16 h-16 mr-3 overflow-hidden border rounded-md bg-dark-sidebar border-gray-700/50"
-                                >
-                                    <img
-                                        v-if="product.thumbnail"
-                                        :src="'/storage/' + product.thumbnail"
-                                        :alt="product.nama"
-                                        class="object-cover w-full h-full"
-                                        loading="lazy"
-                                    />
-                                    <span v-else class="text-2xl">🎮</span>
-                                </div>
-
-                                <!-- Product Info -->
-                                <div class="flex-grow">
-                                    <h4
-                                        class="font-medium text-white line-clamp-1"
-                                    >
-                                        {{ product.nama }}
-                                    </h4>
-
-                                    <!-- Current Category -->
-                                    <div class="flex items-center mt-2">
-                                        <span class="mr-1 text-xs text-gray-400"
-                                            >Category:</span
-                                        >
-                                        <span
-                                            class="text-xs px-2 py-0.5 rounded-full"
-                                            :class="[
-                                                product.kategori_id ===
-                                                category.id
-                                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                    : 'bg-dark-sidebar text-gray-300 border border-gray-700',
-                                            ]"
-                                        >
-                                            {{
-                                                product.kategori
-                                                    ?.kategori_name || "None"
-                                            }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Selection Indicator -->
-                                <div
-                                    v-if="selectedProducts.includes(product.id)"
-                                    class="absolute w-5 h-5 top-2 right-2 text-primary"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="w-5 h-5"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <!-- Quantum entanglement lines (when selected) -->
-                            <div
-                                v-if="
-                                    selectedProducts.includes(product.id) &&
-                                    !isLowPowerDevice
-                                "
-                                class="quantum-lines"
-                            ></div>
-                        </div>
-                    </div>
+                    <ProductModalList
+                        :products="products"
+                        :category="category"
+                        :selected-products="selectedProducts"
+                        :is-low-power-device="isLowPowerDevice"
+                        :toggle-selection="toggleSelection"
+                    />
 
                     <!-- Pagination -->
                     <div

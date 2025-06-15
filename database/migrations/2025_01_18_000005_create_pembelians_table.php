@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('reference_id')->nullable();
             $table->string('order_type')->default('game');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('layanan_id')->constrained('layanans');
+            $table->foreignId('layanan_id')->nullable()->constrained('layanans')->nullOnDelete();
             $table->string('nickname')->nullable()->comment('Player nickname');
             $table->string('input_id')->comment('Player ID, Server ID, etc.');
             $table->string('input_zone')->nullable()->comment('Zone ID, Server name, etc.');
@@ -29,8 +29,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled'])->default('pending');
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
-            $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
-            $table->foreignId('flashsale_item_id')->nullable()->constrained('flashsale_items');
+            $table->foreignId('voucher_id')->nullable()->constrained('vouchers')->nullOnDelete();
+            $table->foreignId('flashsale_item_id')->nullable()->constrained('flashsale_items')->nullOnDelete();
             $table->json('callback_data')->nullable();
             $table->timestamps();
         });

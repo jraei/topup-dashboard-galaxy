@@ -19,7 +19,7 @@ class TripayController extends Controller
         $provider = PaymentProvider::where('provider_name', 'Tripay')->first();
 
         $this->config =  [
-            "mode" => 'development',
+            "mode" => 'production',
             "merchant_code" => $provider['kode_merchant'],
             "api_key" => $provider['api_key'],
             "private_key" => $provider['private_key'],

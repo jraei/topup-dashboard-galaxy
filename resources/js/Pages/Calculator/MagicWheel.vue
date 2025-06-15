@@ -31,11 +31,11 @@ const formattedDiamonds = computed(() => {
 // Result message based on stars and diamonds
 const resultMessage = computed(() => {
     if (currentStars.value >= 200) {
-        return "You already have enough stars for the Legend skin!";
+        return "Kamu sudah memiliki cukup bintang untuk memperoleh skin legend!";
     } else if (currentStars.value === 200) {
-        return `You're halfway there! You need ${formattedDiamonds.value} Diamonds to reach 200 Stars!`;
+        return `Setengah jalan! Kamu hanya perlu ${formattedDiamonds.value} Diamond untuk mencapai 200 Stars!`;
     } else {
-        return `You need ${formattedDiamonds.value} Diamonds to reach 200 Stars!`;
+        return `Kamu perlu ${formattedDiamonds.value} Diamond untuk mencapai 200 Stars!`;
     }
 });
 
@@ -71,7 +71,8 @@ const progressPercentage = computed(() => {
                         Magic Wheel <span class="text-primary">Calculator</span>
                     </h1>
                     <p class="mt-2 text-white/70">
-                        Calculate the diamonds needed to obtain a Legend skin
+                        Hitung diamond yang diperlukan untuk memperoleh skin
+                        Legend
                     </p>
                 </div>
 
@@ -88,7 +89,7 @@ const progressPercentage = computed(() => {
                                         <label
                                             for="stars"
                                             class="text-lg font-medium text-white"
-                                            >Current Star Points:</label
+                                            >Star Points Saat Ini:</label
                                         >
                                         <div
                                             class="flex items-center space-x-1"
@@ -203,7 +204,7 @@ const progressPercentage = computed(() => {
                                         class="flex items-center justify-between mb-2"
                                     >
                                         <span class="text-sm text-white/70"
-                                            >Progress to Legend Skin:</span
+                                            >Progress:</span
                                         >
                                         <span
                                             class="text-sm font-bold text-white"
@@ -275,7 +276,7 @@ const progressPercentage = computed(() => {
                                                 d="M12 2L9.5 8.5H2L7.5 12.5L5.5 19L12 15L18.5 19L16.5 12.5L22 8.5H14.5L12 2Z"
                                             />
                                         </svg>
-                                        Top Up Diamonds Now!
+                                        Top Up Diamonds Sekarang!
                                     </a>
                                 </div>
                             </div>
@@ -287,11 +288,12 @@ const progressPercentage = computed(() => {
                                 How it works
                             </h3>
                             <p class="text-sm text-white/70">
-                                The Magic Wheel requires 200 stars to exchange
-                                for a Legend skin. Each 5x spin costs 270
-                                diamonds and gives 5 stars. This calculator
-                                helps you estimate how many more diamonds you
-                                need based on your current star count.
+                                Magic Wheel membutuhkan 200 bintang untuk
+                                ditukar dengan skin Legend. Setiap 5x spin
+                                berharga 270 diamond dan memberikan 5 bintang.
+                                Kalkulator ini membantu Anda memperkirakan
+                                berapa banyak diamond lagi yang Anda perlukan
+                                berdasarkan jumlah bintang Anda saat ini.
                             </p>
                         </div>
                     </div>

@@ -5,7 +5,6 @@ import DesktopTierTwo from "./DesktopTierTwo.vue";
 import MobileBreadcrumbs from "./MobileBreadcrumbs.vue";
 import CosmicStarfield from "./CosmicStarfield.vue";
 import { usePage } from "@inertiajs/vue3";
-import { LogOut, Compass } from "lucide-vue-next";
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -17,11 +16,15 @@ const isScrolled = ref(false);
 const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value;
 
-    // Disable body scroll when mobile menu is open
     if (isMobileMenuOpen.value) {
-        document.body.style.overflow = "hidden";
+        document.body.classList.add("menu-open");
     } else {
-        document.body.style.overflow = "";
+        document.body.classList.remove("menu-open");
+        // Kembalikan scroll position
+        const scrollY = document.body.style.top;
+        document.body.style.position = "";
+        document.body.style.top = "";
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
 };
 

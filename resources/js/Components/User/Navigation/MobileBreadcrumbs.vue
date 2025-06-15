@@ -1,7 +1,6 @@
 <script setup>
-import { ref, computed, resolveComponent } from "vue";
-import { Link } from "@inertiajs/vue3";
-import ApplicationLogo from "@/Components/ApplicationLogo.vue";
+import { ref, computed } from "vue";
+import { Link, usePage } from "@inertiajs/vue3";
 import ProductSearch from "./ProductSearch.vue";
 import CosmicIcon from "./CosmicIcon.vue";
 import {
@@ -46,6 +45,7 @@ const expandedItems = ref([]);
 const isAuthenticated = computed(() => {
     return !!props.user;
 });
+const page = usePage();
 
 const toggleSearch = () => {
     showSearch.value = !showSearch.value;
@@ -77,6 +77,8 @@ const getIconName = (emojiName) => {
 const isAdmin = computed(() => {
     return props.userRole === "admin";
 });
+
+const logoHeader = page.props.web_details.logo_header;
 </script>
 
 <template>
@@ -87,7 +89,16 @@ const isAdmin = computed(() => {
                 <!-- Left: Logo -->
                 <div class="flex items-center flex-shrink-0">
                     <Link :href="route('dashboard')">
-                        <ApplicationLogo class="w-auto h-8 text-primary" />
+                        <!-- <ApplicationLogo
+                            class="w-auto h-8 text-primary"
+                            :class="{ hidden: showSearch }"
+                        /> -->
+                        <img
+                            :src="logoHeader"
+                            alt="logo"
+                            class="w-auto h-8"
+                            :class="{ hidden: showSearch }"
+                        />
                     </Link>
                 </div>
 
@@ -97,12 +108,16 @@ const isAdmin = computed(() => {
                     <button
                         class="flex items-center justify-center w-10 h-10 text-gray-300 transition-all rounded-full hover:bg-primary/10"
                         @click="toggleSearch"
+                        v-if="!showSearch"
                     >
                         <CosmicIcon name="search" size="md" />
                     </button>
 
                     <!-- Language -->
-                    <button class="flex items-center text-lg text-secondary">
+                    <button
+                        class="flex items-center text-lg text-secondary"
+                        v-if="!showSearch"
+                    >
                         🇮🇩
                     </button>
 
@@ -112,7 +127,7 @@ const isAdmin = computed(() => {
                         @click="toggleMenu"
                     >
                         <div
-                            v-if="!isOpen"
+                            v-if="!isOpen && !showSearch"
                             class="flex flex-col items-end space-y-1.5"
                         >
                             <div
@@ -126,7 +141,7 @@ const isAdmin = computed(() => {
                             ></div>
                         </div>
                         <svg
-                            v-else
+                            v-else-if="isOpen && showSearch"
                             xmlns="http://www.w3.org/2000/svg"
                             class="w-6 h-6"
                             fill="none"
@@ -184,23 +199,23 @@ const isAdmin = computed(() => {
         </div>
 
         <!-- Mobile Menu (Breadcrumb Panel) -->
-        <div v-if="isOpen" class="fixed inset-0 z-40 flex">
+        <div v-if="isOpen" class="fixed inset-0 z-50 flex">
             <!-- Backdrop -->
             <div
-                class="fixed inset-0 transition-opacity duration-300 bg-black/60 backdrop-blur-sm"
+                class="fixed inset-0 z-40 h-screen bg-black/60 backdrop-blur-sm"
                 @click="closeMenu"
             ></div>
 
             <!-- Slide-in Panel -->
             <div
-                class="relative flex flex-col w-4/5 h-full max-w-sm overflow-y-auto transition-all duration-300 transform bg-gradient-to-br from-primary/50 to-bg-content_background backdrop-blur-md"
+                class="relative z-50 flex flex-col w-4/5 h-screen max-w-sm overflow-y-auto transition-all duration-300 transform bg-gradient-to-br from-primary/50 to-bg-content_background backdrop-blur-md"
             >
                 <!-- Panel Header -->
                 <div
                     class="flex items-center justify-between p-4 border-b border-primary/20"
                 >
                     <Link :href="route('dashboard')" @click="closeMenu">
-                        <ApplicationLogo class="w-auto h-8 text-primary" />
+                        <img :src="logoHeader" alt="logo" class="w-auto h-8" />
                     </Link>
                     <button
                         class="flex items-center justify-center w-10 h-10 text-gray-300 rounded-full hover:bg-primary/10"
@@ -348,8 +363,9 @@ const isAdmin = computed(() => {
                             :href="route('dashboard.transactions')"
                             class="flex items-center px-4 py-3 text-gray-200 transition-all rounded-md hover:bg-primary/10 hover:text-primary"
                             :class="{
-                                'bg-primary/5 text-primary':
-                                    route().current('dashboard'),
+                                'bg-primary/5 text-primary': route().current(
+                                    'dashboard.transactions'
+                                ),
                             }"
                             @click="closeMenu"
                         >
@@ -396,7 +412,8 @@ const isAdmin = computed(() => {
                 >
                     <div class="grid grid-cols-2 gap-3">
                         <Link
-                            :href="route('admin.dashboard')"
+                            :href="route('logout')"
+                            method="post"
                             class="flex items-center justify-center px-4 py-2 text-sm font-medium text-center text-white transition-all rounded-md bg-primary hover:bg-primary-hover"
                             @click="closeMenu"
                         >

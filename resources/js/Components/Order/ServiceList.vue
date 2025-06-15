@@ -69,7 +69,7 @@ const flashsaleServiceGroups = computed(() => {
 </script>
 
 <template>
-    <CosmicCard title="Select Nominal" :stepNumber="2">
+    <CosmicCard title="Pilih Layanan" :stepNumber="2">
         <div class="space-y-6">
             <!-- Flashsale Services -->
             <div

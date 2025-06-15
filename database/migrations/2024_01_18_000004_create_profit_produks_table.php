@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('profit_produks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_roles_id')->constrained('user_roles');
-            $table->foreignId('produk_id')->constrained('produks');
+            $table->foreignId('user_roles_id')->nullable()->constrained('user_roles')->nullOnDelete();
+            $table->foreignId('produk_id')->nullable()->constrained('produks')->nullOnDelete();
             $table->enum('type', ['percent', 'multiplier'])->default('percent');
             $table->decimal('value', 10, 2)->default(0);
             $table->timestamps();

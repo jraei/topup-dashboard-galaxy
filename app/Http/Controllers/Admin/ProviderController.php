@@ -8,6 +8,7 @@ use App\Models\Provider;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\NaelstoreController;
 
 class ProviderController extends Controller
 {
@@ -134,61 +135,52 @@ class ProviderController extends Controller
     // get balance from digiflazzController
     public function getBalancesByProvider(Provider $provider)
     {
-        if ($provider->provider_name == 'digiflazz') {
-            $digiflazz = new DigiflazzController();
-            $data = $digiflazz->getDigiflazzBalance();
-            if ($data['status']) {
-                $balance = $data['data'];
-                $provider->update([
-                    'balance' => $balance,
-                    'status' => 'active'
-                ]);
+        $data = null;
+        switch ($provider->provider_name) {
+            case 'digiflazz':
+                $digiflazz = new DigiflazzController();
+                $data = $digiflazz->getDigiflazzBalance();
+                break;
+            case 'moogold':
+                $moogold = new MoogoldController();
+                $data = $moogold->getMoogoldBalance();
+                break;
+            case 'naelstore':
+                $naelstore = new NaelstoreController();
+                $data = $naelstore->getNaelstoreBalance();
+                break;
+            default:
                 return back()->with('status', [
-                    'type' => 'success',
-                    'action' => 'Success',
-                    'text' => 'Balance has been updated!',
-                    'balance' => $balance,
-                    'status' => 'active',
-                    'provider_id' => $provider->id,
+                    'type' => 'error',
+                    'action' => 'Request Error',
+                    'text' => 'Provider not found!',
+                ]);
+                break;
+        }
 
-                ]);
-            } else {
-                $provider->update(['status' => 'inactive']);
-                return back()->with('status', [
-                    'type' => 'error',
-                    'action' => 'Request Error',
-                    'text' => $data['message'],
-                    'provider_id' => $provider->id,
-                    'status' => 'inactive'
-                ]);
-            }
-        } else if ($provider->provider_name == 'moogold') {
-            $moogold = new MoogoldController();
-            $data = $moogold->getMoogoldBalance();
-            if ($data['status']) {
-                $balance = $data['data'];
-                $provider->update([
-                    'balance' => $balance,
-                    'status' => 'active'
-                ]);
-                return back()->with('status', [
-                    'type' => 'success',
-                    'action' => 'Success',
-                    'text' => 'Balance has been updated!',
-                    'balance' => $balance,
-                    'status' => 'active',
-                    'provider_id' => $provider->id,
-                ]);
-            } else {
-                $provider->update(['status' => 'inactive']);
-                return back()->with('status', [
-                    'type' => 'error',
-                    'action' => 'Request Error',
-                    'text' => $data['message'],
-                    'status' => 'inactive',
-                    'provider_id' => $provider->id
-                ]);
-            }
+        if ($data['status']) {
+            $balance = $data['data'];
+            $provider->update([
+                'balance' => $balance,
+                'status' => 'active'
+            ]);
+            return back()->with('status', [
+                'type' => 'success',
+                'action' => 'Success',
+                'text' => 'Balance has been updated!',
+                'balance' => $balance,
+                'status' => 'active',
+                'provider_id' => $provider->id,
+            ]);
+        } else {
+            $provider->update(['status' => 'inactive']);
+            return back()->with('status', [
+                'type' => 'error',
+                'action' => 'Request Error',
+                'text' => $data['message'],
+                'status' => 'inactive',
+                'provider_id' => $provider->id
+            ]);
         }
     }
 }

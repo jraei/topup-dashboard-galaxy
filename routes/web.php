@@ -2,30 +2,34 @@
 
 use Inertia\Inertia;
 use App\Models\Banner;
+use App\Models\Produk;
+use App\Models\WebConfig;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MoogoldController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\CronjobController;
 use App\Http\Controllers\Admin\ProdukController;
 use App\Http\Controllers\Admin\TripayController;
+use App\Http\Controllers\Admin\CronjobController;
 use App\Http\Controllers\Admin\DepositController;
 use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\ProviderController;
+use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\PayMethodController;
 use App\Http\Controllers\Admin\PembelianController;
 use App\Http\Controllers\Admin\PembayaranController;
-use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\ProfitProdukController;
 use App\Http\Controllers\Admin\FlashsaleItemController;
 use App\Http\Controllers\Admin\ItemThumbnailController;
@@ -54,6 +58,7 @@ Route::get('/xendit/get-payment-methods', [XenditController::class, 'getPaymentM
 Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/leaderboard', [IndexController::class, 'leaderboard'])->name('leaderboard');
 Route::get('/cek-transaksi', [IndexController::class, 'cekTransaksi'])->name('cek-transaksi');
+Route::get('/term-of-service', [IndexController::class, 'termOfService'])->name('term-of-service');
 
 // Order Processing Routes
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');
@@ -66,6 +71,7 @@ Route::get('/order/invoice/{order_id}', [OrderController::class, 'invoice'])->na
 // Cronjob routes
 Route::get('/getMoogold', [CronjobController::class, 'getMoogold'])->name('cronjob.getMoogold');
 Route::get('/getDigiflazz', [CronjobController::class, 'getDigiflazz'])->name('cronjob.getDigiflazz');
+Route::get('/statusMoogold', [CronjobController::class, 'statusMoogold'])->name('cronjob.statusMoogold');
 
 
 Route::middleware('auth')->group(function () {
@@ -99,7 +105,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/', [AdminController::class, 'index'])->name('admin.index');
 
     Route::get('dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('dashboard/export', [AdminController::class, 'exportDashboard'])->name('admin.dashboard.export');
@@ -154,12 +160,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Placeholder routes for all other admin pages
     Route::resource('/products', ProdukController::class);
     Route::post('/products/{id}/validation', [ProdukController::class, 'updateValidation'])->name('products.updateValidation');
+    Route::delete('/products/deleteProductsByProvider/{provider}', [ProdukController::class, 'deleteProductsByProvider'])->name('products.deleteProduks');
+    Route::patch('/products/togglePopuler/{produk}', [ProdukController::class, 'togglePopuler'])->name('products.togglePopuler');
     Route::post('/services/getService/{provider}', [ProdukController::class, 'getProductsByProvider'])->name('products.getProductsByProvider');
 
     // Service Management
     Route::resource('/services', LayananController::class);
     Route::post('/services/getServices/{provider}', [LayananController::class, 'getServicesByProvider'])->name('services.getServicesByProvider');
-    Route::delete('/services/deleteLayanan', [LayananController::class, 'deleteLayanan'])->name('services.deleteLayanan');
+    Route::delete('/services/deleteServicesByProvider/{provider}', [LayananController::class, 'deleteLayanan'])->name('services.deleteLayanans');
 
     // Provider Management
     Route::resource('/providers', ProviderController::class);
@@ -167,7 +175,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('providers/getBalances/{provider}', [ProviderController::class, 'getBalancesByProvider'])->name('providers.getBalancesByProvider');
     Route::post('providers/syncHargaLayanan', [ProviderController::class, 'syncHargaLayanan'])->name('providers.syncHargaLayanan');
 
-    Route::get('/profit-preview', [ProfitProdukController::class, 'preview'])->name('profit-produks.preview');
 
     // Product Input Field Management
     Route::resource('produk-input-fields', ProdukInputFieldController::class)->names('admin.produk-input-fields');

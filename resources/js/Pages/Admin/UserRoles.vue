@@ -190,7 +190,12 @@ const saveDataForm = () => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.userRoles.links" />
+            <Pagination
+                :links="props.userRoles.links"
+                :currentPage="props.userRoles.current_page"
+                :perPage="props.userRoles.per_page"
+                :totalEntries="props.userRoles.total"
+            />
         </div>
 
         <!-- Form Modal -->

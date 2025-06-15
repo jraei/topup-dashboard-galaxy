@@ -84,7 +84,7 @@ watch(
             class="flex items-center py-2 space-x-2 overflow-x-auto scrollbar-none"
         >
             <!-- All Categories Option -->
-            <div
+            <!-- <div
                 @click="selectCategory(null)"
                 :class="[
                     activeCategory === null
@@ -94,7 +94,7 @@ watch(
                 class="px-4 py-2 text-sm font-medium transition-all rounded-full cursor-pointer select-none whitespace-nowrap hover:scale-105"
             >
                 All Products
-            </div>
+            </div> -->
 
             <div
                 v-for="category in categories"

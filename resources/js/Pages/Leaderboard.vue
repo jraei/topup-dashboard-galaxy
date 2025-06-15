@@ -13,18 +13,23 @@
                     <CosmicStars />
 
                     <h1
-                        class="mb-8 text-3xl font-bold text-center text-white md:text-4xl"
+                        class="mb-4 text-2xl font-bold text-center text-white md:text-4xl"
                     >
                         <span
                             class="text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text"
                         >
-                            Cosmic Leaderboard
+                            Top 10 Pembelian Terbanyak di NAELSTORE
                         </span>
                     </h1>
+                    <p class="mb-8 text-center text-primary-text/80">
+                        Berikut ini adalah daftar 10 pembelian terbanyak yang
+                        dilakukan oleh pelanggan kami. Data ini diambil dari
+                        sistem kami dan selalu diperbaharui.
+                    </p>
 
                     <!-- Tabs Container -->
                     <CosmicTabs
-                        :time-periods="['Today', 'This Week', 'This Month']"
+                        :time-periods="['Hari Ini', 'Minggu Ini', 'Bulan Ini']"
                         :active-tab="activeTab"
                         @tab-change="handleTabChange"
                     />
@@ -41,7 +46,7 @@
                             :href="route('index')"
                             class="inline-flex items-center px-6 py-3 space-x-2 text-lg text-white transition-all duration-300 border rounded-full bg-primary/40 hover:bg-primary/60 backdrop-blur-sm border-primary/30"
                         >
-                            <span>Return to Home</span>
+                            <span>Kembali</span>
                         </Link>
                     </div>
                 </div>
@@ -74,16 +79,16 @@ const props = defineProps({
 
 const { toast } = useToast();
 const loading = ref(false);
-const activeTab = ref("Today");
+const activeTab = ref("Hari Ini");
 
 // Compute current rankings based on active tab
 const currentRankings = computed(() => {
     switch (activeTab.value) {
-        case "Today":
+        case "Hari Ini":
             return props.daily || [];
-        case "This Week":
+        case "Minggu Ini":
             return props.weekly || [];
-        case "This Month":
+        case "Bulan Ini":
             return props.monthly || [];
         default:
             return [];

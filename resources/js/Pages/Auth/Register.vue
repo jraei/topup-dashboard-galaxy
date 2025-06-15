@@ -58,7 +58,7 @@ function checkPasswordStrength(password) {
     // Length check
     if (password.length >= 8) score++;
     else {
-        passwordFeedback.value = "Password should be at least 8 characters";
+        passwordFeedback.value = "Password minimal 8 karakter";
         passwordStrength.value = Math.max(1, score);
         return;
     }
@@ -71,7 +71,7 @@ function checkPasswordStrength(password) {
     passwordStrength.value = score;
 
     if (score < 3) {
-        passwordFeedback.value = "Add uppercase, numbers or special characters";
+        passwordFeedback.value = "Tambahkan angka, simbol atau huruf besar";
     } else {
         passwordFeedback.value = "";
     }
@@ -111,15 +111,15 @@ const submit = () => {
 
     <CosmicAuthCard
         ref="authCardRef"
-        title="Create Your"
-        subtitle="Join the cosmic community"
+        title="Daftar Akun"
+        subtitle="Pastikan masukkan data yang belum pernah digunakan"
     >
         <form @submit.prevent="submit">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <CosmicFormField
                     id="name"
                     type="text"
-                    label="Full Name"
+                    label="Nama Lengkap"
                     v-model="form.name"
                     :error="form.errors.name"
                     required
@@ -151,13 +151,13 @@ const submit = () => {
                 <CountrySelector
                     id="phone_code"
                     v-model="form.phone_code"
-                    label="Country Code"
+                    label="Kode Negara"
                 />
 
                 <CosmicFormField
                     id="phone"
                     type="text"
-                    label="WhatsApp Number"
+                    label="Nomor Whatsapp"
                     v-model="form.phone"
                     :error="form.errors.phone"
                     autocomplete="tel"
@@ -215,7 +215,7 @@ const submit = () => {
                     <CosmicFormField
                         id="password_confirmation"
                         type="password"
-                        label="Confirm Password"
+                        label="Konfirmasi Password"
                         v-model="form.password_confirmation"
                         :error="form.errors.password_confirmation"
                         required
@@ -230,7 +230,7 @@ const submit = () => {
                     :href="route('login')"
                     class="text-sm text-gray-400 underline rounded-md hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
-                    Already registered?
+                    Sudah punya akun?
                 </Link>
 
                 <PrimaryButton
@@ -238,7 +238,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    <span>Register</span>
+                    <span>Daftar</span>
                     <div class="cosmic-button-stars"></div>
                 </PrimaryButton>
             </div>

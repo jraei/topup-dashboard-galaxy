@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, watch } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
@@ -12,15 +11,15 @@ const currentStars = ref(1);
 // Calculate diamonds needed using the provided formula
 const diamondsNeeded = computed(() => {
     const point = currentStars.value;
-    
+
     // Already have max stars
     if (point >= 100) {
         return 0;
     }
-    
+
     // Apply the provided formula
     if (point < 90) {
-        return Math.ceil((2000 - point * 20) * 850 / 1000);
+        return Math.ceil(((2000 - point * 20) * 850) / 1000);
     } else {
         return Math.ceil(2000 - point * 20);
     }
@@ -34,9 +33,9 @@ const formattedDiamonds = computed(() => {
 // Result message based on stars and diamonds
 const resultMessage = computed(() => {
     if (currentStars.value >= 100) {
-        return "You already have enough stars for the Zodiac skin!";
+        return "Kamu sudah memiliki cukup bintang untuk memperoleh skin zodiac!";
     } else {
-        return `You need ${formattedDiamonds.value} Diamonds to complete your Zodiac!`;
+        return `Kamu perlu ${formattedDiamonds.value} Diamonds untuk skin Zodiac!`;
     }
 });
 
@@ -72,7 +71,8 @@ const progressPercentage = computed(() => {
                         Zodiac <span class="text-secondary">Calculator</span>
                     </h1>
                     <p class="mt-2 text-white/70">
-                        Calculate the diamonds needed to obtain a Zodiac skin
+                        Hitung diamond yang diperlukan untuk memperoleh skin
+                        Zodiac
                     </p>
                 </div>
 
@@ -89,7 +89,7 @@ const progressPercentage = computed(() => {
                                         <label
                                             for="stars"
                                             class="text-lg font-medium text-white"
-                                            >Current Star Points:</label
+                                            >Star Points Sekarang:</label
                                         >
                                         <div
                                             class="flex items-center space-x-1"
@@ -204,7 +204,7 @@ const progressPercentage = computed(() => {
                                         class="flex items-center justify-between mb-2"
                                     >
                                         <span class="text-sm text-white/70"
-                                            >Progress to Zodiac Skin:</span
+                                            >Progress</span
                                         >
                                         <span
                                             class="text-sm font-bold text-white"
@@ -276,7 +276,7 @@ const progressPercentage = computed(() => {
                                                 d="M12 2L9.5 8.5H2L7.5 12.5L5.5 19L12 15L18.5 19L16.5 12.5L22 8.5H14.5L12 2Z"
                                             />
                                         </svg>
-                                        Top Up Diamonds Now!
+                                        Top Up Diamonds Sekarang!
                                     </a>
                                 </div>
                             </div>
@@ -285,15 +285,15 @@ const progressPercentage = computed(() => {
                         <!-- Info Box -->
                         <div class="p-4 mt-8 rounded-lg bg-secondary/10">
                             <h3 class="mb-2 text-lg font-semibold text-white">
-                                How it works
+                                Cara Kerja
                             </h3>
                             <p class="text-sm text-white/70">
-                                The Zodiac draw requires 100 stars to exchange
-                                for a Zodiac skin. This calculator helps you
-                                estimate how many more diamonds you need based on
-                                your current star count. The diamond cost
-                                calculation changes as you get closer to 90
-                                stars.
+                                Draw Zodiac membutuhkan 100 bintang untuk
+                                ditukarkan dengan skin Zodiac. Kalkulator ini
+                                membantu Anda memperkirakan berapa banyak
+                                diamond lagi yang Anda perlukan berdasarkan
+                                jumlah bintang Anda saat ini. Perhitungan biaya
+                                diamond berubah saat Anda mendekati 90 bintang.
                             </p>
                         </div>
                     </div>

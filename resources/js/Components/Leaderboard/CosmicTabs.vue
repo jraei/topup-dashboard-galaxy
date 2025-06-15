@@ -85,11 +85,11 @@ import { Orbit, Moon, Diameter, CircleOff } from "lucide-vue-next";
 const props = defineProps({
     timePeriods: {
         type: Array,
-        default: () => ["Today", "This Week", "This Month"],
+        default: () => ["Hari Ini", "Minggu Ini", "Bulan Ini"],
     },
     activeTab: {
         type: String,
-        default: "Today",
+        default: "Hari Ini",
     },
 });
 

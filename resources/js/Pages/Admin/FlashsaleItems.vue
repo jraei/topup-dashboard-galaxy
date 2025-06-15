@@ -596,7 +596,12 @@ watch(
                 </template>
             </DataTable>
             <!-- Pagination component -->
-            <Pagination :links="flashsaleItems.links" />
+            <Pagination
+                :links="props.flashsaleItems.links"
+                :currentPage="props.flashsaleItems.current_page"
+                :perPage="props.flashsaleItems.per_page"
+                :totalEntries="props.flashsaleItems.total"
+            />
         </div>
 
         <!-- Add/Edit Flash Sale Item Modal -->

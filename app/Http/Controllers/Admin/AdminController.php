@@ -745,9 +745,9 @@ class AdminController extends Controller
             'header_bg' => 'required|string|regex:/^\#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/',
             'text_primary' => 'required|string|regex:/^\#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/',
             'text_secondary' => 'required|string|regex:/^\#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/',
-            'logo_header' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:max_width=300,max_height=100',
-            'logo_footer' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:max_width=300,max_height=100',
-            'logo_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:1024|dimensions:width=32,height=32',
+            'logo_header' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp,ico',
+            'logo_footer' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp,ico',
+            'logo_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp,ico',
         ]);
 
         if ($validator->fails()) {
@@ -768,7 +768,7 @@ class AdminController extends Controller
                 foreach ($logoFields as $field) {
                     if ($request->hasFile($field)) {
                         $file = $request->file($field);
-                        $filename = time() . '_' . $field . '.' . $file->getClientOriginalExtension();
+                        $filename =  $field . '.' . $file->getClientOriginalExtension();
                         $path = $file->storeAs('logos', $filename, 'public');
                         WebConfig::set($field, '/storage/' . $path, "Logo: {$field}", 'image');
                     }

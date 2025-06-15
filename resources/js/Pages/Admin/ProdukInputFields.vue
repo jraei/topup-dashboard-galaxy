@@ -295,7 +295,12 @@ const manageOptions = (field) => {
             </DataTable>
 
             <!-- Pagination component -->
-            <Pagination :links="props.fields.links" />
+            <Pagination
+                :links="props.fields.links"
+                :currentPage="props.fields.current_page"
+                :perPage="props.fields.per_page"
+                :totalEntries="props.fields.total"
+            />
         </div>
 
         <!-- Add/Edit Field Modal -->

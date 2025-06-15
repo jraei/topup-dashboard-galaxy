@@ -1,4 +1,3 @@
-
 <script setup>
 defineProps({
     title: {
@@ -28,7 +27,7 @@ const planetIcons = [
 // Get SVG for the current step
 const getPlanetSvg = (step) => {
     if (step === null || step <= 0 || step > planetIcons.length) {
-        return '';
+        return "";
     }
     return planetIcons[step - 1];
 };
@@ -45,13 +44,13 @@ const getPlanetSvg = (step) => {
             <div class="relative z-10 flex items-center">
                 <!-- Planet Step Indicator -->
                 <div v-if="stepNumber !== null" class="mr-3 space-x-1">
-                    <div 
+                    <div
                         v-html="getPlanetSvg(stepNumber)"
-                        class="w-5 h-5 md:w-6 md:h-6 text-secondary inline-block"
-                        :class="{'current-step': true}"
+                        class="inline-block w-5 h-5 md:w-6 md:h-6 text-secondary"
+                        :class="{ 'current-step': true }"
                     ></div>
                 </div>
-                
+
                 <div>
                     <h3 class="text-lg font-bold md:text-xl">
                         <template v-if="stepNumber !== null">
@@ -171,7 +170,8 @@ const getPlanetSvg = (step) => {
 }
 
 @keyframes step-pulse {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 0.8;
     }

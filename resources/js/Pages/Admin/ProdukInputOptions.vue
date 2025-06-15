@@ -377,7 +377,12 @@ const updateValueFromLabel = () => {
             </DataTable>
 
             <!-- Pagination component -->
-            <Pagination :links="props.options.links" />
+            <Pagination
+                :links="props.options.links"
+                :currentPage="props.options.current_page"
+                :perPage="props.options.per_page"
+                :totalEntries="props.options.total"
+            />
         </div>
 
         <!-- Add/Edit Option Modal -->

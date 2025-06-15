@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('produk_input_fields', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_id')->constrained()->onDelete('cascade');
+            $table->foreignId('produk_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name'); // eg. user_id, zone_id, server
             $table->string('label'); // Label yang ditampilkan di frontend
             $table->enum('type', ['text', 'number', 'select']);

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('flashsale_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('flashsale_event_id')->constrained('flashsale_events');
-            $table->foreignId('layanan_id')->constrained('layanans');
+            $table->foreignId('flashsale_event_id')->nullable()->constrained('flashsale_events')->nullOnDelete();
+            $table->foreignId('layanan_id')->nullable()->constrained('layanans')->nullOnDelete();
             $table->bigInteger('harga_flashsale')->default(0);
             $table->bigInteger('stok_tersedia')->nullable();
             $table->bigInteger('stok_terjual')->nullable();

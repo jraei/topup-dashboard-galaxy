@@ -64,9 +64,7 @@ function formatCurrency(amount) {
                 >
                     {{ formatCurrency(balance) }}
                 </div>
-                <div class="text-xs text-secondary/80">
-                    Your NaelCoin balance
-                </div>
+                <div class="text-xs text-secondary/80">Saldo NaelCoin Anda</div>
             </div>
             <div class="flex flex-col gap-2 mt-6 sm:mt-0 sm:flex-row">
                 <PrimaryButton
@@ -90,7 +88,7 @@ function formatCurrency(amount) {
                         Topup
                     </span>
                 </PrimaryButton>
-                <PrimaryButton
+                <!-- <PrimaryButton
                     @click="$emit('redeem')"
                     class="flex text-gray-900 transition bg-secondary/90 hover:bg-secondary shadow-glow-secondary"
                 >
@@ -111,7 +109,7 @@ function formatCurrency(amount) {
                         </svg>
                         Redeem
                     </span>
-                </PrimaryButton>
+                </PrimaryButton> -->
             </div>
         </div>
         <!-- Decorative flying planet -->

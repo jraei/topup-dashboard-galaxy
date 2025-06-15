@@ -13,6 +13,7 @@ use Gonon\Digiflazz\Digiflazz;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\NaelstoreController;
 
 class ProdukController extends Controller
 {
@@ -25,7 +26,7 @@ class ProdukController extends Controller
         $provider_filter = $request->input('provider_id');
 
         // Validate the sort field to prevent SQL injection
-        $allowedSortFields = ['nama', 'reference', 'kategori_id', 'provider_id', 'validasi_id', 'status'];
+        $allowedSortFields = ['nama', 'populer', 'kategori_id', 'provider_id', 'validasi_id', 'status'];
         if (!in_array($sort, $allowedSortFields)) {
             $sort = 'id';
         }
@@ -43,7 +44,7 @@ class ProdukController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
                     ->orWhere('developer', 'like', "%{$search}%")
-                    ->orWhere('reference', 'like', "%{$search}%")
+                    ->orWhere('populer', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%")
                     ->orWhere('validasi_id', 'like', "%{$search}%")
                     ->orWhere('status', 'like', "%{$search}%")
@@ -217,19 +218,74 @@ class ProdukController extends Controller
 
     public function getProductsByProvider(Provider $provider)
     {
-        // Get Products from API
-        if ($provider->provider_name == 'digiflazz') {
-            $digiflazz = new DigiflazzController();
-            $affectedArray = $digiflazz->getDigiflazzProduk();
-
-            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['game'] . ' games & ' . $affectedArray['pulsa'] . ' pulsa have been added or updated!']);
-        } else if ($provider->provider_name == 'moogold') {
-            $moogold = new MoogoldController();
-            $affectedArray = $moogold->getMoogoldProducts();
-
-            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['success'] . ' products successfully and ' . $affectedArray['failed'] . ' failed to be added!']);
-        } else {
-            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+        // Get Products from API\
+        switch ($provider->provider_name) {
+            case 'digiflazz':
+                $digiflazz = new DigiflazzController();
+                $response = $digiflazz->getDigiflazzProduk();
+                break;
+            case 'moogold':
+                $moogold = new MoogoldController();
+                $response = $moogold->getMoogoldProducts();
+                break;
+            case 'naelstore':
+                $naelstore = new NaelstoreController();
+                $response = $naelstore->getNaelstoreProduk();
+                break;
+            default:
+                return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+                break;
         }
+
+        if (isset($response['status']) && !$response['status']) {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => $response['message']]);
+        }
+
+        $data = $response['data'];
+
+        return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $data['total_products'] . ' products have been added or updated!']);
+    }
+
+    public function deleteProductsByProvider(Provider $provider)
+    {
+        $count = Produk::where('provider_id', $provider->id)->count();
+
+        try {
+            $products = Produk::where('provider_id', $provider->id)->get();
+
+            foreach ($products as $product) {
+                // Hapus gambar Produk
+                if ($product->thumbnail) {
+                    Storage::disk('public')->delete($product->thumbnail);
+                }
+            }
+
+            Produk::where('provider_id', $provider->id)->delete();
+        } catch (\Throwable $th) {
+            return back()->with('status', [
+                'type' => 'error',
+                'action' => 'Request Error',
+                'text' => $th->getMessage()
+            ]);
+        }
+
+        return back()->with('status', [
+            'type' => 'success',
+            'action' => 'Success',
+            'text' => $count . ' services have been deleted!'
+        ]);
+    }
+
+    public function togglePopuler(Produk $produk)
+    {
+        $produk->update([
+            'populer' => !$produk->populer
+        ]);
+
+        return back()->with('status', [
+            'type' => 'success',
+            'action' => 'Success',
+            'text' => 'Static status updated successfully!'
+        ]);
     }
 }

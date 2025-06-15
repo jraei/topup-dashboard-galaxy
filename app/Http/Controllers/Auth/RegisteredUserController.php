@@ -45,7 +45,7 @@ class RegisteredUserController extends Controller
         $key = 'registration_attempt:' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            return back()->with('error', 'Too many registration attempts. Please try again later.');
+            return back()->with('error', 'Terlalu banyak percobaan mendaftar. Silahkan coba lagi dalam beberapa menit.');
         }
 
         RateLimiter::hit($key, 300); // 5 minutes
@@ -54,8 +54,12 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:25|alpha_num|unique:' . User::class,
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20|unique:users,phone',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'username.unique' => 'Username sudah terdaftar, silakan gunakan yang lain.',
+            'email.unique' => 'Email sudah digunakan. Silakan coba yang lain.',
+            'phone.unique' => 'Nomor telepon sudah digunakan. Silakan coba yang lain.'
         ]);
 
         $user = User::create([

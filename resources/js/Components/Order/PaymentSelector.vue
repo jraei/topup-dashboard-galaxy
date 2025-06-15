@@ -30,9 +30,6 @@ const price = computed(() => {
     const value = props.selectedService.harga_jual * props.quantity;
     return Math.ceil(value);
 });
-console.log("base price", props.basePrice);
-
-console.log(price.value);
 
 const userBalance = computed(() => page.props.auth?.user?.saldo ?? 0);
 
@@ -142,7 +139,7 @@ const isSelected = (payment) => {
 </script>
 
 <template>
-    <CosmicCard :title="'Select Payment'" :step-number="4">
+    <CosmicCard :title="'Metode Pembayaran'" :step-number="4">
         <div class="space-y-4">
             <div class="relative flex flex-col gap-4">
                 <!-- NaelCoin -->
@@ -160,7 +157,7 @@ const isSelected = (payment) => {
                     ]"
                 >
                     <img
-                        :src="props.saldoMethod?.gambar"
+                        :src="'/storage/' + props.saldoMethod?.gambar"
                         alt="NaelCoin"
                         class="w-10 h-10 mr-4 rounded"
                     />
@@ -195,7 +192,7 @@ const isSelected = (payment) => {
                             );
                         "
                     >
-                        BEST PRICE
+                        HARGA TERMURAH
                     </span>
                 </button>
 

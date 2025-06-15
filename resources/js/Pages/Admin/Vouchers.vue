@@ -296,7 +296,12 @@ const saveDataForm = () => {
                 </template>
             </DataTable>
             <!-- Pagination component -->
-            <Pagination :links="props.vouchers.links" />
+            <Pagination
+                :links="props.vouchers.links"
+                :currentPage="props.vouchers.current_page"
+                :perPage="props.vouchers.per_page"
+                :totalEntries="props.vouchers.total"
+            />
         </div>
 
         <!-- Add/Edit Category Modal -->

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Gonon\Digiflazz\Digiflazz;
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
+use App\Models\Provider;
 
 class KategoriController extends Controller
 {
@@ -47,6 +48,8 @@ class KategoriController extends Controller
         // Get static Moogold categories
         $staticCategories = $this->getMoogoldStaticCategories();
 
+        $providers = Provider::where('status', 'active')->get();
+
         return Inertia::render('Admin/Categories', [
             'categories' => $categories,
             'filters' => [
@@ -54,6 +57,7 @@ class KategoriController extends Controller
                 'sort' => $sort,
                 'direction' => $direction
             ],
+            'providers' => $providers,
             'staticCategories' => $staticCategories
         ]);
     }
@@ -65,6 +69,7 @@ class KategoriController extends Controller
     {
         $kategori = $request->validate([
             'kategori_name' => 'required|unique:kategoris,kategori_name|max:50',
+            'provider_id' => 'required|exists:providers,id',
             'status' => 'required'
         ]);
 
@@ -98,11 +103,18 @@ class KategoriController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $kategori = Kategori::findOrFail($id);
         // update data berdasarkan id
-        $validatedData = $request->validate([
-            'kategori_name' => 'required|unique:kategoris,kategori_name|max:50',
+        $rules = [
+            'provider_id' => 'required|exists:providers,id',
             'status' => 'required'
-        ]);
+        ];
+
+        if ($request->kategori_name != $kategori->kategori_name) {
+            $rules['kategori_name'] = 'required|unique:kategoris,kategori_name|max:50';
+        }
+
+        $validatedData = $request->validate($rules);
 
         Kategori::where('id', $id)->update($validatedData);
 
@@ -206,6 +218,7 @@ class KategoriController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Get static Moogold categories.

@@ -1320,10 +1320,10 @@ const deleteLogo = (field) => {
                                         >
                                             {{
                                                 provider.provider_name ==
-                                                "digiflazz"
-                                                    ? "Rp " +
+                                                "moogold"
+                                                    ? "RM " +
                                                       provider.balance.toLocaleString()
-                                                    : "RM " + provider.balance
+                                                    : "Rp " + provider.balance
                                             }}
                                         </span>
                                     </h4>

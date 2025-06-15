@@ -5,6 +5,7 @@ import CosmicAuthCard from "@/Components/Auth/CosmicAuthCard.vue";
 import CosmicFormField from "@/Components/Auth/CosmicFormField.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import InputError from "@/Components/InputError.vue";
 
 defineProps({
     canResetPassword: {
@@ -45,8 +46,8 @@ const submit = () => {
 
     <CosmicAuthCard
         ref="authCardRef"
-        title="Log in to"
-        subtitle="Access your cosmic journey"
+        title="Masuk"
+        subtitle="Masuk dengan akun yang telah kamu daftarkan"
     >
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
@@ -63,6 +64,7 @@ const submit = () => {
                 autofocus
                 autocomplete="username"
             />
+            <!-- <InputError :message="form.errors" class="mt-1" /> -->
 
             <CosmicFormField
                 id="password"
@@ -92,7 +94,7 @@ const submit = () => {
                     :href="route('password.request')"
                     class="text-sm text-gray-400 underline rounded-md hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
-                    Forgot your password?
+                    Lupa password?
                 </Link>
 
                 <PrimaryButton
@@ -100,18 +102,18 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    <span>Log in</span>
+                    <span>Masuk</span>
                     <div class="cosmic-button-stars"></div>
                 </PrimaryButton>
             </div>
 
             <div class="mt-6 text-center">
-                <span class="text-gray-400">Don't have an account?</span>
+                <span class="text-gray-400">Belum punya akun?</span>
                 <Link
                     :href="route('register')"
                     class="ml-1 underline transition-colors text-primary hover:text-primary-hover"
                 >
-                    Register
+                    Daftar
                 </Link>
             </div>
         </form>

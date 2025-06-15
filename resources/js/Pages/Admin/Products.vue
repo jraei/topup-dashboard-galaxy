@@ -33,7 +33,21 @@ const columns = [
             return kategori ? kategori.kategori_name : "Tidak Diketahui";
         },
     },
-    { key: "reference", label: "reference" },
+    {
+        key: "populer",
+        label: "Populer",
+        format: (value) => {
+            const toggleClass = value ? "bg-primary" : "bg-gray-600";
+
+            return `<div class="flex items-center justify-center">
+                    <div class="${toggleClass} w-10 h-5 rounded-full relative">
+                        <div class="absolute top-0.5 ${
+                            value ? "right-0.5" : "left-0.5"
+                        } bg-white w-4 h-4 rounded-full transition-all duration-200"></div>
+                    </div>
+                </div>`;
+        },
+    },
     {
         key: "provider_id",
         label: "Provider",
@@ -104,8 +118,7 @@ const getServicesFromAPI = () => {
     );
 };
 
-// Delete services by provider
-const deleteServicesByProvider = () => {
+const deleteProductsByProvider = () => {
     if (!selectedProvider.value) {
         proxy.$showSwalConfirm({
             title: "Error",
@@ -117,14 +130,16 @@ const deleteServicesByProvider = () => {
 
     proxy.$showSwalConfirm({
         title: "Warning",
-        text: `Are you sure you want to delete all services from this provider?`,
+        text: `Are you sure you want to delete all products from this provider?`,
         icon: "warning",
         confirmButtonText: "Yes, delete all",
         onConfirm: () => {
-            router.delete(route("services.deleteLayanan"), {
-                data: { provider_id: selectedProvider.value },
-                preserveScroll: true,
-            });
+            router.delete(
+                route("products.deleteProduks", selectedProvider.value),
+                {
+                    preserveScroll: true,
+                }
+            );
         },
     });
 };
@@ -168,12 +183,32 @@ const handleDelete = (item) => {
     });
 };
 
+const handleTogglePopuler = (item) => {
+    router.patch(
+        route("products.togglePopuler", item.id),
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                // No need to handle, page will refresh
+            },
+            onError: (errors) => {
+                proxy.$swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: Object.values(errors)[0],
+                });
+            },
+        }
+    );
+};
+
 const showForm = ref(false);
 const formMode = ref("add");
 const currentData = ref({
     nama: "",
     developer: "",
-    reference: "",
+    populer: "",
     kategori_id: "",
     slug: "",
     provider_id: "",
@@ -368,7 +403,7 @@ const handleFileUpload = (event, field) => {
 
                     <button
                         v-if="selectedProvider"
-                        @click="deleteServicesByProvider"
+                        @click="deleteProductsByProvider"
                         class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 bg-red-600 rounded-lg shadow-lg hover:bg-red-700"
                         :disabled="isLoading"
                     >
@@ -386,7 +421,7 @@ const handleFileUpload = (event, field) => {
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                             />
                         </svg>
-                        <span>Delete Products</span>
+                        <span>Delete All Products</span>
                     </button>
                 </div>
             </div>
@@ -427,6 +462,27 @@ const handleFileUpload = (event, field) => {
                             </svg>
                             <span>Add Products</span>
                         </button>
+                    </template>
+
+                    <template #cell(populer)="{ item }">
+                        <div
+                            @click="handleTogglePopuler(item)"
+                            class="flex items-center justify-center cursor-pointer"
+                        >
+                            <div
+                                :class="
+                                    item.populer ? 'bg-primary' : 'bg-gray-600'
+                                "
+                                class="relative w-10 h-5 transition-colors duration-200 rounded-full"
+                            >
+                                <div
+                                    :class="
+                                        item.populer ? 'right-0.5' : 'left-0.5'
+                                    "
+                                    class="absolute top-0.5 bg-white w-4 h-4 rounded-full transition-all duration-200"
+                                ></div>
+                            </div>
+                        </div>
                     </template>
 
                     <template #actions="{ item }">
@@ -484,7 +540,12 @@ const handleFileUpload = (event, field) => {
                     </template>
                 </DataTable>
             </div>
-            <Pagination :links="props.products.links" />
+            <Pagination
+                :links="props.products.links"
+                :currentPage="props.products.current_page"
+                :perPage="props.products.per_page"
+                :totalEntries="props.products.total"
+            />
         </div>
 
         <!-- Modified Form Modal -->
@@ -563,22 +624,7 @@ const handleFileUpload = (event, field) => {
                                     required
                                 />
                             </div>
-                            <div>
-                                <label
-                                    for="reference"
-                                    class="block mb-1 text-sm font-medium text-gray-300"
-                                    >Reference</label
-                                >
-                                <input
-                                    id="reference"
-                                    v-model="currentData.reference"
-                                    type="text"
-                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="Reference code"
-                                    name="reference"
-                                    required
-                                />
-                            </div>
+
                             <div v-if="kategori_list">
                                 <label
                                     for="kategori_id"
@@ -637,6 +683,35 @@ const handleFileUpload = (event, field) => {
                                         :key="index"
                                     >
                                         {{ item.provider_name.toUpperCase() }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    for="populer"
+                                    class="block mb-1 text-sm font-medium text-gray-300"
+                                    >Populer</label
+                                >
+                                <select
+                                    name="populer"
+                                    id="populer"
+                                    v-model="currentData.populer"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                                >
+                                    <option
+                                        value="false"
+                                        key="false"
+                                        :selected="!currentData.populer"
+                                    >
+                                        Tidak Populer
+                                    </option>
+                                    <option
+                                        value="true"
+                                        key="true"
+                                        :selected="currentData.populer"
+                                    >
+                                        Populer
                                     </option>
                                 </select>
                             </div>
@@ -798,7 +873,10 @@ const handleFileUpload = (event, field) => {
                                 <label
                                     for="deskripsi_game"
                                     class="block mb-1 text-sm font-medium text-gray-300"
-                                    >Deskripsi Game</label
+                                    >Deskripsi Game
+                                    <span class="text-xs text-gray-400"
+                                        >(HTML Allowed)</span
+                                    ></label
                                 >
                                 <textarea
                                     id="deskripsi_game"
@@ -807,7 +885,7 @@ const handleFileUpload = (event, field) => {
                                     placeholder="Deskripsi Game"
                                     name="deskripsi_game"
                                     required
-                                    rows="2"
+                                    rows="4"
                                 />
                             </div>
                         </div>
@@ -928,16 +1006,6 @@ const handleFileUpload = (event, field) => {
                             </p>
                         </div>
                         <div class="p-2 rounded-lg sm:p-3 bg-dark-lighter">
-                            <p class="text-xs text-gray-400 sm:text-sm">
-                                reference
-                            </p>
-                            <p
-                                class="text-sm font-medium text-white truncate sm:text-base"
-                            >
-                                {{ selectedData.reference }}
-                            </p>
-                        </div>
-                        <div class="p-2 rounded-lg sm:p-3 bg-dark-lighter">
                             <p class="text-xs text-gray-400 sm:text-sm">Slug</p>
                             <p
                                 class="text-sm font-medium text-white truncate sm:text-base"
@@ -955,6 +1023,26 @@ const handleFileUpload = (event, field) => {
                             >
                                 {{ selectedData.validasi_id }}
                             </p>
+                        </div>
+                        <div class="p-2 rounded-lg sm:p-3 bg-dark-lighter">
+                            <p class="text-xs text-gray-400 sm:text-sm">
+                                Populer
+                            </p>
+                            <div class="flex items-center mb-4">
+                                <input
+                                    disabled
+                                    id="disabled-checkbox"
+                                    type="checkbox"
+                                    :checked="selectedData.populer"
+                                    value=""
+                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                />
+                                <label
+                                    for="default-checkbox"
+                                    class="text-sm font-medium text-gray-900 ms-2 dark:text-gray-300"
+                                    >Ya</label
+                                >
+                            </div>
                         </div>
                         <div class="p-2 rounded-lg sm:p-3 bg-dark-lighter">
                             <p class="text-xs text-gray-400 sm:text-sm">

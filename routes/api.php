@@ -1,12 +1,12 @@
-
 <?php
 
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\Admin\CheckUsernameController;
 use App\Http\Controllers\Admin\TripayCallbackController;
-use App\Http\Controllers\CalculatorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,8 +19,12 @@ use App\Http\Controllers\CalculatorController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('api.key')->group(function () {
+    Route::post('/balance', [ApiController::class, 'balance']);
+    Route::post('/products', [ApiController::class, 'products']);
+    Route::post('/services', [ApiController::class, 'services']);
+    Route::post('/order', [ApiController::class, 'order']);
+    Route::post('/order/status', [ApiController::class, 'checkOrderStatus']);
 });
 
 // Product search endpoint
@@ -40,14 +44,9 @@ Route::get('/search/products', function (Request $request) {
 })->name('api.search.products');
 
 // Calculator endpoints
-Route::post('/calculator/winrate', [CalculatorController::class, 'calculateWinrate']);
+// Route::post('/calculator/winrate', [CalculatorController::class, 'calculateWinrate']);
 
 // payment gateway callback handle
 Route::prefix('callback')->group(function () {
     Route::post('/tripay', [TripayCallbackController::class, 'handle']);
 });
-
-
-// We no longer need a separate validate-account endpoint as validation
-// is now integrated with the order/confirm endpoint
-

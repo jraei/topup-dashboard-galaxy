@@ -1,5 +1,5 @@
 <template>
-    <CosmicCard title="Promo Code" :step-number="5">
+    <CosmicCard title="Kode Voucher" :step-number="5">
         <div class="space-y-4">
             <!-- Input group -->
             <div class="flex w-full">
@@ -7,8 +7,8 @@
                     <input
                         type="text"
                         v-model="voucherCode"
-                        placeholder="Enter promo code"
-                        class="w-full px-4 py-2 border rounded-lg outline-none bg-secondary/20 text-primary_text focus:ring-2 focus:border-primary focus:bg-secondary/20/90 border-secondary placeholder-secondary"
+                        placeholder="Masukkan kode voucher"
+                        class="w-full px-4 py-2 border rounded-lg outline-none bg-secondary/20 text-primary_text focus:ring-2 focus:bg-secondary/20/90 border-secondary placeholder-secondary"
                         :class="{ 'border-red-500': voucherError }"
                     />
 
@@ -67,7 +67,7 @@
                 <span
                     class="inline-block w-4 h-4 rounded-full bg-secondary/20 animate-ping-small"
                 ></span>
-                <span>Available Promos</span>
+                <span>Voucher tersedia</span>
             </button>
         </div>
 
@@ -77,10 +77,12 @@
             @close="showVoucherModal = false"
             max-width="2xl"
         >
-            <div class="p-6 bg-dark-lighter">
+            <div
+                class="p-6 border shadow-xl rounded-2xl bg-gradient-to-r from-content_background/30 via-content_background to-secondary/10 border-secondary/20 backdrop-blur"
+            >
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-white">
-                        Available Promo Codes
+                        Kode voucher yang tersedia
                     </h2>
                     <button
                         @click="showVoucherModal = false"
@@ -102,8 +104,8 @@
                         @apply-voucher="applyFromModal"
                     />
                 </div>
-                <div v-else class="py-8 text-center text-gray-400">
-                    No active promotions available at this time.
+                <div v-else class="py-8 text-center text-primary-text/70">
+                    Tidak ada voucher tersedia saat ini!
                 </div>
             </div>
         </Modal>

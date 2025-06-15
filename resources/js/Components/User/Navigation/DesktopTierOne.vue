@@ -44,7 +44,7 @@ const isSearchFocused = ref(false);
                 <!-- Right: Language Selector -->
                 <div class="flex items-center">
                     <button
-                        class="flex items-center p-2 transition-all rounded-full hover:bg-secondary/60"
+                        class="flex items-center p-2 transition-all rounded-full"
                     >
                         <span class="text-lg text-primary">🇮🇩</span>
                         <span class="ml-1 text-xs font-medium text-gray-200"

@@ -41,45 +41,39 @@ class IndexController extends Controller
             }])
             ->first();
 
-        // $activeEvents->item->load('layanan.produk'); // pastikan relasi sudah diload
+        if ($activeEvents) {
+            $activeEvents->item = $activeEvents->item->map(function ($item) {
+                $layanan = $item->layanan;
 
-        $activeEvents->item = $activeEvents->item->map(function ($item) {
-            // Modifikasi langsung objek layanan
-            $layanan = $item->layanan;
+                preg_match('/(\d+)/', $layanan->nama_layanan, $matches);
+                $quantity = isset($matches[1]) ? (int) $matches[1] : null;
 
-            preg_match('/(\d+)/', $layanan->nama_layanan, $matches);
-            $quantity = isset($matches[1]) ? (int) $matches[1] : null;
 
-            $thumbnail = null;
-            if ($quantity !== null) {
-                $thumbnail = ItemThumbnail::findThumbnailForQuantity($layanan->produk_id, $quantity);
-            }
+                $thumbnail = $layanan->gambar
+                    ? '/storage/' . $layanan->gambar : ItemThumbnail::findThumbnailForQuantity($layanan->produk_id, $quantity)?->image_url;
 
-            if (!$thumbnail) {
-                $thumbnail = ItemThumbnail::where('produk_id', $layanan->produk_id)
-                    ->default()
-                    ->first();
-            }
+                // 👇 Tambahkan thumbnail ke dalam objek layanan
+                $layanan->gambar = $thumbnail;
 
-            // Tambahkan thumbnail langsung ke layanan
-            $item->layanan = array_merge($layanan->toArray(), [
-                'thumbnail' => $thumbnail->image_path ?? null,
-            ]);
+                // Modifikasi item jika perlu
+                return $item;
+            });
 
-            return $item->toArray();
-        });
-        // dd($activeEvents->item[0]->layanan);
-        // Force seluruh objek jadi array
-        $activeEvents = $activeEvents->toArray();
-        // dd($activeEvents['item'][0]['layanan']);
+            // Opsional: ubah ke array jika ingin dikirim ke Inertia
+            $activeEvents = $activeEvents->toArray();
+        }
+
+
+        // dd($activeEvents['item'][0]);
 
 
 
         // Fetch popular products
         $popularProducts = Produk::whereHas('kategori', function ($query) {
-            $query->where('kategori_name', 'Populer Sekarang');
+            $query->where('status', 'active');
         })
             ->where('status', 'active')
+            ->where('populer', true)
             ->with(['kategori'])
             ->limit(12)
             ->get();
@@ -211,5 +205,11 @@ class IndexController extends Controller
             'serverTime' => Carbon::now()->toISOString(),
             'error' => null,
         ]);
+    }
+
+
+    public function termOfService()
+    {
+        return Inertia::render('TermOfService');
     }
 }

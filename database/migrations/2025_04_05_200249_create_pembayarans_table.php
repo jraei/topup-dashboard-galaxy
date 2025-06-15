@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('pembayarans', function (Blueprint $table) {
             $table->id();
             $table->string('order_id')->unique();
+            $table->string('tipe')->nullable();
             $table->bigInteger('price')->default(0);
             $table->integer('fee')->default(0);
             $table->integer('total_price')->default(0);

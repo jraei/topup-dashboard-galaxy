@@ -1,5 +1,8 @@
 <template>
-    <div class="absolute inset-0 pointer-events-none planets-container z-15">
+    <div
+        class="absolute inset-0 pointer-events-none planets-container z-15"
+        v-if="!isMobile"
+    >
         <!-- SVG definitions for Saturn -->
         <svg class="absolute" width="0" height="0">
             <defs>

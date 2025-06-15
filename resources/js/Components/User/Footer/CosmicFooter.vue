@@ -40,13 +40,13 @@ onMounted(() => {
 
 const navLinks = [
     { name: "Topup", route: "index" },
-    { name: "Transactions", route: "index" },
-    { name: "Leaderboard", route: "index" },
-    { name: "Calculator", route: "index" },
+    { name: "Cek Transaksi", route: "cek-transaksi" },
+    { name: "Leaderboard", route: "leaderboard" },
+    { name: "Calculator", route: "calculator.winrate" },
 ];
 
 const legalLinks = [
-    { name: "Terms of Service", route: "index" },
+    { name: "Terms of Service", route: "term-of-service" },
     { name: "Privacy Policy", route: "index" },
     { name: "Refund Policy", route: "index" },
 ];
@@ -131,7 +131,7 @@ const legalLinks = [
                         <h3
                             class="mb-4 text-lg font-semibold text-primary-text"
                         >
-                            Quick Links
+                            Peta Situs
                         </h3>
                         <NavLinks :links="navLinks" />
                     </div>

@@ -234,7 +234,12 @@ const closeViewModal = () => {
                 </template>
             </DataTable>
             <!-- Pagination component -->
-            <Pagination :links="props.deposits.links" />
+            <Pagination
+                :links="props.deposits.links"
+                :currentPage="props.deposits.current_page"
+                :perPage="props.deposits.per_page"
+                :totalEntries="props.deposits.total"
+            />
         </div>
 
         <!-- View Deposit Modal -->

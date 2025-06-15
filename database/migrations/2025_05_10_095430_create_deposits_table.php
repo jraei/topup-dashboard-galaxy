@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('deposits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('deposit_id')->unique();
             $table->string('provider_reference')->unique();
-            $table->foreignId('pay_method_id')->constrained('pay_methods');
+            $table->foreignId('pay_method_id')->nullable()->constrained('pay_methods')->nullOnDelete();
             $table->bigInteger('amount');
             $table->integer('fee')->default(0);
             $table->string('qr_url')->nullable()->comment('Qris Only');

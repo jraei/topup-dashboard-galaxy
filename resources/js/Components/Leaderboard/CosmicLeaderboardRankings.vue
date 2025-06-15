@@ -17,11 +17,9 @@
             <CircleOff
                 class="w-16 h-16 mx-auto mb-4 text-secondary opacity-30"
             />
-            <p class="text-xl text-gray-400">
-                No cosmic purchases detected yet
-            </p>
+            <p class="text-xl text-gray-400">Belum ada data transaksi</p>
             <p class="text-gray-500">
-                Be the first to appear on the leaderboard!
+                Silahkan melakukan transaksi untuk melihat ranking
             </p>
         </div>
 

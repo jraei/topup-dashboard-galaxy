@@ -306,12 +306,12 @@ const confirmOrder = async () => {
                                     />
                                     <path d="M7 2h6v4H7V2z" />
                                 </svg>
-                                Order Summary
+                                Ringkasan Pesanan
                             </h4>
                             <div class="px-3 py-2 rounded-lg bg-dark-lighter">
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="text-xs text-gray-400">
-                                        Service:
+                                        Layanan
                                     </div>
                                     <div
                                         class="text-xs font-semibold text-white"

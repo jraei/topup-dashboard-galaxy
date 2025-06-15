@@ -36,9 +36,12 @@ class OrderController extends Controller
             ->where('status', 'active')
             ->pluck('layanan_id');
 
+        // $petunjukField = $produk->petunjuk_field ?? null;
+
         // Normal services (excluding flashsale items)
         $services = $produk->layanan()
             ->whereNotIn('id', $excludedLayananIds)
+            ->where('status', 'active')
             ->orderBy('harga_beli_idr', 'asc')
             ->get()
             ->map(function ($service) {
@@ -169,23 +172,23 @@ class OrderController extends Controller
         // FAQs for product
         $faqs = [
             [
-                'question' => 'How long does top-up take?',
-                'answer' => 'Instant delivery for 90% of orders. Most top-ups are processed automatically and delivered within seconds. For manual processing, it may take up to 5 minutes during peak hours.',
+                'question' => 'Berapa lama pesanan akan diterima?',
+                'answer' => 'Pesanan akan diterima secara instant dalam 1-5 menit. Jika pesanan lebih dari 1x24 jam, anda dapat menghubungi customer service kami.',
                 'category' => 'delivery'
             ],
             [
-                'question' => 'Is it safe to purchase here?',
-                'answer' => 'Yes, all transactions are secured with industry-standard encryption. We never store your complete payment details and have been serving customers since 2020 with a 99.7% satisfaction rate.',
+                'question' => 'Apakah transaksi saya aman?',
+                'answer' => 'Seluruh transaksi dilakukan secara aman dan terenkripsi. Kami menggunakan sistem keamanan yang terkini untuk melindungi informasi pribadi Anda.',
                 'category' => 'security'
             ],
             [
-                'question' => 'What payment methods are accepted?',
-                'answer' => 'We accept a wide range of payment methods including credit/debit cards, e-wallets, bank transfers, and convenience store payments. You can view all available options during checkout.',
+                'question' => 'Metode pembayaran apa yang tersedia?',
+                'answer' => 'Kami menyediakan berbagai metode pembayaran, seperti transfer bank, kartu kredit/debit, dan e-wallet. Anda dapat memilih metode pembayaran yang sesuai dengan kebutuhan Anda.',
                 'category' => 'payment'
             ],
             [
-                'question' => 'Can I get a refund if there\'s a problem?',
-                'answer' => 'We offer a full refund if the top-up fails to deliver. Please contact our support team within 24 hours of purchase with your order number for assistance.',
+                'question' => 'Apakah saya dapat membatalkan pesanan?',
+                'answer' => 'Ya, Anda dapat membatalkan pesanan jika pesanan terlalu lama. Silakan hubungi customer service kami untuk membantu Anda membatalkan pesanan.',
                 'category' => 'refunds'
             ]
         ];
@@ -357,12 +360,12 @@ class OrderController extends Controller
         // Check profit safeguard
         $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
 
-        if ($finalPrice <= $hargaBeli) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid price calculation',
-            ], 400);
-        }
+        // if ($finalPrice <= $hargaBeli) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Invalid price calculation',
+        //     ], 400);
+        // }
 
         // Return response with updated structure to include dynamic fields
         return response()->json([
@@ -394,7 +397,7 @@ class OrderController extends Controller
      */
     public function processOrder(Request $request)
     {
-        // Validate user is authenticated if using balance
+        // 1️⃣ Validasi awal
         if ($request->payment_method['type'] === 'Saldo Akun' && !Auth::check()) {
             return response()->json([
                 'status' => 'error',
@@ -420,34 +423,22 @@ class OrderController extends Controller
         }
 
         $user = Auth::user();
+        $quantity = $request->quantity;
 
-        $layanan = Layanan::with('produk')->findOrFail($request->layanan_id);
+        $layanan = Layanan::with('produk.provider')->findOrFail($request->layanan_id);
         $produk = $layanan->produk;
-        $kategori = $produk->Kategori;
-
-
+        $providerName = strtolower($produk->provider->provider_name);
         $paymentMethodDynamic = PayMethod::where('id', $request->payment_method['channel'])->first();
 
-        // Extract input ID and zone from dynamically named fields
+        // 2️⃣ Ambil input dinamis
         $inputId = null;
         $inputZone = null;
-
-        // Get the input fields configuration for this product
         $inputFields = $produk->inputFields()->with('options')->get();
-
-        // Dynamic fields container for all product-specific inputs
         $dynamicFields = [];
-
-        // Find the user ID and zone/server fields from inputs
         foreach ($inputFields as $field) {
             $fieldName = $field->name;
-
-            // Check if the field exists in the request
             if ($request->has($fieldName)) {
-                // Add to dynamic fields collection
                 $dynamicFields[$fieldName] = $request->input($fieldName);
-
-                // Set special fields for validation
                 if ($field->isUserIdField()) {
                     $inputId = $request->input($fieldName);
                 } elseif ($field->isServerField()) {
@@ -456,71 +447,50 @@ class OrderController extends Controller
             }
         }
 
-
-        // Check if it's a flashsale item
+        // 3️⃣ Cek flashsale
         $flashsaleItem = null;
         if ($request->flashsale_item_id && $request->layanan_id) {
-            $flashsaleData = $this->validateFlashsale($request->flashsale_item_id, $request->layanan_id, $request->quantity);
-
+            $flashsaleData = $this->validateFlashsale($request->flashsale_item_id, $request->layanan_id, $quantity);
             if ($flashsaleData['status'] !== 'success') {
                 return response()->json([
                     'status' => 'error',
                     'message' => $flashsaleData['message'],
                 ], 422);
             }
-
             $flashsaleItem = $flashsaleData['data'];
         }
-        // calculate basePrice
 
+        // 4️⃣ Hitung harga
         $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
-        $basePrice = $basePrice;
-        $quantity = $request->quantity;
         $price = $basePrice * $quantity;
-
-        // Process voucher if provided
-        $voucher = null;
         $voucherDiscount = 0;
+        $voucher = null;
         if ($request->voucher_code) {
             $voucher = $this->validateVoucher($request->voucher_code, $price);
             $voucherDiscount = $voucher['calculated_discount'];
         }
-
-        // Calculate total price
-        $totalPrice = $price - $voucherDiscount;
-        $totalPrice = ceil($totalPrice);
-
-        // Calculate fees based on payment method
+        $totalPrice = ceil($price - $voucherDiscount);
         $paymentInfo = $this->calculatePaymentFees($request->payment_method, $totalPrice);
         $finalPrice = $paymentInfo['finalPrice'];
+        $hargaBeli = $layanan->harga_beli_idr ? $layanan->harga_beli_idr * $quantity : $layanan->harga_beli * $quantity;
 
-        // Check profit safeguard
-        $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
-        if ($totalPrice <= $hargaBeli) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid price calculation',
-            ], 400);
-        }
+        // if ($totalPrice <= $hargaBeli) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Invalid price calculation',
+        //     ], 400);
+        // }
 
+        // 5️⃣ Generate order_id
+        $order_id = $this->generateUniqueOrderId();
+        $paymentData = null;
+        $successOrders = [];
+        $failedOrders = [];
+        $allCompleted = true;
+        $referenceIds = [];
 
-        // Generate unique order ID
-        $orderId = $this->generateUniqueOrderId();
-
-        // Prepare additional data for dynamic fields
-        $additionalData = [];
-        foreach ($request->except(['layanan_id', 'quantity', 'payment_method', 'email', 'phone', 'voucher_code', 'flashsale_item_id']) as $key => $value) {
-            $additionalData[$key] = $value;
-        }
-
-
-
-        $status = null;
-        $reference = null;
-
-        // Process payment based on method
+        // 6️⃣ Proses Saldo Akun
         if ($request->payment_method['type'] === 'Saldo Akun') {
-            // Check if user has enough balance
             if ($user->saldo < $finalPrice) {
                 return response()->json([
                     'status' => 'error',
@@ -528,106 +498,160 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Deduct balance
-            $user->saldo -= $finalPrice;
-            $user->save();
-
-
-            Pembayaran::create([
-                'order_id' => $orderId,
-                'price' => $finalPrice,
-                'fee' => $paymentInfo['fee'],
-                'total_price' => $finalPrice,
-                'payment_method' => 'Saldo Akun',
-                'payment_provider' => 'Saldo Akun',
-                'status' => 'paid',
-            ]);
-
-            if ($produk->provider->provider_name == 'moogold') {
-
-                $moogoldOrderCategory = $produk->moogold_order_category;
-                // Process order through API
+            // Proses berbeda berdasarkan provider
+            if ($providerName == 'moogold') {
+                // Moogold bisa handle quantity dalam 1 request
                 $moogold = new MoogoldController();
-
-
                 $apiResult = $moogold->createTransaction([
-                    'category_id' => $moogoldOrderCategory,
-                    'order_id' => $orderId,
+                    'category_id' => $produk->moogold_order_category,
+                    'order_id' => $order_id,
                     'service_id' => $layanan->kode_layanan,
-                    'quantity' => $request->quantity,
+                    'quantity' => $quantity,
                     'user_id' => $inputId,
                     'server' => $inputZone
                 ]);
 
-
                 if (!$apiResult['data']['status']) {
-                    return response()->json([
-                        'status' => 'error',
+                    $failedOrders[] = [
+                        'order_id' => $order_id,
                         'message' => $apiResult['data']['raw']['err_message'] ?? $apiResult['data']['message']
-                    ]);
-                }
-
-                $data = $apiResult['data'];
-
-                // Update order status
-                if ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") {
-                    $status = "completed";
-                    $reference = $data['order_id'];
+                    ];
+                    $allCompleted = false;
                 } else {
-                    $status = "failed";
+                    $data = $apiResult['data'];
+                    $status = ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") ? "completed" : "failed";
+                    $referenceIds[] = $data['order_id'];
+                    $allCompleted = $allCompleted && ($status == "completed");
                 }
-            } else if ($produk->provider->provider_name == 'digiflazz') {
-                $digiflazz = new DigiflazzController();
+            } elseif ($providerName == 'digiflazz') {
+                // Digiflazz perlu loop per quantity
+                for ($i = 0; $i < $quantity; $i++) {
+                    $subOrderId = $order_id . '-' . ($i + 1);
+                    $digiflazz = new DigiflazzController();
+                    $target = $inputId . ($inputZone ? '-' . $inputZone : '');
+                    $apiResult = $digiflazz->createTransaction([
+                        'kode_layanan' => $layanan->kode_layanan,
+                        'target' => $target,
+                        'ref_id' => $subOrderId,
+                    ]);
 
-                $target = $inputId . $inputZone;
+                    if (!isset($apiResult->status) || !in_array($apiResult->status, ["Pending", "Sukses"])) {
+                        $failedOrders[] = [
+                            'order_id' => $subOrderId,
+                            'message' => $apiResult->message ?? "DF | Create transaction error"
+                        ];
+                        $allCompleted = false;
+                        continue;
+                    }
 
-                $apiResult = $digiflazz->createTransaction([
-                    'kode_layanan' => $layanan->kode_layanan,
+                    $status = ($apiResult->status == "Pending" || $apiResult->status == "Sukses") ? "completed" : "failed";
+                    $referenceIds[] = $apiResult->ref_id;
+                    $successOrders[] = [
+                        'status' => $status,
+                        'reference' => $apiResult->ref_id
+                    ];
+                    $allCompleted = $allCompleted && ($status == "completed");
+                }
+            } else if ($providerName == 'naelstore') {
+                // Naelstore bisa handle quantity dalam 1 request
+
+                $naelstore = new NaelstoreController();
+                $target = $inputId . ($inputZone ? '-' . $inputZone : '');
+
+                $apiResult = $naelstore->createTransaction([
+                    'layanan_id' => $layanan->kode_layanan,
+                    'quantity' => $quantity,
                     'target' => $target,
-                    'ref_id' => $orderId,
-                    'testing' => true
                 ]);
 
-                if (!$apiResult->status) {
+                if (!$apiResult['status']) {
+                    $failedOrders[] = [
+                        'order_id' => $order_id,
+                        'message' => $apiResult['message'] ?? "DF | Create transaction error"
+                    ];
+
+                    $allCompleted = false;
+
                     return response()->json([
                         'status' => 'error',
-                        'message' =>  $apiResult->message ?? "DF | Create transaction error"
+                        'message' => $apiResult['message']
                     ]);
-                }
-
-
-                // Update order status
-                if ($apiResult->status == "Pending" || $apiResult->status == "Sukses") {
-                    $status = "completed";
-                    $reference = $apiResult->ref_id;
                 } else {
-                    $status = "failed";
+                    $data = $apiResult['data'];
+                    $status = ($data['success_orders']['status'] == "completed" || $data['success_orders']['status'] == "processing") ? "completed" : "failed";
+                    foreach ($data['success_orders'] as $order) {
+                        $referenceIds[] = $order['order_id'];
+                    }
+                    $allCompleted = $allCompleted && ($status == "completed");
                 }
             } else {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Provider name issue, please contact admin',
-                ], 500);
+                    'message' => 'Provider tidak dikenali'
+                ], 400);
             }
-        } else {
 
+            // Potong saldo hanya jika ada yang berhasil
+            if ($allCompleted || !empty($successOrders)) {
+                $user->decrement('saldo', $finalPrice);
+            }
+        }
 
-            // Payment gateway integration
-            $item = $produk->nama . ' - ' . $layanan->nama_layanan;
+        // Insert pembayaran (1x untuk semua quantity)
+        $pembayaran = Pembayaran::create([
+            'tipe' => 'order',
+            'order_id' => $order_id,
+            'price' => $finalPrice,
+            'fee' => $paymentInfo['fee'],
+            'total_price' => $finalPrice,
+            'payment_method' => $request->payment_method['type'] === 'Saldo Akun' ? 'Saldo Akun' : $paymentInfo['methodCode'],
+            'payment_provider' => $request->payment_method['type'] === 'Saldo Akun' ? 'Saldo Akun' : $paymentMethodDynamic->payment_provider,
+            'payment_reference' => $paymentData['reference'] ?? null,
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'paid' : 'failed') : 'pending',
+            'instruksi' => $paymentData['instructions'] ?? null,
+            'qr_url' => $paymentData['qr_url'] ?? null,
+            'payment_link' => $paymentData['checkout_url'] ?? null,
+            'expired_time' => $paymentData['expired_time'] ?? null,
+        ]);
 
-            $paymentData = [];
+        // Insert pembelian utama (1x untuk semua quantity)
+        $pembelian = Pembelian::create([
+            'order_id' => $order_id,
+            'order_type' => 'game',
+            'user_id' => Auth::id(),
+            'layanan_id' => $layanan->id,
+            'nickname' => $request->nickname,
+            'input_id' => $inputId,
+            'input_zone' => $inputZone,
+            'price' => $basePrice,
+            'quantity' => $quantity,
+            'discount' => $voucherDiscount,
+            'total_price' => $totalPrice,
+            'profit' => $totalPrice - $hargaBeli,
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'completed' : 'failed') : 'pending',
+            'reference_id' => implode(',', $referenceIds),
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'voucher_id' => $voucher ? $voucher['id'] : null,
+            'flashsale_item_id' => $flashsaleItem ? $flashsaleItem->id : null,
+            'callback_data' => array_merge($dynamicFields, [
+                'sub_orders' => $providerName == 'digiflazz' ? $successOrders : null,
+                'failed_orders' => $failedOrders
+            ])
+        ]);
 
-            // process tripay payment gateway if payment method provider is tripay
+        // 7️⃣ Payment Gateway (jika bukan Saldo Akun)
+        if ($request->payment_method['type'] !== 'Saldo Akun') {
+            $itemDesc = $produk->nama . ' - ' . $layanan->nama_layanan;
 
             if ($paymentMethodDynamic->payment_provider === 'Tripay') {
-
                 $tripay = new TripayController();
                 $response = $tripay->createTransaction([
-                    'item' => $item,
+                    'item' => $itemDesc,
                     'price' => $totalPrice,
                     'quantity' => 1,
                     'method' => $paymentInfo['methodCode'],
-                    'merchant_ref' => $orderId,
+                    'merchant_ref' => $order_id,
                     'customer_name' => $user->username ?? 'Guest',
                     'customer_email' => $request->email ?? 'guest@gmail.com',
                     'customer_phone' => $request->phone
@@ -640,75 +664,30 @@ class OrderController extends Controller
                     ]);
                 }
 
-                // Create invoice for payment
                 $paymentData = $response['data']['data'];
+                $pembayaran->update([
+                    'payment_reference' => $paymentData['reference'],
+                    'instruksi' => $paymentData['instructions'],
+                    'qr_url' => $paymentData['qr_url'],
+                    'payment_link' => $paymentData['checkout_url'],
+                    'expired_time' => $paymentData['expired_time'],
+                ]);
             }
-
-            Pembayaran::create([
-                'order_id' => $orderId,
-                'price' => $paymentData['amount_received'],
-                'fee' => $paymentData['total_fee'],
-                'total_price' => $paymentData['amount'],
-                'payment_provider' => 'Tripay',
-                'payment_method' => $paymentInfo['methodCode'],
-                'payment_reference' => $paymentData['reference'],
-                'status' => 'pending',
-                'instruksi' => $paymentData['instructions'] ?? null,
-                'qr_url' => $paymentData['qr_url'] ?? null,
-                'payment_link' => $paymentData['checkout_url'] ?? null,
-                'expired_time' => $paymentData['expired_time'] ?? null,
-            ]);
-
-            $status = 'pending';
         }
 
-        if ($status) {
+        // Update stok flashsale dan voucher
+        if ($flashsaleItem) $this->reduceFlashsaleStock($request->flashsale_item_id, $quantity);
+        if ($voucher) $this->reduceVoucherStock($request->voucher_code);
 
-            // reduce voucher & flashsales
-            if ($flashsaleItem) {
-                $this->reduceFlashsaleStock($request->flashsale_item_id, $quantity);
-            }
-            if ($voucher) {
-                $this->reduceVoucherStock($request->voucher_code);
-            }
-
-            // Create the pembelian record
-            $pembelian = new Pembelian();
-            $pembelian->order_id = $orderId;
-            $pembelian->order_type = 'game';
-            $pembelian->user_id = Auth::id();
-            $pembelian->layanan_id = $layanan->id;
-            $pembelian->nickname = $request->nickname;
-            $pembelian->input_id = $inputId;
-            $pembelian->input_zone = $inputZone;
-            $pembelian->price = $basePrice;
-            $pembelian->quantity = $quantity;
-            $pembelian->discount = $voucherDiscount;
-            $pembelian->total_price = $totalPrice;
-            $pembelian->profit = $totalPrice - $hargaBeli;
-            $pembelian->status = $status;
-            $pembelian->reference_id = $reference;
-            $pembelian->phone = $request->phone;
-            $pembelian->email = $request->email;
-            $pembelian->voucher_id = $voucher ? $voucher['id'] : null;
-            $pembelian->flashsale_item_id = $flashsaleItem ? $flashsaleItem->id : null;
-
-            // Store additional fields as JSON
-            if (!empty($additionalData)) {
-                $pembelian->callback_data = $additionalData;
-            }
-
-            $pembelian->save();
-
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Order processed successfully',
-                'order_id' => $orderId,
-                'redirect' => true,
-            ]);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Order created, please proceed to payment',
+            'order_id' => $order_id,
+            'redirect' => true,
+            'payment_link' => $paymentData['checkout_url'] ?? null,
+        ]);
     }
+
 
     /**
      * Helper method to calculate payment fees

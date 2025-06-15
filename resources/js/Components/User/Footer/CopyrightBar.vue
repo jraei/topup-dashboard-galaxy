@@ -101,11 +101,11 @@ const currentYear = new Date().getFullYear();
         >
             <!-- Copyright text with cosmic symbol -->
             <div class="flex items-center mb-4 sm:mb-0">
-                <span class="mr-2 text-primary-text">&#x1F7BC;</span>
+                <span class="mr-2 text-primary-text">&copy;</span>
                 <!-- Unicode symbol for cosmic copyright -->
                 <span
-                    >{{ currentYear }} {{ judulWeb }} - Across the
-                    Universe</span
+                    >{{ currentYear }} {{ judulWeb }} - All Rights
+                    Reserved</span
                 >
             </div>
 

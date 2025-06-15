@@ -15,6 +15,7 @@ const props = defineProps({
     errors: Object,
     filters: Object,
     staticCategories: Object,
+    providers: Object,
 });
 
 const { proxy } = getCurrentInstance();
@@ -32,6 +33,17 @@ const categories = computed(() => props.categories.data || []);
 const columns = [
     { key: "id", label: "ID" },
     { key: "kategori_name", label: "Kategori" },
+    {
+        key: "provider_id",
+        label: "Provider",
+        format: (value) => {
+            const category = props.providers.filter(
+                (cat) => cat.id === value
+            )[0];
+
+            return category ? category.provider_name.toUpperCase() : "Unknown";
+        },
+    },
     {
         key: "kode_kategori",
         label: "Moogold Code",
@@ -131,6 +143,7 @@ const openAddForm = () => {
     formMode.value = "add";
     currentCategory.value = {
         kategori_name: "",
+        provider_id: "1",
         status: "active",
     };
     showForm.value = true;
@@ -175,6 +188,7 @@ const saveCategory = () => {
             onSuccess: () => {
                 // successMessage.value = page.props.flash.success;
                 currentCategory.value.category_name = "";
+                currentCategory.value.provider_id = "";
             },
         });
     } else {
@@ -320,7 +334,12 @@ const saveCategory = () => {
                 </template>
             </DataTable>
             <!-- Pagination component -->
-            <Pagination :links="props.categories.links" />
+            <Pagination
+                :links="props.categories.links"
+                :currentPage="props.categories.current_page"
+                :perPage="props.categories.per_page"
+                :totalEntries="props.categories.total"
+            />
         </div>
 
         <!-- Add/Edit Category Modal -->
@@ -400,6 +419,29 @@ const saveCategory = () => {
                                 >
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                            <!-- provider field -->
+                            <div>
+                                <label
+                                    for="provider_id"
+                                    class="block mb-1 text-sm font-medium text-gray-300"
+                                    >Provider</label
+                                >
+                                <select
+                                    id="provider_id"
+                                    name="provider_id"
+                                    v-model="currentCategory.provider_id"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
+                                >
+                                    <option
+                                        v-for="(provider, index) in providers"
+                                        :key="index"
+                                        :value="provider.id"
+                                    >
+                                        {{ provider.provider_name }}
+                                    </option>
                                 </select>
                             </div>
                         </div>

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('item_thumbnails', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_id')->constrained('produks')->onDelete('cascade');
+            $table->foreignId('produk_id')->nullable()->constrained('produks')->nullOnDelete();
             $table->unsignedInteger('min_item')->nullable(); // nullable kalau static
             $table->unsignedInteger('max_item')->nullable(); // nullable kalau static
             $table->boolean('is_static')->default(false); // true kalau gambar tidak tergantung jumlah

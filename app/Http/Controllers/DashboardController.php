@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use Inertia\Inertia;
 use App\Models\Deposit;
 use App\Models\PayMethod;
 use App\Models\Pembelian;
+use App\Models\Pembayaran;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Http\Controllers\Admin\TripayController;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Admin\TripayController;
 
 class DashboardController extends Controller
 {
@@ -25,8 +26,10 @@ class DashboardController extends Controller
         $pembelian = Pembelian::with('layanan')
             ->where('user_id', $user->id)
             ->where('created_at', '>=', $yesterday)
+            ->latest()
             ->limit(10)
             ->get();
+
 
         // Hitung total pembelian 1hari terakhir
         $totalPembelian = Pembelian::where('user_id', $user->id)
@@ -150,14 +153,31 @@ class DashboardController extends Controller
             'customer_phone' => $user->phone_number ?? '08000000000'
         ]);
 
-        if (!isset($response['data']['status']) || !isset($response['data']['data']['reference'])) {
-            abort(422, 'Payment gateway error. Please try again later.');
+        if (!isset($response['data']['success']) || !isset($response['data']['data']['reference'])) {
+            abort(422, 'Payment gateway error. Please try again later: ');
 
             // return redirect()->back()->with('error', 'Payment gateway error. Please try again later.');
         }
 
 
         $responseData = $response['data']['data'];
+
+        // create pembayaran
+        Pembayaran::create([
+            'tipe' => 'deposit',
+            'order_id' => $merchantRef,
+            'price' => $validated['nominal'],
+            'fee' => $responseData['total_fee'] ?? 0,
+            'total_price' => $validated['nominal'] + $responseData['total_fee'] ?? 0,
+            'payment_provider' => $payMethod->payment_provider,
+            'payment_method' => $payMethod->kode,
+            'payment_reference' => $responseData['reference'],
+            'instruksi' => $responseData['instruction'] ?? null,
+            'qr_url' => $responseData['qr_url'] ?? null,
+            'payment_link' => $responseData['checkout_url'] ?? null,
+            'expired_time' => Carbon::createFromTimestamp($responseData['expired_time']),
+            'status' => 'pending',
+        ]);
 
         // Create deposit record
         $deposit = Deposit::create([

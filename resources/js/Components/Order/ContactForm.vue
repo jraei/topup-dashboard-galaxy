@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-4">
-        <CosmicCard title="Contact Information" :step-number="6">
+        <CosmicCard title="Informasi Pembayaran" :step-number="6">
             <div class="space-y-4">
                 <div>
                     <label
@@ -12,7 +12,7 @@
                         id="email"
                         v-model="localEmail"
                         type="email"
-                        class="w-full px-4 py-2 text-white transition-colors border rounded-lg bg-dark-lighter border-secondary/30 focus:border-secondary focus:outline-none"
+                        class="w-full px-4 py-2 border rounded-lg outline-none bg-secondary/20 text-primary_text focus:ring-2 focus:border-primary focus:bg-secondary/20/90 border-secondary placeholder-secondary"
                         placeholder="Your email address"
                     />
                 </div>
@@ -28,17 +28,35 @@
                         <select
                             id="country"
                             v-model="selectedCountry"
-                            class="w-full px-3 py-2 text-white transition-colors border rounded-lg bg-dark-lighter border-secondary/30 focus:border-secondary focus:outline-none"
+                            class="w-full px-3 py-2 border rounded-lg outline-none bg-secondary/20 text-primary_text focus:ring-2 focus:bg-secondary/20/90 border-secondary placeholder-secondary"
                         >
-                            <option value="ID">Indonesia (+62)</option>
-                            <option value="MY">Malaysia (+60)</option>
-                            <option value="SG">Singapore (+65)</option>
-                            <option value="TH">Thailand (+66)</option>
-                            <option value="VN">Vietnam (+84)</option>
-                            <option value="PH">Philippines (+63)</option>
-                            <option value="US">United States (+1)</option>
-                            <option value="GB">United Kingdom (+44)</option>
-                            <option value="AU">Australia (+61)</option>
+                            <option class="bg-secondary" value="ID">
+                                Indonesia (+62)
+                            </option>
+                            <option value="MY" class="bg-secondary">
+                                Malaysia (+60)
+                            </option>
+                            <option value="SG" class="bg-secondary">
+                                Singapore (+65)
+                            </option>
+                            <option value="TH" class="bg-secondary">
+                                Thailand (+66)
+                            </option>
+                            <option value="VN" class="bg-secondary">
+                                Vietnam (+84)
+                            </option>
+                            <option value="PH" class="bg-secondary">
+                                Philippines (+63)
+                            </option>
+                            <option value="US" class="bg-secondary">
+                                United States (+1)
+                            </option>
+                            <option value="GB" class="bg-secondary">
+                                United Kingdom (+44)
+                            </option>
+                            <option value="AU" class="bg-secondary">
+                                Australia (+61)
+                            </option>
                         </select>
                     </div>
 
@@ -51,7 +69,7 @@
                         >
                         <div class="flex">
                             <span
-                                class="inline-flex items-center px-3 text-sm text-gray-300 border border-r-0 bg-dark-card border-secondary/30 rounded-l-md"
+                                class="inline-flex items-center px-3 text-sm border border-r-0 bg-secondary/20 text-primary-text border-secondary rounded-l-md"
                             >
                                 {{ countryPrefix }}
                             </span>
@@ -60,7 +78,7 @@
                                 v-model="localPhone"
                                 type="text"
                                 required
-                                class="w-full px-4 py-2 text-white transition-colors border rounded-r-lg bg-dark-lighter border-secondary/30 focus:border-secondary focus:outline-none"
+                                class="w-full px-4 py-2 text-white transition-colors border rounded-r-lg bg-secondary/20 border-secondary focus:border-secondary focus:outline-none placeholder-secondary"
                                 placeholder="WhatsApp number"
                             />
                         </div>
@@ -71,7 +89,7 @@
                 </div>
 
                 <div
-                    class="p-3 text-xs text-gray-400 rounded-lg bg-dark-lighter"
+                    class="p-3 text-xs rounded-lg text-primary-text bg-secondary/20"
                 >
                     <div class="flex items-start">
                         <svg
@@ -89,8 +107,8 @@
                             />
                         </svg>
                         <p>
-                            We'll send your order details and receipt to this
-                            WhatsApp number. Make sure it's correct.
+                            Bukti transaksi akan dikirim ke email di atas
+                            (opsional)
                         </p>
                     </div>
                 </div>

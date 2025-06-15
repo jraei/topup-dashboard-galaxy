@@ -3,10 +3,26 @@ import { Link } from "@inertiajs/vue3";
 import { computed } from "vue";
 
 const props = defineProps({
-    links: Array,
-    currentPage: Number,
-    perPage: Number,
-    totalEntries: Number,
+    links: {
+        type: Array,
+        required: true,
+        default: () => [],
+    },
+    currentPage: {
+        type: Number,
+        required: true,
+        default: 1,
+    },
+    perPage: {
+        type: Number,
+        required: true,
+        default: 10,
+    },
+    totalEntries: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
 });
 
 // Menghitung indeks data yang ditampilkan

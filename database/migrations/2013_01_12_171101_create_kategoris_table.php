@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('kategori_name')->unique();
             $table->string('kode_kategori')->nullable();
-            $table->foreignId('provider_id')->nullable()->constrained('providers');
+            $table->foreignId('provider_id')->nullable()->constrained('providers')->nullOnDelete();
             $table->string('status')->default('active');
             $table->timestamps();
         });

@@ -7,9 +7,12 @@ use App\Models\Produk;
 use App\Models\Layanan;
 use App\Models\Provider;
 use Illuminate\Http\Request;
+use App\Models\FlashsaleItem;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\NaelstoreController;
 
 class LayananController extends Controller
 {
@@ -175,48 +178,98 @@ class LayananController extends Controller
      */
     public function getServicesByProvider(Provider $provider)
     {
-        // Get services from API
-        if ($provider->provider_name == 'digiflazz') {
-            $digiflazz = new DigiflazzController();
-            $affectedRow = $digiflazz->getDigiflazzService();
-
-            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedRow . ' services have been added or updated!']);
-        } else if ($provider->provider_name == 'moogold') {
-            $moogold = new MoogoldController();
-            $affectedArray = $moogold->getMoogoldServices();
-
-            return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $affectedArray['success'] . ' services successfully and ' . $affectedArray['failed'] . ' failed to be added!']);
-        } else {
-            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+        switch ($provider->provider_name) {
+            case 'digiflazz':
+                $digiflazz = new DigiflazzController();
+                $response = $digiflazz->getDigiflazzService();
+                break;
+            case 'moogold':
+                $moogold = new MoogoldController();
+                $response = $moogold->getMoogoldServices();
+                break;
+            case 'naelstore':
+                $naelstore = new NaelstoreController();
+                $response = $naelstore->getNaelstoreServices();
+                break;
+            default:
+                return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => 'Provider not found!']);
+                break;
         }
+
+        if (!$response['status']) {
+            return back()->with('status', ['type' => 'error', 'action' => 'Request Error', 'text' => $response['message']]);
+        }
+
+        $data = $response['data'];
+        $this->syncHargaBeliIdr($provider->provider_name);
+
+        return back()->with('status', ['type' => 'success', 'action' => 'Success', 'text' => $data['affected_rows'] . ' services have been added or updated!']);
     }
 
     /**
      * Delete services by provider
      */
-    public function deleteLayanan(Request $request)
+    public function deleteLayanan(Provider $provider)
     {
-        $request->validate([
-            'provider_id' => 'required|exists:providers,id'
-        ]);
+        $count = Layanan::where('provider_id', $provider->id)->count();
 
-        $count = Layanan::where('provider_id', $request->provider_id)->count();
+        try {
+            $services = Layanan::where('provider_id', $provider->id)->get();
 
-        // Delete images for all services being deleted
-        $services = Layanan::where('provider_id', $request->provider_id)->get();
-        foreach ($services as $service) {
-            if ($service->gambar) {
-                Storage::disk('public')->delete($service->gambar);
+            foreach ($services as $service) {
+                // Hapus gambar layanan
+                if ($service->gambar) {
+                    Storage::disk('public')->delete($service->gambar);
+                }
+
+                // Hapus flashsale items terkait
+                if ($service->flashSaleItem()->exists()) {
+                    $service->flashSaleItem()->delete();
+                }
+
+                // Hapus layanan satu per satu
+                $service->delete();
             }
+        } catch (\Throwable $th) {
+            return back()->with('status', [
+                'type' => 'error',
+                'action' => 'Request Error',
+                'text' => $th->getMessage()
+            ]);
         }
-
-        // Delete the services
-        Layanan::where('provider_id', $request->provider_id)->delete();
 
         return back()->with('status', [
             'type' => 'success',
             'action' => 'Success',
             'text' => $count . ' services have been deleted!'
         ]);
+    }
+
+    public function syncHargaBeliIdr($provider)
+    {
+        // Ambil semua provider yang perlu diupdate
+        $provider = Provider::where('provider_name', $provider)->first();
+
+        $results = [];
+
+        // Update semua layanan provider ini dengan single query
+        $affected = DB::table('layanans')
+            ->where('provider_id', $provider->id)
+            ->whereNotNull('harga_beli')
+            ->update([
+                'harga_beli_idr' => DB::raw("harga_beli * {$provider->rate_kurs}"),
+                'updated_at' => now()
+            ]);
+
+        $results[$provider->provider_name] = [
+            'rate_kurs' => $provider->rate_kurs,
+            'affected_rows' => $affected
+        ];
+
+        return [
+            'status' => true,
+            'message' => 'Harga beli IDR synced successfully',
+            'data' => $results
+        ];
     }
 }

@@ -32,9 +32,9 @@ const waLink = computed(() => {
         </div>
 
         <div>
-            <h4 class="font-bold leading-tight">Need help?</h4>
+            <h4 class="font-bold leading-tight">Butuh bantuan?</h4>
             <p class="text-sm font-medium text-primary-text/80">
-                Contact admin here
+                Kontak admin disini
             </p>
         </div>
     </a>

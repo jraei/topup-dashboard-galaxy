@@ -10,11 +10,11 @@
         @mouseleave="resumeAutoplay"
     >
         <!-- Cyberpunk border gradient -->
-        <div class="absolute inset-0 p-0.5 rounded-2xl z-0">
+        <!-- <div class="absolute inset-0 p-0.5 rounded-2xl z-0">
             <div
                 class="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/50 to-secondary/50 animate-pulse-slow"
             ></div>
-        </div>
+        </div> -->
 
         <!-- Carousel container -->
         <div class="relative z-10 overflow-hidden rounded-2xl">

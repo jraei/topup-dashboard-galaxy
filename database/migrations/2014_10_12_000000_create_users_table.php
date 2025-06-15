@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone');
             $table->bigInteger('saldo')->default(0);
-            $table->foreignId('user_role_id')->constrained('user_roles');
+            $table->foreignId('user_role_id')->nullable()->constrained('user_roles')->nullOnDelete();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('status', ['active', 'nonactive'])->default('nonactive');

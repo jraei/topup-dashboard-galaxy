@@ -102,7 +102,7 @@ const formatStatus = (status) => {
             <!-- Main Dashboard Content -->
             <div class="flex-1 p-4 transition-all duration-300 lg:p-8">
                 <!-- Security Callout -->
-                <div class="mb-6">
+                <!-- <div class="mb-6">
                     <div
                         class="flex items-center gap-3 p-4 rounded-lg shadow bg-primary/20 text-primary"
                     >
@@ -145,7 +145,7 @@ const formatStatus = (status) => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Main Cards Row -->
                 <div class="flex flex-col gap-6 mb-6 lg:flex-row">
@@ -330,11 +330,13 @@ const formatStatus = (status) => {
                         >
                             <thead>
                                 <tr class="bg-primary/10 text-secondary">
-                                    <th class="p-3 text-left">Nomor Invoice</th>
-                                    <th class="p-3 text-left">Item</th>
-                                    <th class="p-3 text-left">User Input</th>
-                                    <th class="p-3 text-right">Harga</th>
                                     <th class="p-3 text-left">Tanggal</th>
+                                    <th class="p-3 text-left">Nomor Invoice</th>
+                                    <th class="p-3 text-left">Layanan</th>
+                                    <th class="p-3 text-left">Harga</th>
+                                    <th class="p-3 text-left">Jumlah</th>
+                                    <th class="p-3 text-left">Total</th>
+                                    <th class="p-3 text-left">Target</th>
                                     <th class="p-3 text-left">Status</th>
                                 </tr>
                             </thead>
@@ -343,9 +345,22 @@ const formatStatus = (status) => {
                                     class="border-b border-white/5"
                                     v-for="trx in props.pembelian"
                                 >
+                                    <td class="p-3">
+                                        <!-- format date based on locale -->
+                                        {{ formatDate(trx.created_at) }}
+                                    </td>
                                     <td class="p-3">{{ trx.order_id }}</td>
                                     <td class="p-3">
                                         {{ trx.layanan.nama_layanan }}
+                                    </td>
+                                    <td class="p-3">
+                                        {{ formatCurrency(trx.price) }}
+                                    </td>
+                                    <td class="p-3 text-center">
+                                        {{ trx.quantity }}x
+                                    </td>
+                                    <td class="p-3">
+                                        {{ formatCurrency(trx.total_price) }}
                                     </td>
                                     <td class="p-3">
                                         {{
@@ -353,13 +368,6 @@ const formatStatus = (status) => {
                                                 ? `${trx.input_id} (${trx.input_zone})`
                                                 : trx.input_id
                                         }}
-                                    </td>
-                                    <td class="p-3 text-right">
-                                        {{ trx.total_price }}
-                                    </td>
-                                    <td class="p-3">
-                                        <!-- format date based on locale -->
-                                        {{ formatDate(trx.created_at) }}
                                     </td>
                                     <td
                                         class="p-3"

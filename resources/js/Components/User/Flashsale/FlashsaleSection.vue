@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import FlashsaleCard from "./FlashsaleCard.vue";
 import FlashsaleHeader from "./FlashsaleHeader.vue";
-import throttle from "lodash/throttle";
+import debounce from "lodash/debounce";
 
 const props = defineProps({
     event: {
@@ -62,58 +62,59 @@ const cloneCount = computed(() => {
 });
 
 // Handle manual scrolling with improved detection
-const handleScroll = () => {
-    if (!carouselRef.value) return;
-    isUserScrolling.value = true;
+// const handleScroll = () => {
+//     if (!carouselRef.value) return;
+//     isUserScrolling.value = true;
 
-    // Handle infinite scroll effect for large screens
-    if (isLargeScreen.value) {
-        const carousel = carouselRef.value;
-        const scrollWidth = carousel.scrollWidth;
-        const containerWidth = carousel.clientWidth;
+//     // Handle infinite scroll effect for large screens
+//     if (isLargeScreen.value) {
+//         const carousel = carouselRef.value;
+//         const scrollWidth = carousel.scrollWidth;
+//         const containerWidth = carousel.clientWidth;
 
-        // If near end, jump to start
-        if (carousel.scrollLeft > scrollWidth - containerWidth - 50) {
-            // Add small delay before jumping to make transition smoother
-            setTimeout(() => {
-                carousel.scrollTo({
-                    left: 1, // Small offset to prevent jump
-                    behavior: "auto",
-                });
-            }, 50);
-        }
+//         // If near end, jump to start
+//         if (carousel.scrollLeft > scrollWidth - containerWidth - 50) {
+//             // Add small delay before jumping to make transition smoother
+//             setTimeout(() => {
+//                 carousel.scrollTo({
+//                     left: 1, // Small offset to prevent jump
+//                     behavior: "auto",
+//                 });
+//             }, 50);
+//         }
 
-        // If near start (after a backward scroll), jump to end
-        else if (carousel.scrollLeft < 50) {
-            const originalItems = props.event.item.length;
-            const cardWidth = cachedCardWidthScroll || 300;
+//         // If near start (after a backward scroll), jump to end
+//         else if (carousel.scrollLeft < 50) {
+//             const originalItems = props.event.item.length;
+//             const cardWidth = cachedCardWidthScroll || 300;
 
-            const spaceBetweenCards = 16; // This is the space-x-4 = 1rem = 16px
+//             const spaceBetweenCards = 16; // This is the space-x-4 = 1rem = 16px
 
-            // Jump to position just before cloned items
-            setTimeout(() => {
-                carousel.scrollTo({
-                    left:
-                        (cardWidth + spaceBetweenCards) * originalItems -
-                        containerWidth,
-                    behavior: "auto",
-                });
-            }, 50);
-        }
-    }
+//             // Jump to position just before cloned items
+//             setTimeout(() => {
+//                 carousel.scrollTo({
+//                     left:
+//                         (cardWidth + spaceBetweenCards) * originalItems -
+//                         containerWidth,
+//                     behavior: "auto",
+//                 });
+//             }, 50);
+//         }
+//     }
 
-    // Clear previous timeout
-    if (scrollTimeoutId.value) {
-        window.clearTimeout(scrollTimeoutId.value);
-    }
+//     // Clear previous timeout
+//     if (scrollTimeoutId.value) {
+//         window.clearTimeout(scrollTimeoutId.value);
+//     }
 
-    // Set new timeout to detect when user stops scrolling
-    scrollTimeoutId.value = window.setTimeout(() => {
-        isUserScrolling.value = false;
-    }, 1000); // Longer delay for better UX
-};
+//     // Set new timeout to detect when user stops scrolling
+//     scrollTimeoutId.value = window.setTimeout(() => {
+//         isUserScrolling.value = false;
+//     }, 1000); // Longer delay for better UX
+// };
 
-const throttledHandleScroll = throttle(handleScroll, 500);
+// const throttledHandleScroll = throttle(handleScroll, 500);
+// const debouncedHandleScroll = debounce(handleScroll, 300);
 
 // Check viewport size
 const handleResize = () => {
@@ -149,8 +150,9 @@ const setupVisibilityObserver = () => {
         return;
 
     observerRef.value = new IntersectionObserver(
-        (entries) => {
+        (entries, observer) => {
             isVisible.value = entries[0].isIntersecting;
+            if (isVisible.value) observer.unobserve(carouselRef.value); // observer hanya jalan sekali
         },
         { threshold: 0.1 }
     );
@@ -308,14 +310,9 @@ watch(shouldAutoScroll, (val) => {
                     </svg>
                 </button>
 
-                <!-- Scroll indicators (fade edges) for visual effect -->
-                <!-- <div class="scroll-fade-left"></div>
-                <div class="scroll-fade-right"></div> -->
-
                 <!-- Main carousel container with optimized scrolling -->
                 <div
                     ref="carouselRef"
-                    @scroll="throttledHandleScroll"
                     @mouseenter="isHovering = true"
                     @mouseleave="isHovering = false"
                     @touchstart="isHovering = true"
@@ -323,26 +320,6 @@ watch(shouldAutoScroll, (val) => {
                     class="flex pt-2 pb-4 space-x-4 overflow-x-auto snap-x scrollbar-none"
                     :class="{ 'auto-scroll': shouldAutoScroll }"
                 >
-                    <!-- Clone items at the beginning for seamless loop (lg screens) -->
-                    <!-- <template v-if="hasClonedItems">
-                        <FlashsaleCard
-                            v-for="(item, index) in event.item.slice(
-                                -cloneCount
-                            )"
-                            :key="`pre-clone-${item.id}-${index}`"
-                            :flash-item="item"
-                            class="flex-none snap-start pre-clone-card"
-                            :style="{
-                                width: isMobile
-                                    ? 'calc(100% - 2rem)'
-                                    : isLargeScreen
-                                    ? 'calc((100% - 3rem) / 4)'
-                                    : 'calc((100% - 1rem) / 2)',
-                                minWidth: '290px',
-                            }"
-                        />
-                    </template> -->
-
                     <!-- Original flashsale items -->
                     <FlashsaleCard
                         v-for="item in event.item"
@@ -358,28 +335,6 @@ watch(shouldAutoScroll, (val) => {
                             minWidth: '290px',
                         }"
                     />
-
-                    <!-- Clone items at the end for seamless loop (lg screens) -->
-                    <!-- <template v-if="hasClonedItems">
-                        <FlashsaleCard
-                            v-for="(item, index) in event.item.slice(
-                                0,
-                                cloneCount
-                            )"
-                            :key="`post-clone-${item.id}-${index}`"
-                            :flash-item="item"
-                            class="flex-none snap-start post-clone-card"
-                            :style="{
-                                width: isMobile
-                                    ? 'calc(100% - 2rem)'
-                                    : isLargeScreen
-                                    ? 'calc((100% - 3rem) / 4)'
-                                    : 'calc((100% - 1rem) / 2)',
-                                minWidth: '290px',
-                            }"
-                        />
-                    </template> -->
-
                     <!-- Spacer element to ensure proper scrolling -->
                     <div class="flex-none w-4"></div>
                 </div>

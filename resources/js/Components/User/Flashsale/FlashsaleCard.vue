@@ -129,6 +129,8 @@ onMounted(() => {
         });
     }
 });
+
+console.log(produk.value);
 </script>
 
 <template>
@@ -186,11 +188,11 @@ onMounted(() => {
                     <div class="flex items-center mt-1 space-x-2">
                         <!-- Thumbnail image -->
                         <div
-                            v-if="thumbnailImage"
+                            v-if="layanan.gambar"
                             class="flex-shrink-0 w-10 h-10 overflow-hidden rounded"
                         >
                             <img
-                                :src="'/storage/' + thumbnailImage"
+                                :src="layanan.gambar"
                                 alt="Product"
                                 class="object-cover w-full h-full"
                             />
@@ -253,20 +255,18 @@ onMounted(() => {
 
                 <!-- Right Section - Simplified Cosmic Elements -->
                 <div class="right-section">
-                    <div class="cosmic-layer">
-                        <!-- Simplified CSS Planet -->
+                    <!-- <div class="cosmic-layer">
                         <div class="cosmic-planet"></div>
                         <div class="planet-ring"></div>
 
-                        <!-- Use minimal CSS particles -->
                         <CssCosmicParticles
                             v-if="!isLowPowerDevice"
                             :density="particleDensity"
                             theme="primary"
                         />
-                    </div>
+                    </div> -->
 
-                    <div class="thermal-edge"></div>
+                    <!-- <div class="thermal-edge"></div> -->
                 </div>
             </div>
 
@@ -421,7 +421,7 @@ onMounted(() => {
         rgba(51, 195, 240, 0.2) 50%,
         transparent
     );
-    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5);
+    /* box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.5); */
 }
 
 .planet-ring {
@@ -488,7 +488,7 @@ onMounted(() => {
     overflow: hidden;
     position: relative;
     backdrop-filter: blur(4px);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    /* box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); */
 }
 
 /* Enhanced progress bar */
@@ -497,7 +497,7 @@ onMounted(() => {
     background-color: #9b87f5; /* primary */
     transition: width 1s ease-out;
     position: relative;
-    box-shadow: 0 0 10px rgba(155, 135, 245, 0.5);
+    /* box-shadow: 0 0 10px rgba(155, 135, 245, 0.5); */
     background-image: linear-gradient(
         90deg,
         rgba(155, 135, 245, 0.8),

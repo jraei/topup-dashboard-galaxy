@@ -10,6 +10,7 @@ use App\Models\Provider;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Medboubazine\Moogold\Moogold;
+use Illuminate\Support\Facades\DB;
 use Medboubazine\Moogold\Auth\Credentials;
 
 class MoogoldController extends Controller
@@ -48,79 +49,228 @@ class MoogoldController extends Controller
 
     public function getMoogoldProducts()
     {
-        $provider = Provider::where('provider_name', 'moogold')->first();
+        $provider = Provider::where('provider_name', 'moogold')
+            ->where('status', 'active')
+            ->first(['id', 'provider_name']);
 
-        if (!$provider || $provider->status != 'active') {
+        if (!$provider) {
             return [
                 'status' => false,
-                'message' => 'Provider not found or inactive!'
+                'message' => 'Provider not found or inactive!',
             ];
         }
-        // List kategori dan ID nya (statis)
-        $categories = Kategori::where('provider_id', $provider->id)->where('status', 'active')->get();
+
+        $categories = Kategori::where('provider_id', $provider->id)
+            ->where('status', 'active')
+            ->get(['id', 'kode_kategori', 'kategori_name']);
 
         try {
             $moogold = new Moogold($this->credentials);
-            $products = $moogold->products();
+            $productsApi = $moogold->products();
         } catch (\Exception $e) {
-            logger()->error("Failed to connect in getMoogoldProducts functions at MoogoldController: " . $e->getMessage());
+            logger()->error("Moogold API connection failed: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => $e->getMessage()
+                'message' => 'Failed to connect to Moogold API: ' . $e->getMessage(),
             ];
         }
 
-
-        $affectedRows = [
-            'success' => 0,
-            'failed' => 0
+        $result = [
+            'total_categories' => 0,
+            'total_products' => 0,
+            'total_created' => 0,
+            'total_updated' => 0,
+            'categories' => []
         ];
-        // Loop semua kategori
+
+        // Ambil semua slug yang sudah ada untuk validasi
+        $existingSlugs = Produk::pluck('slug')->toArray();
+
         foreach ($categories as $category) {
-            $categoryCode = $category->kode_kategori;
-            $categoryName = $category->kategori_name;
-            $categoryId = $category->id;
-            $moogoldOrderCategory = $category->kode_kategori == 50 ? 1 : 2;
+            $categoryResult = [
+                'name' => $category->kategori_name,
+                'products' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'failed' => 0
+            ];
+
             try {
-                // Call API Moogold per kategori
-                $response = $products->list($categoryCode);
+                $response = $productsApi->list($category->kode_kategori);
 
-                // // Tambahkan hasil ke array utama
-                if (!empty($response)) {
-                    foreach ($response as $product) {
-                        $productName = $product->getName();
+                if (empty($response)) {
+                    continue;
+                }
 
-                        // Skip produk yang mengandung karakter Chinese/non-Latin
-                        if (
-                            preg_match('/[\p{Han}]/u', $productName) || // Deteksi karakter Chinese
-                            preg_match('/[^\x00-\x7F]/', $productName)
-                        ) { // Deteksi karakter non-ASCII
-                            continue; // Lewati produk ini
-                        }
+                $batchInsert = [];
+                $batchUpdate = [];
+                $now = now();
 
-                        Produk::updateOrCreate(
-                            ['provider_id' => $provider->id, 'reference' => $product->getId()],
-                            [
-                                "nama" => $product->getName(),
-                                "developer" => 'Unknown Developer',
-                                "kategori_id" => $categoryId,
-                                "moogold_order_category" => $moogoldOrderCategory,
-                                "slug" => Str::slug($product->getName(), '-') ?? null,
-                                "status" => 'active',
-                            ]
-                        );
-                        $affectedRows['success']++;
+                foreach ($response as $product) {
+                    $productName = $product->getName();
+                    $productRef = $product->getId();
+
+                    if ($this->containsNonLatinChars($productName)) {
+                        $categoryResult['failed']++;
+                        continue;
+                    }
+
+                    // Generate slug hanya berdasarkan nama produk
+                    $slug = $this->generateUniqueSlug($productName, $existingSlugs);
+                    $existingSlugs[] = $slug; // Tambahkan ke daftar slug yang ada
+
+                    $productData = [
+                        "nama" => $productName,
+                        "developer" => 'Unknown Developer',
+                        "kategori_id" => $category->id,
+                        "moogold_order_category" => $category->kode_kategori == 50 ? 1 : 2,
+                        "slug" => $slug,
+                        "status" => 'active',
+                        "provider_id" => $provider->id,
+                        "reference" => $productRef,
+                        "updated_at" => $now
+                    ];
+
+                    // Cek apakah produk sudah ada berdasarkan reference
+                    $existingProduct = Produk::where('reference', $productRef)
+                        ->where('provider_id', $provider->id)
+                        ->first(['id']);
+
+                    if ($existingProduct) {
+                        $batchUpdate[] = $productData + ['id' => $existingProduct->id];
+                    } else {
+                        $productData['created_at'] = $now;
+                        $batchInsert[] = $productData;
                     }
                 }
+
+                // Eksekusi batch insert
+                if (!empty($batchInsert)) {
+                    try {
+                        Produk::insert($batchInsert);
+                        $createdCount = count($batchInsert);
+                        $categoryResult['created'] = $createdCount;
+                        $categoryResult['products'] += $createdCount;
+                        $result['total_created'] += $createdCount;
+                        $result['total_products'] += $createdCount;
+                    } catch (\Exception $e) {
+                        logger()->error("Batch insert failed for category {$category->kategori_name}: " . $e->getMessage());
+                        $categoryResult['failed'] += count($batchInsert);
+                    }
+                }
+
+                // Eksekusi batch update
+                if (!empty($batchUpdate)) {
+                    $updatedCount = $this->batchUpdateProducts($batchUpdate);
+                    $categoryResult['updated'] = $updatedCount;
+                    $categoryResult['products'] += $updatedCount;
+                    $result['total_updated'] += $updatedCount;
+                    $result['total_products'] += $updatedCount;
+                }
             } catch (\Exception $e) {
-                // Kalau ada error ambil 1 kategori, log errornya tapi lanjut loop
-                logger()->error("Failed to fetch products for category {$categoryName}: " . $e->getMessage());
-                $affectedRows['failed']++;
+                logger()->error("Failed processing category {$category->kategori_name}: " . $e->getMessage());
+                $categoryResult['failed']++;
+                continue;
+            }
+
+            if ($categoryResult['products'] > 0) {
+                $result['categories'][$category->kategori_name] = $categoryResult;
+                $result['total_categories']++;
             }
         }
 
-        return $affectedRows;
+        return [
+            'status' => true,
+            'message' => 'Products synchronized successfully',
+            'data' => $result
+        ];
     }
+
+    /**
+     * Generate slug unik hanya berdasarkan nama produk
+     */
+    private function generateUniqueSlug($productName, &$existingSlugs)
+    {
+        $baseSlug = Str::slug($productName, '-');
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (in_array($slug, $existingSlugs)) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Helper method untuk deteksi karakter non-Latin
+     */
+    private function containsNonLatinChars($string)
+    {
+        return preg_match('/[\p{Han}]/u', $string) || preg_match('/[^\x00-\x7F]/', $string);
+    }
+
+    /**
+     * Batch update produk dengan single query
+     */
+    /**
+     * Batch update produk dengan single query
+     * Sesuai dengan revisi validasi slug terbaru
+     */
+    private function batchUpdateProducts(array $data)
+    {
+        if (empty($data)) {
+            return 0;
+        }
+
+        $table = (new Produk())->getTable();
+        $cases = [];
+        $ids = [];
+        $params = [];
+
+        foreach ($data as $row) {
+            $ids[] = $row['id'];
+
+            // Untuk nama
+            $cases[] = "WHEN id = ? THEN ?";
+            $params[] = $row['id'];
+            $params[] = $row['nama'];
+
+            // Untuk slug
+            $cases[] = "WHEN id = ? THEN ?";
+            $params[] = $row['id'];
+            $params[] = $row['slug'];
+
+            // Untuk kategori_id
+            $cases[] = "WHEN id = ? THEN ?";
+            $params[] = $row['id'];
+            $params[] = $row['kategori_id'];
+
+            // Untuk moogold_order_category
+            $cases[] = "WHEN id = ? THEN ?";
+            $params[] = $row['id'];
+            $params[] = $row['moogold_order_category'];
+        }
+
+        $idsStr = implode(',', $ids);
+        $casesStr = implode(' ', $cases);
+
+        $query = "UPDATE {$table} SET 
+        nama = CASE {$casesStr} END,
+        slug = CASE {$casesStr} END,
+        kategori_id = CASE {$casesStr} END,
+        moogold_order_category = CASE {$casesStr} END,
+        updated_at = NOW()
+        WHERE id IN ({$idsStr})";
+
+        try {
+            return DB::update($query, $params);
+        } catch (\Exception $e) {
+            logger()->error("Batch update products failed: " . $e->getMessage());
+            return 0;
+        }
+    }
+
 
     public function getMoogoldServices()
     {
@@ -131,84 +281,173 @@ class MoogoldController extends Controller
                 'message' => 'Provider not found or inactive!'
             ];
         }
+
         $moogold = new Moogold($this->credentials);
         $moogoldProducts = $moogold->products();
-        $activeProducts = Produk::where('provider_id', $provider->id)->where('status', 'active')->get();
+        $activeProducts = Produk::where('provider_id', $provider->id)
+            ->where('status', 'active')
+            ->get(['id', 'reference', 'thumbnail', 'nama']);
+
         $affectedRows = [
             'success' => 0,
-            'failed' => 0
+            'failed' => 0,
+            'updated' => 0,
+            'created' => 0
         ];
+
+        // Preload semua layanan yang ada untuk produk aktif
+        $existingServices = Layanan::whereIn('produk_id', $activeProducts->pluck('id'))
+            ->get(['id', 'produk_id', 'kode_layanan', 'harga_beli'])
+            ->keyBy('kode_layanan');
 
         foreach ($activeProducts as $produk) {
             try {
                 $response = $moogoldProducts->details($produk['reference']);
 
+                if (empty($response)) {
+                    continue;
+                }
+
                 $productName = $response->getName();
 
-                if (!empty($response)) {
-                    $services = $response->getOffers();
+                // Update thumbnail produk jika kosong
+                if (empty($produk['thumbnail']) && !empty($response->getImageUrl())) {
+                    $produk->update(['thumbnail' => $response->getImageUrl()]);
+                }
 
-                    foreach ($services as $data) {
-                        // Update thumbnail
-                        if ($produk['thumbnail'] == null && !empty($response->getImageUrl())) {
-                            $produk->where('reference', $produk['reference'])->update(['thumbnail' => $response->getImageUrl()]);
+                $services = $response->getOffers();
+                $batchInsert = [];
+                $batchUpdate = [];
+
+                foreach ($services as $data) {
+                    $dataId = $data->getId();
+                    $price = $data->getPrice();
+
+                    // Validasi data
+                    if (empty($dataId) || !is_scalar($dataId) || !is_numeric($price)) {
+                        logger()->error("Invalid data - ID: " . json_encode($dataId) . ", Price: " . json_encode($price));
+                        $affectedRows['failed']++;
+                        continue;
+                    }
+
+                    // Proses nama layanan
+                    $serviceName = $this->cleanServiceName($data->getName(), $productName, $dataId);
+
+                    // Cek apakah layanan sudah ada
+                    if ($existingServices->has($dataId)) {
+                        $existingService = $existingServices->get($dataId);
+
+                        // Hanya update jika harga berbeda
+                        if ($existingService->harga_beli != $price) {
+                            $batchUpdate[] = [
+                                'id' => $existingService->id,
+                                'harga_beli' => $price,
+                                'status' => 'active',
+                                'updated_at' => now()
+                            ];
+                            $affectedRows['updated']++;
                         }
+                    } else {
+                        // Tambahkan ke batch insert
+                        $batchInsert[] = [
+                            'produk_id' => $produk->id,
+                            'provider_id' => $provider->id,
+                            'kode_layanan' => $dataId,
+                            'nama_layanan' => $serviceName,
+                            'harga_beli' => $price,
+                            'status' => 'active',
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ];
+                        $affectedRows['created']++;
+                    }
 
-                        $dataId = $data->getId();
-                        $price = $data->getPrice();
+                    $affectedRows['success']++;
+                }
 
-                        if (empty($dataId) || !is_scalar($dataId)) {
-                            logger()->error("Invalid ID: " . json_encode($dataId));
-                            continue; // Lewati layanan ini
-                        }
+                // Eksekusi batch update
+                if (!empty($batchUpdate)) {
+                    $this->batchUpdateLayanan($batchUpdate);
+                }
 
-                        if (!is_numeric($price)) {
-                            logger()->error("Invalid Price for ID $dataId: " . json_encode($price));
-                            continue;
-                        }
-                        $serviceName = $data->getName();
-
-                        $idTag = "(#{$dataId})";
-                        if (strpos($serviceName, $idTag) !== false) {
-                            $serviceName = str_replace($idTag, '', $serviceName);
-                            $serviceName = trim($serviceName);
-                        }
-
-
-                        // Remove product name from service name
-                        $productNameClean = trim($productName);
-                        if (stripos($serviceName, $productNameClean) === 0) {
-                            $serviceName = trim(str_replace($productNameClean, '', $serviceName));
-                            $serviceName = preg_replace('/^\s*-\s*/', '', $serviceName); // lebih kuat buat bersihin dash + spasi
-                        }
-
-                        // Safety check biar gak kosong
-                        if (empty($serviceName)) {
-                            $serviceName = $data->getName(); // fallback ke nama original aja kalau kosong
-                        }
-
-
-                        // =====================================
-
-                        Layanan::updateOrCreate(
-                            ['kode_layanan' => $dataId],
-                            [
-                                "produk_id" => $produk->id,
-                                "provider_id" =>  $provider->id,
-                                "nama_layanan" => $serviceName, // Pakai nama yang sudah difilter
-                                "harga_beli" => $price,
-                                "status" => 'active'
-                            ]
-                        );
-                        $affectedRows['success']++;
+                // Eksekusi batch insert
+                if (!empty($batchInsert)) {
+                    Layanan::insert($batchInsert);
+                    // Tambahkan ke existing services untuk menghindari duplicate insert
+                    foreach ($batchInsert as $newService) {
+                        $existingServices->put($newService['kode_layanan'], (object)[
+                            'id' => null, // Tidak perlu ID untuk pengecekan berikutnya
+                            'produk_id' => $newService['produk_id'],
+                            'kode_layanan' => $newService['kode_layanan'],
+                            'harga_beli' => $newService['harga_beli']
+                        ]);
                     }
                 }
             } catch (\Exception $e) {
-                logger()->error("Failed to fetch layanan for products {$produk->nama}: " . $e->getMessage());
+                logger()->error("Failed to fetch layanan for product {$produk->nama}: " . $e->getMessage());
                 $affectedRows['failed']++;
             }
         }
-        return $affectedRows;
+
+        return [
+            'status' => true,
+            'message' => 'Services synchronized successfully',
+            'data' => [
+                'affected_rows' => $affectedRows['success'],
+                'updated_services' => $affectedRows['updated'],
+                'created_services' => $affectedRows['created'],
+                'failed_services' => $affectedRows['failed']
+            ]
+        ];
+    }
+
+    /**
+     * Bersihkan nama layanan
+     */
+    protected function cleanServiceName($rawName, $productName, $dataId)
+    {
+        $serviceName = $rawName;
+
+        // Hapus ID tag
+        $idTag = "(#{$dataId})";
+        if (strpos($serviceName, $idTag) !== false) {
+            $serviceName = str_replace($idTag, '', $serviceName);
+        }
+
+        // Hapus nama produk dari awal nama layanan
+        $productNameClean = trim($productName);
+        if (stripos($serviceName, $productNameClean) === 0) {
+            $serviceName = trim(str_replace($productNameClean, '', $serviceName));
+            $serviceName = preg_replace('/^\s*-\s*/', '', $serviceName);
+        }
+
+        return trim($serviceName) ?: $rawName; // Fallback ke nama original jika kosong
+    }
+
+    /**
+     * Batch update layanan
+     */
+    protected function batchUpdateLayanan(array $data)
+    {
+        $table = (new Layanan())->getTable();
+        $cases = [];
+        $ids = [];
+        $params = [];
+
+        foreach ($data as $row) {
+            $ids[] = $row['id'];
+            $cases[] = "WHEN {$row['id']} THEN ?";
+            $params[] = $row['harga_beli'];
+        }
+
+        $ids = implode(',', $ids);
+        $cases = implode(' ', $cases);
+
+        return DB::update("UPDATE {$table} SET 
+        harga_beli = CASE id {$cases} END,
+        status = 'active',
+        updated_at = NOW()
+        WHERE id IN ({$ids})", $params);
     }
 
     public function createTransaction(array $data)

@@ -62,8 +62,8 @@ const hargaJual = computed(() => {
 // Decide if we have a thumbnail to display
 const hasThumbnail = computed(() => {
     return (
-        props.service.thumbnail !== null &&
-        props.service.thumbnail !== undefined
+        props.service.gambar ||
+        (props.service.thumbnail && props.service.thumbnail != "")
     );
 });
 </script>
@@ -90,7 +90,11 @@ const hasThumbnail = computed(() => {
             <div class="relative w-6 h-6 md:w-8 md:h-8 shrink-0">
                 <img
                     v-if="hasThumbnail"
-                    :src="service.thumbnail"
+                    :src="
+                        service.gambar
+                            ? '/storage/' + service.gambar
+                            : service.thumbnail
+                    "
                     :alt="service.nama_layanan"
                     class="object-cover w-full h-full rounded-lg cosmic-thumbnail"
                 />

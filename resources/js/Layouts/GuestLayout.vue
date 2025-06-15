@@ -1,9 +1,15 @@
 <script setup>
 import CosmicNavbar from "@/Components/User/Navigation/CosmicNavbar.vue";
 import CosmicFooter from "@/Components/User/Footer/CosmicFooter.vue";
+import { Head, usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+const judulWeb = page.props.web_details.meta_title;
 </script>
 
 <template>
+    <Head :title="judulWeb" />
+
     <div>
         <div class="min-h-screen bg-content_background">
             <!-- Cosmic Navigation System -->
