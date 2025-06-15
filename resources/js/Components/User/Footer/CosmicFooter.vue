@@ -39,11 +39,14 @@ onMounted(() => {
 });
 
 const navLinks = [
-    { name: "Topup", route: "index" },
     { name: "Cek Transaksi", route: "cek-transaksi" },
     { name: "Leaderboard", route: "leaderboard" },
     { name: "Calculator", route: "calculator.winrate" },
 ];
+
+if (page.props.auth.role === "H2H" || page.props.auth.role === "admin") {
+    navLinks.push({ name: "API Docs", route: "api-docs" });
+}
 
 const legalLinks = [
     { name: "Terms of Service", route: "term-of-service" },

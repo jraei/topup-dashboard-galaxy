@@ -40,7 +40,7 @@
                     disabled
                     class="bg-secondary text-primary-text"
                 >
-                    Select {{ field.label.toLowerCase() }}
+                    Pilih {{ field.label.toLowerCase() }}
                 </option>
                 <option
                     v-for="option in field.options"

@@ -63,7 +63,7 @@ Route::get('/term-of-service', [IndexController::class, 'termOfService'])->name(
 // API Documentation
 Route::get('/api-docs', function () {
     return Inertia::render('ApiDocs');
-})->name('api-docs');
+})->name('api-docs')->middleware('auth');
 
 // Order Processing Routes
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');

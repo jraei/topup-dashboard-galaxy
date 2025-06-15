@@ -334,6 +334,7 @@ const formatCurrency = (amount) => {
                                         Transactions
                                     </div>
                                 </DropdownLink>
+
                                 <DropdownLink
                                     :href="route('logout')"
                                     method="post"
