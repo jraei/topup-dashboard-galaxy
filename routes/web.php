@@ -4,13 +4,13 @@ use Inertia\Inertia;
 use App\Models\Banner;
 use App\Models\Produk;
 use App\Models\WebConfig;
+use App\Http\Controllers\ApiDocs;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MoogoldController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
+use App\Http\Controllers\ApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,7 +54,6 @@ Route::get('/calculator/winrate', [CalculatorController::class, 'winrate'])->nam
 Route::get('/calculator/magic-wheel', [CalculatorController::class, 'magicWheel'])->name('calculator.magic-wheel');
 Route::get('/calculator/zodiac', [CalculatorController::class, 'zodiac'])->name('calculator.zodiac');
 
-Route::get('/xendit/get-payment-methods', [XenditController::class, 'getPaymentMethods']);
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/leaderboard', [IndexController::class, 'leaderboard'])->name('leaderboard');
@@ -61,9 +61,11 @@ Route::get('/cek-transaksi', [IndexController::class, 'cekTransaksi'])->name('ce
 Route::get('/term-of-service', [IndexController::class, 'termOfService'])->name('term-of-service');
 
 // API Documentation
-Route::get('/api-docs', function () {
-    return Inertia::render('ApiDocs');
-})->name('api-docs')->middleware('auth');
+Route::middleware('auth', 'h2h')->group(function () {
+    Route::get('/api-docs', [ApiController::class, 'docs'])->name('api-docs');
+    Route::post('/api/update-ip-whitelist', [ApiController::class, 'updateIpWhitelist'])->name('api.update-ip-whitelist');
+});
+
 
 // Order Processing Routes
 Route::get('/order/{produk:slug}', [OrderController::class, 'index'])->name('order.index');

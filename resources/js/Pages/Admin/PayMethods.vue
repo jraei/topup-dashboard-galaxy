@@ -641,7 +641,7 @@ const handleFileUpload = (event, field) => {
                                 Gambar
                             </p>
                             <img
-                                :src="'/storage/' + selectedData.gambar"
+                                :src="selectedData.gambar"
                                 alt="Preview Petunjuk"
                                 class="object-cover w-24 h-24 mt-2 border rounded-lg shadow-md sm:w-32 sm:h-32 border-primary/60"
                             />

@@ -54,7 +54,7 @@ const getPlanetSvg = (step) => {
                 <div>
                     <h3 class="text-lg font-bold md:text-xl">
                         <template v-if="stepNumber !== null">
-                            Step {{ stepNumber }} of {{ totalSteps }}:
+                            Langkah {{ stepNumber }} dari {{ totalSteps }}:
                         </template>
                         {{ title }}
                     </h3>

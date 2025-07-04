@@ -3,7 +3,14 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 import { useToast } from "@/Composables/useToast";
-import { CircleCheck, Download, AlertCircle, Clock } from "lucide-vue-next";
+import {
+    CircleCheck,
+    Download,
+    AlertCircle,
+    Clock,
+    Copy,
+    Check,
+} from "lucide-vue-next";
 
 const props = defineProps({
     order: Object,
@@ -11,6 +18,21 @@ const props = defineProps({
     product: Object,
     user: Object,
 });
+
+const isCopied = ref(false);
+
+const copyToClipboard = (text) => {
+    navigator.clipboard
+        .writeText(text)
+        .then(() => {
+            isCopied.value = true;
+            toast.success("Teks berhasil disalin");
+            setTimeout(() => (isCopied.value = false), 2000);
+        })
+        .catch((err) => {
+            console.error("Gagal menyalin teks: ", err);
+        });
+};
 
 const { toast } = useToast();
 
@@ -498,11 +520,35 @@ onUnmounted(() => {
                         <div class="">
                             <div class="flex items-center justify-between">
                                 <span class="font-medium text-gray-300"
-                                    >Total Pembayaran</span
-                                >
-                                <span class="text-lg font-bold text-primary">{{
-                                    formatCurrency(payment?.total_price)
-                                }}</span>
+                                    >Total Pembayaran
+                                </span>
+                                <span
+                                    class="flex justify-center gap-1 text-lg font-bold text-primary"
+                                    >{{ formatCurrency(payment?.total_price) }}
+                                    <button
+                                        @click="
+                                            copyToClipboard(
+                                                payment?.total_price
+                                            )
+                                        "
+                                        class="p-1 text-gray-400 transition-colors hover:text-primary"
+                                        :title="
+                                            isCopied
+                                                ? 'Tersalin!'
+                                                : 'Salin nomor'
+                                        "
+                                    >
+                                        <Copy
+                                            v-if="!isCopied"
+                                            class="w-4 h-4"
+                                        />
+                                        <Check
+                                            v-else
+                                            class="w-4 h-4 text-green-500"
+                                        />
+                                        <!-- Tambahkan import Check dari lucide -->
+                                    </button>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -583,6 +629,44 @@ onUnmounted(() => {
                                 Silahkan untuk melakukan pembayaran dengan
                                 metode yang kami pilih.
                             </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="p-5 border rounded-lg border-secondary/50 bg-secondary/20 backdrop-blur-sm"
+                        v-if="order.status === 'pending' && payment.pay_code"
+                    >
+                        <div class="">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-gray-300"
+                                    >Nomor Pembayaran</span
+                                >
+                                <span
+                                    class="flex justify-center gap-1 text-lg font-bold text-primary"
+                                    >{{ payment.pay_code }}
+                                    <button
+                                        @click="
+                                            copyToClipboard(payment.pay_code)
+                                        "
+                                        class="p-1 text-gray-400 transition-colors hover:text-primary"
+                                        :title="
+                                            isCopied
+                                                ? 'Tersalin!'
+                                                : 'Salin nomor'
+                                        "
+                                    >
+                                        <Copy
+                                            v-if="!isCopied"
+                                            class="w-4 h-4"
+                                        />
+                                        <Check
+                                            v-else
+                                            class="w-4 h-4 text-green-500"
+                                        />
+                                        <!-- Tambahkan import Check dari lucide -->
+                                    </button>
+                                </span>
+                            </div>
                         </div>
                     </div>
 

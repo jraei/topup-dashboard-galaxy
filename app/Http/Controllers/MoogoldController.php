@@ -565,4 +565,92 @@ class MoogoldController extends Controller
             ];
         }
     }
+
+
+    public function getAccountNickname(string $productId, string $userId, ?string $server = null)
+    {
+        // Setup info dasar
+        $timestamp = time(); // Unix timestamp
+        $path = "product/validate"; // Endpoint path dari Moogold
+        $baseUri = "https://moogold.com/wp-json/v1/api/";
+
+        // Credentials (replace ini sesuai object atau .env kamu)
+        $partnerId = $this->credentials->partner_id;
+        $secretKey = $this->credentials->secret_key;
+
+        // Bangun body untuk API
+        $data = [
+            "product-id" => $productId,
+            "User ID" => $userId,
+            "Server" => $server ?? null,
+        ];
+
+
+        $bodyArray = [
+            "path" => $path,
+            "data" => $data,
+        ];
+
+        $body = json_encode($bodyArray);
+        // Signature
+        $signature = hash_hmac('SHA256', "{$body}{$timestamp}{$path}", $secretKey);
+
+        // Headers
+        $headers = [
+            "Accept" => "application/json",
+            "timestamp" => $timestamp,
+            "auth" => $signature,
+            "Authorization" => "Basic " . base64_encode("{$partnerId}:{$secretKey}"),
+        ];
+
+        // Guzzle request
+        $client = new Client([
+            "base_uri" => $baseUri,
+            "timeout"  => 30,
+            "allow_redirects" => false,
+            "http_errors" => false,
+            "verify" => true,
+            "headers" => $headers,
+        ]);
+
+        try {
+            return [
+                'status' => false,
+                'message' => $headers
+            ];
+
+            $response = $client->request("POST", $path, [
+                "body" => $body
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $contents = $response->getBody();
+                $data = json_decode($contents, true);
+
+                if (isset($data['status']) && isset($data['username'])) {
+                    return [
+                        'status' => true,
+                        'message' => $data['message'],
+                        'username' => $data['username'],
+                    ];
+                } else {
+                    return [
+                        'status' => false,
+                        'message' => 'Invalid response structure',
+                        'raw' => $data,
+                    ];
+                }
+            } else {
+                return [
+                    'status' => false,
+                    'message' => "HTTP Error: " . $response->getStatusCode(),
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => "Exception: " . $e->getMessage(),
+            ];
+        }
+    }
 }

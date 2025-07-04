@@ -682,7 +682,7 @@ class AdminController extends Controller
 
         // $appearanceSettings = WebConfig::getColorPaletteAttribute();
 
-        $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'api_private_key', 'balance', 'status')->get();
+        $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'base_url', 'api_private_key', 'balance', 'status')->get();
 
         return Inertia::render('Admin/WebConfigs', [
             'generalSettings' => $generalSettings,
@@ -794,6 +794,7 @@ class AdminController extends Controller
         foreach ($providers as $provider) {
             $providerId = $provider->id;
             $rules["providers.{$providerId}.api_username"] = 'nullable|string|max:255';
+            $rules["providers.{$providerId}.base_url"] = 'nullable|string|max:255';
             $rules["providers.{$providerId}.api_key"] = 'nullable|string|max:255';
             $rules["providers.{$providerId}.api_private_key"] = 'nullable|string|max:255';
             $rules["providers.{$providerId}.status"] = 'required|in:active,inactive';
@@ -817,6 +818,9 @@ class AdminController extends Controller
                         }
                         if (isset($data['api_key'])) {
                             $updateData['api_key'] = $data['api_key'];
+                        }
+                        if (isset($data['base_url'])) {
+                            $updateData['base_url'] = $data['base_url'];
                         }
                         if (isset($data['api_private_key'])) {
                             $updateData['api_private_key'] = $data['api_private_key'];

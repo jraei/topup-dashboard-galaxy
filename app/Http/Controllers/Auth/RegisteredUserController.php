@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserRole;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -41,14 +42,6 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Apply rate limiting for registration attempts
-        $key = 'registration_attempt:' . $request->ip();
-
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            return back()->with('error', 'Terlalu banyak percobaan mendaftar. Silahkan coba lagi dalam beberapa menit.');
-        }
-
-        RateLimiter::hit($key, 300); // 5 minutes
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -62,13 +55,15 @@ class RegisteredUserController extends Controller
             'phone.unique' => 'Nomor telepon sudah digunakan. Silakan coba yang lain.'
         ]);
 
+        $roleBasic = UserRole::where('role_name', 'basic')->first();
+
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'user_role_id' => 3, // Assuming 3 is for regular users
+            'user_role_id' => $roleBasic->id, // Assuming 3 is for regular users
         ]);
 
         event(new Registered($user));

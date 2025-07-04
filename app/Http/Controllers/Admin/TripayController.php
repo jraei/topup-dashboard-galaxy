@@ -33,7 +33,14 @@ class TripayController extends Controller
         $merchant = new Merchant($client);
         $result = $merchant->paymentChannels();
 
-        $data = json_decode($result->getBody()->getContents(), true)['data'];
+        $result = json_decode($result->getBody()->getContents(), true);
+
+        if (!$result['success']) {
+            logger()->error("Failed to get methods: " . $result['message']);
+            return  $result['message'];
+        }
+
+        $data = $result['data'];
 
         // affected
         $affectedRow = 0;

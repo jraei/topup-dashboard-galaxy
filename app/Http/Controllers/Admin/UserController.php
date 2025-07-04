@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use Inertia\Inertia;
 use App\Models\UserRole;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -81,6 +82,8 @@ class UserController extends Controller
         ]);
 
         $validatedData['password'] = Hash::make($request->password);
+
+        $validatedData['api_key'] = Str::random(40);
 
         User::create($validatedData);
 

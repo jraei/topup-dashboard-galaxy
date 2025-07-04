@@ -63,6 +63,7 @@ const apiForm = useForm({
     providers: props.providers.reduce((acc, provider) => {
         acc[provider.id] = {
             id: provider.id,
+            base_url: provider.base_url || "",
             api_username: provider.api_username || "",
             api_key: provider.api_key || "",
             api_private_key: provider.api_private_key || "",
@@ -1349,6 +1350,30 @@ const deleteLogo = (field) => {
                                                 :message="
                                                     apiForm.errors[
                                                         `providers.${id}.api_username`
+                                                    ]
+                                                "
+                                                class="mt-1"
+                                            />
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <InputLabel
+                                                :for="`base_url_${id}`"
+                                                value="Base URL"
+                                            />
+                                            <TextInput
+                                                :id="`base_url_${id}`"
+                                                type="text"
+                                                class="block w-full text-white border-gray-600 bg-gray-700/70"
+                                                v-model="
+                                                    apiForm.providers[id]
+                                                        .base_url
+                                                "
+                                            />
+                                            <InputError
+                                                :message="
+                                                    apiForm.errors[
+                                                        `providers.${id}.base_url`
                                                     ]
                                                 "
                                                 class="mt-1"

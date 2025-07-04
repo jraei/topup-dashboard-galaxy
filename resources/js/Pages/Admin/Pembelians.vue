@@ -481,7 +481,10 @@ const closeViewModal = () => {
                                         Username
                                     </p>
                                     <p class="font-medium text-white">
-                                        {{ selectedPurchase.user.username }}
+                                        {{
+                                            selectedPurchase.user.username ||
+                                            "Guest"
+                                        }}
                                     </p>
                                 </div>
                                 <div>

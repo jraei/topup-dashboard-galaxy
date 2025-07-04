@@ -75,13 +75,14 @@ class NaelstoreController extends Controller
                 ->filter()
                 ->values();
 
+            $providerId = $this->naelstore->id;
+
             // 2. Insert kategori jika belum ada
             $kategoriMap = [];
             foreach ($kategoriList as $kategoriName) {
                 $kategori = Kategori::firstOrCreate(
                     ['kategori_name' => $kategoriName],
-                    ['status' => 'active'],
-                    ['provider_id' => $this->naelstore->id]
+                    ['provider_id' => $providerId]
                 );
                 $kategoriMap[$kategoriName] = $kategori->id;
             }
@@ -314,7 +315,7 @@ class NaelstoreController extends Controller
                 'form_params' => $params
             ]);
 
-            $data = json_decode($response->getBody()->getContents());
+            $data = json_decode($response->getBody()->getContents(), true);
 
             return collect([
                 'status' => true,

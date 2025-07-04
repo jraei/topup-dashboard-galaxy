@@ -22,4 +22,9 @@ class Provider extends Model
     {
         return $this->hasMany(Layanan::class);
     }
+
+    public function kategori(): HasMany
+    {
+        return $this->hasMany(Kategori::class);
+    }
 }

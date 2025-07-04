@@ -15,6 +15,7 @@ use ZerosDev\TriPay\Callback;
 use App\Models\PaymentProvider;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\NaelstoreController;
 
 class TripayCallbackController extends Controller
 {
@@ -61,12 +62,13 @@ class TripayCallbackController extends Controller
 
             $dataPembelian = Pembelian::where('order_id', $order_id)->first();
             $dataLayanan = $dataPembelian->layanan;
+
             $dataProduk = $dataLayanan->produk;
+            $quantity = $dataPembelian->quantity;
 
             $uid = $dataPembelian->input_id ?? null;
             $zone = $dataPembelian->input_zone ?? null;
             $kode_layanan = $dataLayanan->kode_layanan;
-            $target = $uid . $zone;
 
 
             if (!$invoice || $invoice->status != 'pending') {
@@ -91,83 +93,137 @@ class TripayCallbackController extends Controller
             }
 
             $status = null;
-            $reference = null;
-
+            $referenceIds = [];
 
             if ($data->status == "PAID") {
 
-                $invoice->update([
-                    'status' => 'paid'
-                ]);
+                $invoice->update(['status' => 'paid']);
+
+                $referenceId = null;
+                $successOrders = [];
+                $failedOrders = [];
+                $allCompleted = true;
+                $status = null;
+
+                $provider = $dataLayanan->provider->provider_name;
+
+                switch ($provider) {
+                    case "digiflazz":
+                        for ($i = 0; $i < $quantity; $i++) {
+                            $subOrderId = $order_id . '-' . ($i + 1);
+                            $digiflazz = new DigiflazzController();
+                            $target = $uid . ($zone ? $uid : '');
+
+                            $apiResult = $digiflazz->createTransaction([
+                                'kode_layanan' => $dataLayanan->kode_layanan,
+                                'target' => $target,
+                                'ref_id' => $subOrderId,
+                            ]);
+
+                            if (isset($apiResult['status']) && !$apiResult['status']) {
+                                return response()->json([
+                                    'status' => false,
+                                    'message' => $apiResult['message']
+                                ], 400);
+                            }
 
 
-                if ($dataLayanan->provider->provider_name == "digiflazz") {
-                    $digiflazz = new DigiflazzController();
-                    $order = $digiflazz->createTransaction([
-                        'kode_layanan' => $kode_layanan,
-                        'target' => $target,
-                        'ref_id' => $order_id
-                    ]);
+                            if (!isset($apiResult['status']) || !in_array($apiResult['status'], ["Pending", "Sukses"])) {
+                                $failedOrders[] = [
+                                    'order_id' => $subOrderId,
+                                    'message' => $apiResult['message'] ?? "DF | Create transaction error"
+                                ];
+                                $allCompleted = false;
+                                continue;
+                            }
 
-                    if ($order['data']['status'] == "Pending" || $order['data']['status'] == "Sukses") {
-                        $status = "completed";
-                        $reference = $order_id;
-                    } else {
-                        $status = "failed";
-                    }
-                } else if ($dataLayanan->provider->provider_name == "moogold") {
-                    $moogoldOrderCategory = $dataProduk->moogold_order_category;
+                            $referenceId = $order_id;
+                            $successOrders[] = [
+                                'status' => $apiResult['status'],
+                                'reference' => $apiResult['ref_id']
+                            ];
+                            $status = $allCompleted ? "completed" : "failed";
+                        }
+                        break;
+                    case "moogold":
+                        $moogold = new MoogoldController;
+                        $order = $moogold->createTransaction([
+                            'category_id' => $dataProduk->moogold_order_category,
+                            'order_id' => $order_id,
+                            'service_id' => $kode_layanan,
+                            'quantity' => $dataPembelian->quantity,
+                            'user_id' => $uid,
+                            'server' => $zone
+                        ]);
 
-                    $moogold = new MoogoldController;
-                    $order = $moogold->createTransaction([
-                        'category_id' => $moogoldOrderCategory,
-                        'order_id' => $order_id,
-                        'service_id' => $kode_layanan,
-                        'quantity' => $dataPembelian->quantity,
-                        'user_id' => $uid,
-                        'server' => $zone
-                    ]);
+                        if (!$order['data']['status']) {
+                            return response()->json([
+                                'status' => 'error',
+                                'message' => $order['data']['raw']['err_message'] ?? $order['data']['message']
+                            ]);
+                        }
 
+                        $data = $order['data'];
+                        $status = in_array($data['response']['status'], ["pending", "processing"]) ? "completed" : "failed";
+                        $referenceId = $data['order_id'];
 
+                        break;
+                    case "naelstore":
+                        $naelstore = new NaelstoreController();
+                        $target = $uid . ($zone ? '-' . $zone : '');
 
-                    if (!$order['data']['status']) {
+                        $response = $naelstore->createTransaction([
+                            'layanan_id' => $kode_layanan,
+                            'quantity' => $dataPembelian->quantity,
+                            'target' => $target,
+                        ]);
+
+                        if (!$response['status']) {
+                            return response()->json([
+                                'status' => 'error',
+                                'message' => $response['message']
+                            ]);
+                        }
+
+                        $data = $response['data'];
+                        $status = $data['status'] == true ? "completed" : "failed";
+
+                        $referenceId = $data['order_id'];
+                        break;
+                    default:
                         return response()->json([
                             'status' => 'error',
-                            'message' => $order['data']['raw']['err_message'] ?? $order['data']['message']
+                            'message' => 'Provider not found',
                         ]);
-                    }
-
-                    $data = $order['data'];
-                    if ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") {
-                        $status = "completed";
-                        $reference = $data['order_id'];
-                    } else {
-                        $status = "failed";
-                    }
-                } else {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Provider not found',
-                    ]);
                 }
 
+
+                // ✅ Update pembelian hanya jika status ditentukan
                 if ($status) {
+
+                    $references = collect($successOrders)->pluck('reference')->implode(',');
 
                     $dataPembelian->update([
                         'status' => $status,
-                        'reference_id' => $reference ?? null
+                        'reference_id' => $provider == "digiflazz" ? $references : $referenceId,
                     ]);
 
                     return response()->json([
                         'status' => 'success',
-                        'data' => 'Sukses mengubah status pembelian & pembayaran',
-                    ]);
-                } else {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Status tidak valid',
+                        'message' => 'Status pembelian & pembayaran berhasil diperbarui',
+                        'data' => [
+                            'reference_id' => $referenceId,
+                            'status' => $status,
+                            'success' => $successOrders,
+                            'failed' => $failedOrders
+                        ]
                     ]);
                 }
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Status tidak valid',
+                ]);
             } else if ($data->status == "EXPIRED" || $data->status == "FAILED") {
 
                 // restore voucher stock

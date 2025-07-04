@@ -64,6 +64,7 @@ class ProviderController extends Controller
 
         $validatedData = $request->validate([
             'provider_name' => 'sometimes|required|string|max:255',
+            'base_url' => 'nullable|string|max:255',
             'api_username' => 'nullable|string|max:255',
             'api_key' => 'nullable|string|max:255',
             'api_private_key' => 'nullable|string|max:255',

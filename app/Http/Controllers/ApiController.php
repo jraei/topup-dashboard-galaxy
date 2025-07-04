@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Inertia\Inertia;
 use App\Models\Produk;
 use App\Models\Layanan;
 use App\Models\Pembelian;
@@ -15,6 +16,26 @@ use App\Http\Controllers\Admin\DigiflazzController;
 
 class ApiController extends Controller
 {
+
+    public function docs()
+    {
+        return Inertia::render('ApiDocs');
+    }
+
+    public function updateIpWhitelist(Request $request)
+    {
+        $request->validate([
+            'ip_whitelist' => 'nullable|string'
+        ]);
+
+        $user = $request->user();
+        $user->ip_whitelist = $request->ip_whitelist;
+        $user->save();
+
+        return response()->json(['status' => 'success']);
+    }
+
+
     public function balance(Request $request): JsonResponse
     {
         $apiKey = $request->header('X-API-KEY');
@@ -250,6 +271,10 @@ class ApiController extends Controller
                 $data = $apiResult['data'];
                 $status = ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") ? "completed" : "failed";
                 $referenceIds[] = $data['order_id'];
+                $successOrders[] = [
+                    'reference' => $data['order_id'],
+                    'status' => $status
+                ];
                 $allCompleted = $allCompleted && ($status == "completed");
             }
         } elseif ($providerName == 'digiflazz') {
@@ -261,22 +286,21 @@ class ApiController extends Controller
                     'kode_layanan' => $layanan->kode_layanan,
                     'target' => $input_zone ? $input_id . '-' . $input_zone : $input_id,
                     'ref_id' => $subOrderId,
-                    'testing' => true
                 ]);
 
-                if (!isset($apiResult->status) || !in_array($apiResult->status, ["Pending", "Sukses"])) {
+                if (!isset($apiResult['status']) || !in_array($apiResult['status'], ["Pending", "Sukses"])) {
                     $failedOrders[] = [
                         'order_id' => $subOrderId,
-                        'message' => $apiResult->message ?? "DF | Create transaction error"
+                        'message' => $apiResult['message'] ?? "DF | Create transaction error"
                     ];
                     $allCompleted = false;
                     continue;
                 }
 
-                $status = ($apiResult->status == "Pending" || $apiResult->status == "Sukses") ? "completed" : "failed";
-                $referenceIds[] = $apiResult->ref_id;
+                $status = ($apiResult['status'] == "Pending" || $apiResult['status'] == "Sukses") ? "completed" : "failed";
+                $referenceIds[] = $apiResult['ref_id'];
                 $successOrders[] = [
-                    'reference' => $apiResult->ref_id,
+                    'reference' => $apiResult['ref_id'],
                     'status' => $status
                 ];
                 $allCompleted = $allCompleted && ($status == "completed");
@@ -297,10 +321,8 @@ class ApiController extends Controller
             ], 400);
         }
 
-        // Potong saldo hanya jika ada yang berhasil
-        if (!empty($successOrders)) {
-            $user->decrement('saldo', $totalHargaJual);
-        }
+        // Potong saldo 
+        $user->decrement('saldo', $totalHargaJual);
 
         // Catat pembayaran
         Pembayaran::create([
@@ -338,7 +360,7 @@ class ApiController extends Controller
             'status' => true,
             'message' => 'Order diproses',
             'order_id' => $order_id,
-            'success_orders' => $successOrders,
+            // 'success_orders' => $successOrders,
             'failed_orders' => $failedOrders,
         ]);
     }

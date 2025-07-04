@@ -157,7 +157,7 @@ const isSelected = (payment) => {
                     ]"
                 >
                     <img
-                        :src="'/storage/' + props.saldoMethod?.gambar"
+                        :src="props.saldoMethod?.gambar"
                         alt="NaelCoin"
                         class="w-10 h-10 mr-4 rounded"
                     />
@@ -221,7 +221,7 @@ const isSelected = (payment) => {
                         class="flex flex-col flex-1 font-bold text-left text-primary_text"
                     >
                         <span class="">QRIS (Semua Pembayaran)</span>
-                        <span class="text-xs font-light">
+                        <!-- <span class="text-xs font-light">
                             {{
                                 dynamicMethods.QRIS[0].fee_type === "percent"
                                     ? `Fee: ${dynamicMethods.QRIS[0].fee_percent}%`
@@ -232,7 +232,7 @@ const isSelected = (payment) => {
                                           dynamicMethods.QRIS[0].fee_percent
                                       }% + Rp ${dynamicMethods.QRIS[0].fee_fixed?.toLocaleString()}`
                             }}
-                        </span>
+                        </span> -->
                     </div>
                     <span class="ml-auto text-lg font-bold text-primary">
                         Rp
@@ -351,7 +351,7 @@ const isSelected = (payment) => {
                                             >Recommended</span
                                         >
                                     </div>
-                                    <div class="text-xs text-secondary/80">
+                                    <!-- <div class="text-xs text-secondary/80">
                                         {{
                                             meth.fee_type === "percent"
                                                 ? `Fee: Rp ${meth.fee_percent}%`
@@ -361,7 +361,7 @@ const isSelected = (payment) => {
                                                       meth.fee_percent
                                                   }% + Rp ${meth.fee_fixed?.toLocaleString()}`
                                         }}
-                                    </div>
+                                    </div> -->
                                     <div
                                         class="mt-1 text-sm font-bold text-primary"
                                     >

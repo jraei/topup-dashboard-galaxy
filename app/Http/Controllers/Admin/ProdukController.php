@@ -85,7 +85,6 @@ class ProdukController extends Controller
         $product = $request->validate([
             'nama' => 'required|min:1',
             'developer' => 'required',
-            'reference' => 'required',
             'kategori_id' => 'required|numeric',
             'slug' => 'required|unique:produks,slug',
             'provider_id' => 'required|numeric',
@@ -136,13 +135,13 @@ class ProdukController extends Controller
         $rules = [
             'nama' => 'required|min:1',
             'developer' => 'required',
-            'reference' => 'required',
             'kategori_id' => 'required|numeric',
             'provider_id' => 'required|numeric',
             'validasi_id' => 'required',
             'deskripsi_game' => 'required',
             'status' => 'required',
         ];
+
 
 
         // Jika ada file baru, tambahkan validasi gambar
@@ -163,7 +162,14 @@ class ProdukController extends Controller
         }
 
         // validasi data
-        $validatedData = $request->validate($rules);
+        $validatedData = $request->validate($rules, [
+            'kategori_id.required' => 'Kategori harus dipilih',
+            'provider_id.required' => 'Provider harus dipilih',
+            'validasi_id.required' => 'Validasi harus dipilih',
+            'developer.required' => 'Developer harus diisi',
+            'deskripsi_game.required' => 'Deskripsi Game harus diisi',
+            'status.required' => 'Status harus dipilih',
+        ]);
 
         // Simpan file jika ada yang diunggah
         if ($request->hasFile('petunjuk_field')) {

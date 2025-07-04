@@ -50,6 +50,7 @@ class KategoriController extends Controller
 
         $providers = Provider::where('status', 'active')->get();
 
+
         return Inertia::render('Admin/Categories', [
             'categories' => $categories,
             'filters' => [

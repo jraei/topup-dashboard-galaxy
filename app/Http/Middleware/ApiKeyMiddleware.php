@@ -34,6 +34,16 @@ class ApiKeyMiddleware
             ], 401);
         }
 
+        // Check IPv4 is whitelisted
+        $ip = $request->ip();
+        $allowedIps = array_map('trim', explode(',', $user->ip_whitelist));
+        if (!in_array($ip, $allowedIps)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized IP: ' . $ip,
+            ], 401);
+        }
+
         // Optional: set user untuk downstream auth() usage
         auth()->setUser($user);
 

@@ -82,7 +82,7 @@ class PayMethodController extends Controller
         $payMethod = $request->validate($rules);
 
         if ($request->hasFile('gambar')) {
-            $payMethod['gambar'] = $request->file('gambar')->store('payMethods', 'public');
+            $payMethod['gambar'] = '/storage/' . $request->file('gambar')->store('payMethods', 'public');
         }
 
         PayMethod::create($payMethod);
@@ -137,7 +137,7 @@ class PayMethodController extends Controller
             if ($payMethod->gambar) {
                 Storage::disk('public')->delete($payMethod->gambar);
             }
-            $validatedData['gambar'] = $request->file('gambar')->store('payMethods', 'public');
+            $validatedData['gambar'] = '/storage/' . $request->file('gambar')->store('payMethods', 'public');
         }
 
 

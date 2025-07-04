@@ -35,7 +35,7 @@ import CosmicParticles from "../Flashsale/CosmicParticles.vue";
 
         <!-- Banner image -->
         <img
-            src="/img/footerBanner/bg-footer.webp"
+            src="/img/footerBanner/bg-footer.png"
             alt="Cosmic Promotions"
             class="object-cover w-full h-auto"
             loading="lazy"
@@ -50,7 +50,7 @@ import CosmicParticles from "../Flashsale/CosmicParticles.vue";
                         class="mb-2 text-2xl font-bold text-primary-text sm:text-3xl md:text-4xl"
                     >
                         Cosmic Promotions
-                    </h3>
+                    </h3>   
                     <p class="mb-6 text-primary-text/80">
                         Get special deals across multiple top-up options
                     </p>

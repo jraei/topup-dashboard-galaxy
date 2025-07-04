@@ -322,6 +322,24 @@ class OrderController extends Controller
         // Get username if validation is required
         $username = null;
         $validationError = null;
+        // if ($layanan->provider->provider_name === 'moogold') {
+        //     try {
+        //         $moogoldNickname = new MoogoldController();
+        //         $response = $moogoldNickname->getAccountNickname($produk->reference, $inputId, $inputZone);
+
+        //         $username = $response;
+
+        //         if (!$response['status'] || !isset($response['username'])) {
+        //             $validationError = 'Failed to validate account: ' . $response['raw']['message'];
+        //             $username = $response['raw'];
+        //         } else {
+        //             $username = $response['username'];
+        //         }
+        //     } catch (\Exception $e) {
+        //         $validationError = $e->getMessage();
+        //     }
+        // }
+
         if ($produk->validasi_id !== 'tidak' && $produk->validasi_id !== null) {
             try {
                 $usernameController = new CheckUsernameController();
@@ -528,27 +546,37 @@ class OrderController extends Controller
                 for ($i = 0; $i < $quantity; $i++) {
                     $subOrderId = $order_id . '-' . ($i + 1);
                     $digiflazz = new DigiflazzController();
-                    $target = $inputId . ($inputZone ? '-' . $inputZone : '');
+                    $target = $inputId . ($inputZone ? $inputZone : '');
                     $apiResult = $digiflazz->createTransaction([
                         'kode_layanan' => $layanan->kode_layanan,
                         'target' => $target,
                         'ref_id' => $subOrderId,
                     ]);
 
-                    if (!isset($apiResult->status) || !in_array($apiResult->status, ["Pending", "Sukses"])) {
+                    // cek request error
+
+                    if (isset($apiResult['status']) && !$apiResult['status']) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => $apiResult['message']
+                        ], 400);
+                    }
+
+
+                    if (!isset($apiResult['status']) || !in_array($apiResult['status'], ["Pending", "Sukses"])) {
                         $failedOrders[] = [
                             'order_id' => $subOrderId,
-                            'message' => $apiResult->message ?? "DF | Create transaction error"
+                            'message' => $apiResult['message'] ?? "DF | Create transaction error"
                         ];
                         $allCompleted = false;
                         continue;
                     }
 
-                    $status = ($apiResult->status == "Pending" || $apiResult->status == "Sukses") ? "completed" : "failed";
-                    $referenceIds[] = $apiResult->ref_id;
+                    $status = ($apiResult['status'] == "Pending" || $apiResult['status'] == "Sukses") ? "completed" : "failed";
+                    $referenceIds[] = $apiResult['ref_id'];
                     $successOrders[] = [
                         'status' => $status,
-                        'reference' => $apiResult->ref_id
+                        'reference' => $apiResult['ref_id']
                     ];
                     $allCompleted = $allCompleted && ($status == "completed");
                 }
@@ -578,10 +606,10 @@ class OrderController extends Controller
                     ]);
                 } else {
                     $data = $apiResult['data'];
-                    $status = ($data['success_orders']['status'] == "completed" || $data['success_orders']['status'] == "processing") ? "completed" : "failed";
-                    foreach ($data['success_orders'] as $order) {
-                        $referenceIds[] = $order['order_id'];
-                    }
+
+                    $status = $data['status'] == true ? "completed" : "failed";
+
+                    $referenceIds[] = $data['order_id'];
                     $allCompleted = $allCompleted && ($status == "completed");
                 }
             } else {
@@ -592,7 +620,7 @@ class OrderController extends Controller
             }
 
             // Potong saldo hanya jika ada yang berhasil
-            if ($allCompleted || !empty($successOrders)) {
+            if ($allCompleted) {
                 $user->decrement('saldo', $finalPrice);
             }
         }
@@ -611,6 +639,7 @@ class OrderController extends Controller
             'instruksi' => $paymentData['instructions'] ?? null,
             'qr_url' => $paymentData['qr_url'] ?? null,
             'payment_link' => $paymentData['checkout_url'] ?? null,
+            'pay_code' => $paymentData['pay_code'] ?? null,
             'expired_time' => $paymentData['expired_time'] ?? null,
         ]);
 
@@ -667,8 +696,9 @@ class OrderController extends Controller
                 $paymentData = $response['data']['data'];
                 $pembayaran->update([
                     'payment_reference' => $paymentData['reference'],
-                    'instruksi' => $paymentData['instructions'],
-                    'qr_url' => $paymentData['qr_url'],
+                    'instruksi' => $paymentData['instructions'] ?? null,
+                    'qr_url' => $paymentData['qr_url'] ?? null,
+                    'pay_code' => $paymentData['pay_code'] ?? null,
                     'payment_link' => $paymentData['checkout_url'],
                     'expired_time' => $paymentData['expired_time'],
                 ]);

@@ -37,11 +37,11 @@ const columns = [
         key: "provider_id",
         label: "Provider",
         format: (value) => {
-            const category = props.providers.filter(
-                (cat) => cat.id === value
+            const provider = props.providers.filter(
+                (provider) => provider.id == value
             )[0];
 
-            return category ? category.provider_name.toUpperCase() : "Unknown";
+            return provider ? provider.provider_name : "Unknown";
         },
     },
     {
@@ -440,7 +440,9 @@ const saveCategory = () => {
                                         :key="index"
                                         :value="provider.id"
                                     >
-                                        {{ provider.provider_name }}
+                                        {{
+                                            provider.provider_name ?? "Unknown"
+                                        }}
                                     </option>
                                 </select>
                             </div>

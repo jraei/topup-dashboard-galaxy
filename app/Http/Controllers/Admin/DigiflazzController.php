@@ -56,7 +56,7 @@ class DigiflazzController extends Controller
             ];
             $result = Transaction::createTransaction($params);
 
-            return $result;
+            return collect($result);
         } catch (ApiException $e) {
             logger()->error("Failed to create transaction: " . $e->getMessage());
             return collect([
@@ -243,7 +243,8 @@ class DigiflazzController extends Controller
         foreach ($groupedProducts as $categoryName => $brands) {
             // Buat kategori jika belum ada
             $kategori = Kategori::firstOrCreate(
-                ['kategori_name' => $categoryName, 'provider_id' => $provider->id],
+                ['kategori_name' => $categoryName],
+                ['provider_id' => $provider->id],
                 ['status' => 'active']
             );
 

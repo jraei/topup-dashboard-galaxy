@@ -18,7 +18,7 @@
                         ? 'border-red-500 focus:border-red-400'
                         : 'border-secondary/30 focus:border-secondary',
                 ]"
-                :placeholder="`Enter ${field.label.toLowerCase()}`"
+                :placeholder="`Masukkan ${field.label.toLowerCase()}`"
             />
         </div>
 

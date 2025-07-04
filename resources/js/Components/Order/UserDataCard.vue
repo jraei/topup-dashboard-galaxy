@@ -221,14 +221,14 @@ watch(
         <div v-if="savedAccounts.length > 0" class="mb-4 space-y-2">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-medium text-gray-300">
-                    Saved Accounts
+                    Akun tersimpan
                 </h3>
                 <button
                     v-if="savedAccounts.length > 0"
                     @click="clearAllSavedAccounts"
                     class="text-xs text-red-400 hover:text-red-300"
                 >
-                    Clear All
+                    Hapus semua
                 </button>
             </div>
 
@@ -385,7 +385,7 @@ watch(
                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                     </svg>
-                    Account data loaded from previous session
+                    Data akun berhasil dimuat
                 </span>
             </div>
 

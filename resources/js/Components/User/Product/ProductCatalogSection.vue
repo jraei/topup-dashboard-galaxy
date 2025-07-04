@@ -17,11 +17,7 @@ const props = defineProps({
     },
 });
 
-const topupCategory = props.categories.filter(
-    (category) => category.kategori_name === "Top Up"
-)[0];
-
-const activeCategory = ref(topupCategory?.id || null);
+const activeCategory = ref(props.categories[0]?.id || null);
 
 // Filtered products based on selected category
 const filteredProducts = computed(() => {
