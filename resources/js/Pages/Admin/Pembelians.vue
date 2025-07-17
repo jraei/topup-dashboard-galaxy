@@ -26,7 +26,7 @@ const columns = [
         key: "user",
         label: "Username",
         format: (value, item) => {
-            return value.username;
+            return value ? value.username : "Guest";
         },
     },
     {

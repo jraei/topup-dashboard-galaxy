@@ -79,6 +79,7 @@ Route::get('/order/invoice/{order_id}', [OrderController::class, 'invoice'])->na
 Route::get('/getMoogold', [CronjobController::class, 'getMoogold'])->name('cronjob.getMoogold');
 Route::get('/getDigiflazz', [CronjobController::class, 'getDigiflazz'])->name('cronjob.getDigiflazz');
 Route::get('/statusMoogold', [CronjobController::class, 'statusMoogold'])->name('cronjob.statusMoogold');
+Route::get('/statusNaelstore', [CronjobController::class, 'statusNaelstore'])->name('cronjob.statusNaelstore');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

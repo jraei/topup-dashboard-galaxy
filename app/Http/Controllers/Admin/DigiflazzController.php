@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use Exception;
+use App\Models\User;
 use App\Models\Produk;
+use GuzzleHttp\Client;
 use App\Models\Layanan;
 use App\Models\Kategori;
 use App\Models\Provider;
+use App\Models\Pembelian;
+use App\Models\Pembayaran;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Str;
 use Gonon\Digiflazz\Balance;
 use Illuminate\Http\Request;
@@ -16,6 +21,7 @@ use Gonon\Digiflazz\Transaction;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Gonon\Digiflazz\Exceptions\ApiException;
+use App\Http\Controllers\NaelstoreController;
 
 class DigiflazzController extends Controller
 {
@@ -298,168 +304,224 @@ class DigiflazzController extends Controller
 
     public function handleOrder(Request $request)
     {
-        $refId = $request->ref_id;
 
-        $existing = Pembelian::where('reference_id', 'LIKE', "%$refId%")->first();
-        if ($existing) {
+        logger()->info("Digiflazz Order: " . json_encode($request->all()));
+
+        // validate request
+        $request->validate([
+            'ref_id' => 'required|string',
+            'pulsa_code' => 'required|string',
+            'hp' => 'required|string',
+            'price' => 'required',
+        ]);
+
+        $refId = $request->ref_id;
+        $naelstore = new NaelstoreController();
+
+        $expectedSign = md5(env('DIGIFLAZZ_H2H_USERNAME') . env('DIGIFLAZZ_H2H_API_KEY') . $refId);
+        if ($request->sign !== $expectedSign) {
             return response()->json([
-                'data' => [
+                'data' => array_map('strval', [
+                    'ref_id' => $refId,
+                    'status' => '2',
+                    'code' =>  $request->pulsa_code,
+                    'hp' =>  $request->hp,
+                    'price' =>  $request->price,
+                    'message' => 'Invalid signature',
+                    'balance' => '',
+                    'tr_id' => '',
+                    'rc' => '204',
+                    'sn' => '',
+                ])
+            ]);
+        }
+
+        $existing = Pembelian::with('user')->where('order_id', 'LIKE', "%$refId%")->first();
+
+
+        if ($existing) {
+
+            // get balance
+            $response = $naelstore->getNaelstoreBalance();
+            $balance = $response['status'] ?  $response['data'] : '';
+
+
+            return response()->json([
+                'data' => array_map('strval', [
                     'ref_id' => $refId,
                     'status' => $existing->status === 'completed' ? '1' : ($existing->status === 'failed' ? '2' : '0'),
-                    'code' => $existing->layanan->kode_layanan,
-                    'hp' => $existing->input_id,
+                    'code' =>  $existing->layanan->kode_layanan,
+                    'hp' =>  $existing->input_zone ? $existing->input_id . $existing->input_zone : $existing->input_id,
                     'price' => $existing->total_price,
                     'message' => ucfirst($existing->status),
-                    'balance' => $existing->user->saldo,
+                    'balance' =>  $balance,
                     'tr_id' => $existing->order_id,
                     'rc' => $existing->status === 'completed' ? '00' : ($existing->status === 'failed' ? '07' : '39'),
                     'sn' => '',
-                ]
+                ])
             ]);
         }
 
         if ($request->commands !== 'topup') {
             return response()->json([
-                'data' => [
+                'data' => array_map('strval', [
                     'ref_id' => $refId,
                     'status' => '2',
-                    'code' => $request->pulsa_code,
-                    'hp' => $request->hp,
-                    'price' => $request->price,
+                    'code' =>  $request->pulsa_code,
+                    'hp' =>  $request->hp,
+                    'price' =>  $request->price,
                     'message' => 'Command not supported',
                     'balance' => '',
                     'tr_id' => '',
                     'rc' => '20',
                     'sn' => '',
-                ]
+                ])
             ]);
         }
 
-        $layanan = Layanan::where('kode_layanan', $request->pulsa_code)->first();
+        $layanan = Layanan::where('id', $request->pulsa_code)->first();
         if (!$layanan) {
             return response()->json([
-                'data' => [
+                'data' => array_map('strval', [
                     'ref_id' => $refId,
                     'status' => '2',
-                    'code' => $request->pulsa_code,
-                    'hp' => $request->hp,
-                    'price' => $request->price,
+                    'code' =>  $request->pulsa_code,
+                    'hp' =>  $request->hp,
+                    'price' =>  $request->price,
                     'message' => 'Product not found',
                     'balance' => '',
                     'tr_id' => '',
-                    'rc' => '20',
+                    'rc' => '106',
                     'sn' => '',
-                ]
+                ])
             ]);
         }
 
         if ($request->price < $layanan->harga_beli_idr) {
             return response()->json([
-                'data' => [
+                'data' => array_map('strval', [
                     'ref_id' => $refId,
                     'status' => '2',
-                    'code' => $request->pulsa_code,
-                    'hp' => $request->hp,
-                    'price' => $request->price,
+                    'code' =>  $request->pulsa_code,
+                    'hp' =>  $request->hp,
+                    'price' =>  $request->price,
                     'message' => 'Price too low',
                     'balance' => '',
                     'tr_id' => '',
                     'rc' => '106',
                     'sn' => '',
-                ]
+                ])
             ]);
         }
 
         DB::beginTransaction();
 
         try {
-            $order_id = generateUniqueOrderId();
+            // $order_id = $this->generateUniqueOrderId();
 
-            $naelstore = new \App\Http\Controllers\NaelstoreController();
-            $apiResult = $naelstore->createTransaction([
+            $params = [
                 'layanan_id' => $layanan->kode_layanan,
                 'quantity' => 1,
                 'target' => $request->hp,
+            ];
+
+            $naelstoreProvider = Provider::where('provider_name', 'naelstore')->first();
+
+            $client = new Client([
+                'base_uri' => $naelstoreProvider->base_url,
+                'headers' => [
+                    'X-API-KEY' => $naelstoreProvider->api_key
+                ]
             ]);
+
+            $response = $client->request('POST', 'order', [
+                'form_params' => $params
+            ]);
+
+            $apiResult = json_decode($response->getBody()->getContents(), true);
+
+            // get balance
+            $response = $naelstore->getNaelstoreBalance();
+            $balance = $response['status'] ? $response['data'] : '';
 
             if (!$apiResult['status']) {
                 DB::rollBack();
                 return response()->json([
-                    'data' => [
+                    'data' => array_map('strval', [
                         'ref_id' => $refId,
                         'status' => '2',
-                        'code' => $request->pulsa_code,
-                        'hp' => $request->hp,
-                        'price' => $request->price,
-                        'message' => 'Transaction failed',
-                        'balance' => '',
+                        'code' =>  $request->pulsa_code,
+                        'hp' =>  $request->hp,
+                        'price' =>  $request->price,
+                        'message' => 'Transaction failed: ' . $apiResult['message'],
+                        'balance' =>  $balance,
                         'tr_id' => '',
                         'rc' => '07',
                         'sn' => '',
-                    ]
+                    ])
+                ]);
+            } else {
+
+                // $data = $apiResult['data'];
+                $pembayaran = Pembayaran::create([
+                    'tipe' => 'order',
+                    'order_id' => $refId,
+                    'price' => $request->price,
+                    'fee' => 0,
+                    'total_price' => $request->price,
+                    'payment_method' => 'API Digiflazz',
+                    'payment_provider' => 'Saldo Akun',
+                    'status' => 'paid',
+                ]);
+
+
+                $pembelian = Pembelian::create([
+                    'order_id' => $refId,
+                    'order_type' => 'game',
+                    'user_id' => null,
+                    'layanan_id' => $layanan->id,
+                    'input_id' => $request->hp,
+                    'price' => $request->price,
+                    'quantity' => 1,
+                    'total_price' => $request->price,
+                    'profit' => $request->price - $layanan->harga_beli_idr,
+                    'status' => $apiResult['status'] === true ? 'processing' : 'failed',
+                    'reference_id' => $apiResult['order_id'],
+                    'phone' => $request->hp,
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'data' => array_map('strval', [
+                        'ref_id' => $refId,
+                        'status' => '0',
+                        'code' =>  $request->pulsa_code,
+                        'hp' =>  $request->hp,
+                        'price' =>  $request->price,
+                        'message' => 'Process',
+                        'balance' => '',
+                        'tr_id' => $refId,
+                        'rc' => '39',
+                        'sn' => '',
+                    ])
                 ]);
             }
-
-            $user = User::whereNotNull('id')->first(); // Sesuaikan
-            $user->decrement('saldo', $request->price);
-
-            $pembayaran = Pembayaran::create([
-                'tipe' => 'order',
-                'order_id' => $order_id,
-                'price' => $request->price,
-                'fee' => 0,
-                'total_price' => $request->price,
-                'payment_method' => 'API Digiflazz',
-                'payment_provider' => 'Digiflazz',
-                'status' => 'paid',
-            ]);
-
-            $pembelian = Pembelian::create([
-                'order_id' => $order_id,
-                'order_type' => 'game',
-                'user_id' => $user->id,
-                'layanan_id' => $layanan->id,
-                'input_id' => $request->hp,
-                'price' => $request->price,
-                'quantity' => 1,
-                'total_price' => $request->price,
-                'profit' => $request->price - $layanan->harga_beli_idr,
-                'status' => 'processing',
-                'reference_id' => $refId,
-                'phone' => $request->hp,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'data' => [
-                    'ref_id' => $refId,
-                    'status' => '0',
-                    'code' => $request->pulsa_code,
-                    'hp' => $request->hp,
-                    'price' => $request->price,
-                    'message' => 'Process',
-                    'balance' => $user->saldo,
-                    'tr_id' => $order_id,
-                    'rc' => '39',
-                    'sn' => '',
-                ]
-            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'data' => [
+                'data' => array_map('strval', [
                     'ref_id' => $refId,
                     'status' => '2',
-                    'code' => $request->pulsa_code,
-                    'hp' => $request->hp,
-                    'price' => $request->price,
-                    'message' => 'Internal error',
+                    'code' =>  $request->pulsa_code,
+                    'hp' =>  $request->hp,
+                    'price' =>  $request->price,
+                    'message' => 'Internal error: ' . $e->getMessage(),
                     'balance' => '',
                     'tr_id' => '',
                     'rc' => '07',
                     'sn' => '',
-                ]
+                ])
             ]);
         }
     }

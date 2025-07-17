@@ -38,7 +38,7 @@ class TripayCallbackController extends Controller
         $client = new Client($this->config);
         $callback = new Callback($client);
 
-        $callback->enableDebug();
+        // $callback->enableDebug();
         try {
             $callback->validate();
         } catch (Exception $e) {

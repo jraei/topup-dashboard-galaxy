@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\Admin\CheckUsernameController;
+use App\Http\Controllers\Admin\DigiflazzController;
 use App\Http\Controllers\Admin\TripayCallbackController;
 
 /*
@@ -26,6 +27,8 @@ Route::middleware('api.key')->group(function () {
     Route::post('/order', [ApiController::class, 'order']);
     Route::post('/order/status', [ApiController::class, 'checkOrderStatus']);
 });
+
+Route::post('/h2h/digiflazz/order', [DigiflazzController::class, 'handleOrder'])->name('h2h.digiflazz.order');
 
 // Product search endpoint
 Route::get('/search/products', function (Request $request) {

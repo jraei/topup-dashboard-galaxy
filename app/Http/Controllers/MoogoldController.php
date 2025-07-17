@@ -61,7 +61,7 @@ class MoogoldController extends Controller
         }
 
         $categories = Kategori::where('provider_id', $provider->id)
-            ->where('status', 'active')
+            ->where('status', 'active')->where('kode_kategori', '!=', null)
             ->get(['id', 'kode_kategori', 'kategori_name']);
 
         try {
@@ -87,6 +87,7 @@ class MoogoldController extends Controller
         $existingSlugs = Produk::pluck('slug')->toArray();
 
         foreach ($categories as $category) {
+
             $categoryResult = [
                 'name' => $category->kategori_name,
                 'products' => 0,
@@ -565,7 +566,6 @@ class MoogoldController extends Controller
             ];
         }
     }
-
 
     public function getAccountNickname(string $productId, string $userId, ?string $server = null)
     {

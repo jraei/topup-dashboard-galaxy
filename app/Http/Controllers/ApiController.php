@@ -269,13 +269,13 @@ class ApiController extends Controller
                 $allCompleted = false;
             } else {
                 $data = $apiResult['data'];
-                $status = ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") ? "completed" : "failed";
+                $status = ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") ? "processing" : "failed";
                 $referenceIds[] = $data['order_id'];
                 $successOrders[] = [
                     'reference' => $data['order_id'],
                     'status' => $status
                 ];
-                $allCompleted = $allCompleted && ($status == "completed");
+                $allCompleted = $allCompleted && ($status == "processing");
             }
         } elseif ($providerName == 'digiflazz') {
             // Digiflazz perlu loop per quantity
@@ -297,13 +297,13 @@ class ApiController extends Controller
                     continue;
                 }
 
-                $status = ($apiResult['status'] == "Pending" || $apiResult['status'] == "Sukses") ? "completed" : "failed";
+                $status = ($apiResult['status'] == "Pending" || $apiResult['status'] == "Sukses") ? "processing" : "failed";
                 $referenceIds[] = $apiResult['ref_id'];
                 $successOrders[] = [
                     'reference' => $apiResult['ref_id'],
                     'status' => $status
                 ];
-                $allCompleted = $allCompleted && ($status == "completed");
+                $allCompleted = $allCompleted && ($status == "processing");
             }
         } else {
             return response()->json([
@@ -349,7 +349,7 @@ class ApiController extends Controller
             'discount' => 0,
             'total_price' => $totalHargaJual,
             'profit' => ($layanan->harga_jual - $layanan->harga_beli_idr) * $quantity,
-            'status' => $allCompleted ? 'completed' : 'processing',
+            'status' => 'processing',
             'reference_id' => implode(',', $referenceIds),
             'phone' => $request->phone ?? null,
             'email' => $request->email ?? null,

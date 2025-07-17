@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Provider;
+use GuzzleHttp\Client;
 
+use App\Models\Provider;
 use App\Models\Pembelian;
 use Illuminate\Http\Request;
 use Medboubazine\Moogold\Moogold;
@@ -85,7 +86,7 @@ class CronjobController extends Controller
 
     public function statusMoogold()
     {
-        $pendingOrders = Pembelian::where('status', 'pending')->whereHas('layanan.provider', function ($q) {
+        $pendingOrders = Pembelian::whereIn('status', ['pending', 'processing'])->whereHas('layanan.provider', function ($q) {
             $q->where('provider_name', 'moogold');
         })->get();
 
@@ -110,8 +111,10 @@ class CronjobController extends Controller
 
             foreach ($referenceIds as $refId) {
                 try {
+                    // turn refId into int
+                    $refId = (int) $refId;
                     $response = $moogold->orders()->details($refId);
-                    $status = strtolower($response['order_status']);
+                    $status = strtolower($response->getStatus());
                     $statuses[] = $status;
                 } catch (\Exception $e) {
                     $log['errors'][] = [
@@ -157,6 +160,106 @@ class CronjobController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Cronjob check completed',
+            'log' => $log,
+        ]);
+    }
+
+    // Tambahkan fungsi untuk cronjob pengecekan status Naelstore
+    public function statusNaelstore()
+    {
+        $pendingOrders = Pembelian::whereIn('status', ['pending', 'processing'])
+            ->whereHas('layanan.provider', function ($q) {
+                $q->where('provider_name', 'naelstore');
+            })->get();
+
+        $log = [
+            'success_updates' => [],
+            'errors' => [],
+            'unchanged' => [],
+        ];
+
+        $client = new Client();
+
+        $naelstore = Provider::where('provider_name', 'naelstore')->first();
+        $client = new Client([
+            'base_uri' => $naelstore->base_url,
+            'headers' => [
+                'X-API-KEY' => $naelstore->api_key
+            ]
+        ]);
+
+        foreach ($pendingOrders as $order) {
+            try {
+
+                $response = $client->post('order/status', [
+                    'form_params' => [
+                        'order_id' => $order->reference_id,
+                    ]
+                ]);
+
+                $data = json_decode($response->getBody(), true);
+
+                if (!isset($data['status']) || $data['status'] !== 'success') {
+                    $log['errors'][] = [
+                        'order_id' => $order->id,
+                        'message' => $data['message'] ?? 'Invalid response from Naelstore'
+                    ];
+                    continue;
+                }
+
+                $newStatus = strtolower($data['data']['status']);
+                $oldStatus = $order->status;
+
+                if ($newStatus !== $oldStatus) {
+                    $order->update(['status' => $newStatus]);
+
+                    $payload = [
+                        'data' => array_map('strval', [
+                            'ref_id' => $order->reference_id,
+                            'status' => $newStatus === 'completed' ? '1' : ($newStatus === 'failed' ? '2' : '0'),
+                            'code' => $order->layanan->id,
+                            'hp' => $order->input_zone ? $order->input_id . $order->input_zone : $order->input_id,
+                            'price' => $order->total_price,
+                            'message' => ucfirst($newStatus),
+                            'balance' => $order->user->saldo ?? '',
+                            'tr_id' => $order->order_id,
+                            'rc' => $newStatus === 'completed' ? '00' : ($newStatus === 'failed' ? '07' : '39'),
+                            'sn' => '',
+                        ])
+                    ];
+
+                    // send 3x times with interval 3seconds
+                    for ($i = 0; $i < 3; $i++) {
+                        try {
+                            $client->post(env('DIGIFLAZZ_H2H_CALLBACK'), $payload);
+                            break;
+                        } catch (\Exception $e) {
+                            sleep(3);
+                        }
+                    }
+
+                    $log['success_updates'][] = [
+                        'order_id' => $order->order_id,
+                        'from' => $oldStatus,
+                        'to' => $newStatus,
+                    ];
+                } else {
+                    $log['unchanged'][] = [
+                        'order_id' => $order->order_id,
+                        'status' => $oldStatus,
+                    ];
+                }
+            } catch (\Exception $e) {
+                $log['errors'][] = [
+                    'order_id' => $order->order_id,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Naelstore status check completed',
             'log' => $log,
         ]);
     }

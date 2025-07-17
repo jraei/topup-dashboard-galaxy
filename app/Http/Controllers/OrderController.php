@@ -607,10 +607,10 @@ class OrderController extends Controller
                 } else {
                     $data = $apiResult['data'];
 
-                    $status = $data['status'] == true ? "completed" : "failed";
+                    $status = $data['status'] == true ? "processing" : "failed";
 
                     $referenceIds[] = $data['order_id'];
-                    $allCompleted = $allCompleted && ($status == "completed");
+                    $allCompleted = $allCompleted && ($status == "processing");
                 }
             } else {
                 return response()->json([
@@ -619,10 +619,8 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Potong saldo hanya jika ada yang berhasil
-            if ($allCompleted) {
-                $user->decrement('saldo', $finalPrice);
-            }
+            // potong saldo
+            $user->decrement('saldo', $finalPrice);
         }
 
         // Insert pembayaran (1x untuk semua quantity)
@@ -635,7 +633,7 @@ class OrderController extends Controller
             'payment_method' => $request->payment_method['type'] === 'Saldo Akun' ? 'Saldo Akun' : $paymentInfo['methodCode'],
             'payment_provider' => $request->payment_method['type'] === 'Saldo Akun' ? 'Saldo Akun' : $paymentMethodDynamic->payment_provider,
             'payment_reference' => $paymentData['reference'] ?? null,
-            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'paid' : 'failed') : 'pending',
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ? 'paid' : 'pending',
             'instruksi' => $paymentData['instructions'] ?? null,
             'qr_url' => $paymentData['qr_url'] ?? null,
             'payment_link' => $paymentData['checkout_url'] ?? null,
@@ -657,7 +655,7 @@ class OrderController extends Controller
             'discount' => $voucherDiscount,
             'total_price' => $totalPrice,
             'profit' => $totalPrice - $hargaBeli,
-            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'completed' : 'failed') : 'pending',
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'processing' : 'failed') : 'pending',
             'reference_id' => implode(',', $referenceIds),
             'phone' => $request->phone,
             'email' => $request->email,
