@@ -277,7 +277,7 @@ const isSelected = (payment) => {
                                     v-for="meth in group.slice(0, 3)"
                                     :key="meth.id"
                                     :src="meth.gambar"
-                                    class="inline rounded-full shadow h-7 w-7"
+                                    class="inline rounded-full shadow w-8 h-8 object-contain bg-primary/10"
                                     :alt="meth.nama"
                                 />
                             </div>
@@ -336,7 +336,7 @@ const isSelected = (payment) => {
                                 <img
                                     :src="meth.gambar"
                                     alt=""
-                                    class="w-8 h-8 mr-3 rounded"
+                                    class="w-12 object-contain mr-3 rounded"
                                     loading="lazy"
                                 />
                                 <div class="flex-1 space-y-1">

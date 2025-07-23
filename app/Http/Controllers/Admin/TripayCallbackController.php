@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Admin;
 use Exception;
 use App\Models\Deposit;
 use App\Models\Voucher;
+use App\Models\PayMethod;
 use App\Models\Pembelian;
+use App\Models\WebConfig;
 use App\Models\Pembayaran;
 use ZerosDev\TriPay\Client;
 use Illuminate\Http\Request;
@@ -16,6 +18,7 @@ use App\Models\PaymentProvider;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MoogoldController;
 use App\Http\Controllers\NaelstoreController;
+use App\Http\Controllers\WhatsappNotifController;
 
 class TripayCallbackController extends Controller
 {
@@ -61,7 +64,9 @@ class TripayCallbackController extends Controller
         if ($invoice->tipe == "order") {
 
             $dataPembelian = Pembelian::where('order_id', $order_id)->first();
+            $dataPembayaran = Pembayaran::where('order_id', $order_id)->first();
             $dataLayanan = $dataPembelian->layanan;
+            $user = $dataPembelian->user->username ?? 'Guest';
 
             $dataProduk = $dataLayanan->produk;
             $quantity = $dataPembelian->quantity;
@@ -106,13 +111,13 @@ class TripayCallbackController extends Controller
                 $status = null;
 
                 $provider = $dataLayanan->provider->provider_name;
+                $target = $uid . ($zone ?? '');
 
                 switch ($provider) {
                     case "digiflazz":
                         for ($i = 0; $i < $quantity; $i++) {
                             $subOrderId = $order_id . '-' . ($i + 1);
                             $digiflazz = new DigiflazzController();
-                            $target = $uid . ($zone ? $uid : '');
 
                             $apiResult = $digiflazz->createTransaction([
                                 'kode_layanan' => $dataLayanan->kode_layanan,
@@ -142,7 +147,7 @@ class TripayCallbackController extends Controller
                                 'status' => $apiResult['status'],
                                 'reference' => $apiResult['ref_id']
                             ];
-                            $status = $allCompleted ? "completed" : "failed";
+                            $status = $allCompleted ? "processing" : "failed";
                         }
                         break;
                     case "moogold":
@@ -164,13 +169,12 @@ class TripayCallbackController extends Controller
                         }
 
                         $data = $order['data'];
-                        $status = in_array($data['response']['status'], ["pending", "processing"]) ? "completed" : "failed";
+                        $status = in_array($data['response']['status'], ["pending", "processing"]) ? "processing" : "failed";
                         $referenceId = $data['order_id'];
 
                         break;
                     case "naelstore":
                         $naelstore = new NaelstoreController();
-                        $target = $uid . ($zone ? '-' . $zone : '');
 
                         $response = $naelstore->createTransaction([
                             'layanan_id' => $kode_layanan,
@@ -186,7 +190,7 @@ class TripayCallbackController extends Controller
                         }
 
                         $data = $response['data'];
-                        $status = $data['status'] == true ? "completed" : "failed";
+                        $status = $data['status'] == true ? "processing" : "failed";
 
                         $referenceId = $data['order_id'];
                         break;
@@ -207,6 +211,38 @@ class TripayCallbackController extends Controller
                         'status' => $status,
                         'reference_id' => $provider == "digiflazz" ? $references : $referenceId,
                     ]);
+
+                    if ($dataPembelian->status == "processing") {
+                        // send notifikasi whatsapp ke nomor wa customer
+
+                        $phone = str_replace('+', '', $dataPembelian->phone);
+                        $produk = $dataProduk->nama . ' - ' . $dataLayanan->nama_layanan;
+                        $price = $dataPembayaran->total_price;
+                        $payMethod = PayMethod::where('kode', $dataPembayaran->payment_method)->first()->nama;
+                        $judulWeb = WebConfig::where('key', 'judul_web')->first()->value;
+
+                        $whatsappNotif = new WhatsappNotifController();
+                        $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
+
+*Produk* : ' . $produk . '
+*Order ID* : ' . $order_id . '
+*Target* : ' . $target . '
+*Total* : Rp ' . $price . '
+*Metode Pembayaran* : ' . $payMethod . '
+*Status* : ' . $status . '
+
+*Terimakasih kak ' . $user . ' telah membeli di ' . $judulWeb ?? env('APP_NAME') . '😇*');
+
+
+                        $result = json_decode($res);
+                        if ($result->statusCode == 200) {
+                            logger()->info("Success to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                        } else {
+                            logger()->error("Failed to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                        }
+                    }
+
+
 
                     return response()->json([
                         'status' => 'success',

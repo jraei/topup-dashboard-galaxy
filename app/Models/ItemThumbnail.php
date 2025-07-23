@@ -64,16 +64,15 @@ class ItemThumbnail extends Model
     public static function findThumbnailForQuantity($produkId, $quantity)
     {
         // First try to find a range-based thumbnail
-        $thumbnail = self::where('produk_id', $produkId)
-            ->rangeBased()
-            ->where('min_item', '<=', $quantity)
-            ->where('max_item', '>=', $quantity)
-            ->first();
-
-        // If no range-based thumbnail, try static
-        if (!$thumbnail) {
-            $thumbnail = self::where('produk_id', $produkId)
+        if (!$quantity){
+              $thumbnail = self::where('produk_id', $produkId)
                 ->static()
+                ->first();
+        } else{
+            $thumbnail = self::where('produk_id', $produkId)
+                ->rangeBased()
+                ->where('min_item', '<=', $quantity)
+                ->where('max_item', '>=', $quantity)
                 ->first();
         }
 

@@ -21,7 +21,7 @@ class CronjobController extends Controller
         $moogoldController = new MoogoldController();
 
         // Sinkronisasi produk terlebih dahulu
-        $productsResult = $moogoldController->getMoogoldProducts();
+        // $productsResult = $moogoldController->getMoogoldProducts();
 
         // Sinkronisasi layanan
         $servicesResult = $moogoldController->getMoogoldServices();
@@ -30,11 +30,11 @@ class CronjobController extends Controller
         $result = [
             'status' => true,
             'timestamp' => now()->toDateTimeString(),
-            'products' => [
-                'success' => $productsResult['success'] ?? 0,
-                'failed' => $productsResult['failed'] ?? 0,
-                'message' => isset($productsResult['message']) ? $productsResult['message'] : 'Product sync completed'
-            ],
+            // 'products' => [
+            //    'success' => $productsResult['success'] ?? 0,
+            //    'failed' => $productsResult['failed'] ?? 0,
+            //    'message' => isset($productsResult['message']) ? $productsResult['message'] : 'Product sync completed'
+            // ],
             'services' => [
                 'success' => $servicesResult['success'] ?? 0,
                 'failed' => $servicesResult['failed'] ?? 0,
@@ -112,7 +112,7 @@ class CronjobController extends Controller
             foreach ($referenceIds as $refId) {
                 try {
                     // turn refId into int
-                    $refId = (int) $refId;
+                    $refId = (int) trim($refId);
                     $response = $moogold->orders()->details($refId);
                     $status = strtolower($response->getStatus());
                     $statuses[] = $status;
@@ -126,7 +126,15 @@ class CronjobController extends Controller
                 }
             }
 
-            $uniqueStatuses = array_unique($statuses);
+            $mappedStatuses = array_map(function ($status) {
+                return match ($status) {
+                    'refunded' => 'failed',
+                    'pending', 'processing', 'completed', 'failed' => $status,
+                    default => 'failed', // default fallback
+                };
+            }, $statuses);
+
+            $uniqueStatuses = array_unique($mappedStatuses);
             $oldStatus = $order->status;
             $newStatus = null;
 
@@ -135,6 +143,8 @@ class CronjobController extends Controller
             } elseif (in_array('processing', $uniqueStatuses)) {
                 $newStatus = 'processing';
             } elseif (in_array('failed', $uniqueStatuses)) {
+                $newStatus = 'failed';
+            } elseif (in_array('refunded', $uniqueStatuses)) {
                 $newStatus = 'failed';
             }
 

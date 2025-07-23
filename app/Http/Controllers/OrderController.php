@@ -465,6 +465,8 @@ class OrderController extends Controller
             }
         }
 
+
+
         // 3️⃣ Cek flashsale
         $flashsaleItem = null;
         if ($request->flashsale_item_id && $request->layanan_id) {
@@ -507,6 +509,9 @@ class OrderController extends Controller
         $allCompleted = true;
         $referenceIds = [];
 
+        $target = $inputId . ($inputZone ? $inputZone : '');
+
+
         // 6️⃣ Proses Saldo Akun
         if ($request->payment_method['type'] === 'Saldo Akun') {
             if ($user->saldo < $finalPrice) {
@@ -546,7 +551,6 @@ class OrderController extends Controller
                 for ($i = 0; $i < $quantity; $i++) {
                     $subOrderId = $order_id . '-' . ($i + 1);
                     $digiflazz = new DigiflazzController();
-                    $target = $inputId . ($inputZone ? $inputZone : '');
                     $apiResult = $digiflazz->createTransaction([
                         'kode_layanan' => $layanan->kode_layanan,
                         'target' => $target,
@@ -584,7 +588,6 @@ class OrderController extends Controller
                 // Naelstore bisa handle quantity dalam 1 request
 
                 $naelstore = new NaelstoreController();
-                $target = $inputId . ($inputZone ? '-' . $inputZone : '');
 
                 $apiResult = $naelstore->createTransaction([
                     'layanan_id' => $layanan->kode_layanan,
@@ -668,8 +671,13 @@ class OrderController extends Controller
         ]);
 
         // 7️⃣ Payment Gateway (jika bukan Saldo Akun)
+        $waNotif = new WhatsappNotifController();
+        $itemDesc = $produk->nama . ' - ' . $layanan->nama_layanan;
+        $phone = str_replace('+', '', $request->phone);
+        $judulWeb = WebConfig::where('key', 'judul_web')->first()->value ?? env('APP_NAME');
+        $username = $user->username ?? 'Guest';
+
         if ($request->payment_method['type'] !== 'Saldo Akun') {
-            $itemDesc = $produk->nama . ' - ' . $layanan->nama_layanan;
 
             if ($paymentMethodDynamic->payment_provider === 'Tripay') {
                 $tripay = new TripayController();
@@ -701,11 +709,53 @@ class OrderController extends Controller
                     'expired_time' => $paymentData['expired_time'],
                 ]);
             }
+
+            // Kirim notifikasi whatsapp ke user
+            $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat, harap selesaikan pembayaran*
+
+*Produk* : ' . $itemDesc . '
+*Order ID* : ' . $order_id . '
+*Target* : ' . $target . '
+*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+*Status* : Menunggu Pembayaran
+*Link Pembayaran* : ' . route('order.invoice', $order_id) . '
+
+*Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+
+            $result = json_decode($res);
+            if ($result->statusCode == 200) {
+                logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+            } else {
+                logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+            }
+        } else {
+            // Kirim notifikasi whatsapp ke user
+            $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat*
+
+*Produk* : ' . $itemDesc . '
+*Order ID* : ' . $order_id . '
+*Target* : ' . $target . '
+*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+*Status* : Berhasil dibayar
+
+*Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+
+
+            $result = json_decode($res);
+            if ($result->statusCode == 200) {
+                logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+            } else {
+                logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+            }
         }
 
         // Update stok flashsale dan voucher
         if ($flashsaleItem) $this->reduceFlashsaleStock($request->flashsale_item_id, $quantity);
         if ($voucher) $this->reduceVoucherStock($request->voucher_code);
+
+
 
         return response()->json([
             'status' => 'success',

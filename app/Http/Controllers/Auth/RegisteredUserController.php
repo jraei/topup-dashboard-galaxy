@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\UserRole;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\UserRole;
+use App\Models\WebConfig;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rules;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Auth\Events\Registered;
+use App\Providers\RouteServiceProvider;
+use Illuminate\Support\Facades\RateLimiter;
+use App\Http\Controllers\WhatsappNotifController;
 
 class RegisteredUserController extends Controller
 {
@@ -69,6 +71,18 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        $waNotif = new WhatsappNotifController();
+        $judulWeb = WebConfig::where('key', 'judul_web')->first()->value ?? env('APP_NAME');
+        // Kirim notifikasi WhatsApp
+        $res = $waNotif->sendMessage($request->phone, 'Halo ' . $request->name . ', Terima kasih telah melakukan pendaftaran di ' . $judulWeb . '. Akun kamu sudah dapat kamu gunakan untuk transaksi dan menikmati semua fitur yang kami tawarkan!');
+
+        $result = json_decode($res);
+        if ($result->statusCode == 200) {
+            logger()->info("Success to send whatsapp notif [REGISTER ACCOUNT]: " . $result->message);
+        } else {
+            logger()->error("Failed to send whatsapp notif [REGISTER ACCOUNT]: " . $result->message);
+        }
 
         return redirect(RouteServiceProvider::HOME);
     }
