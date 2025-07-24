@@ -10,6 +10,7 @@ use App\Models\PayMethod;
 use App\Models\Pembelian;
 use App\Models\WebConfig;
 use App\Models\Pembayaran;
+use App\Models\PaketLayanan;
 use Illuminate\Http\Request;
 use App\Models\FlashsaleItem;
 use App\Models\ItemThumbnail;
@@ -146,6 +147,40 @@ class OrderController extends Controller
                 })->values();
             });
 
+        // Get active service packages for this product
+        $paketLayanans = PaketLayanan::with(['layanans' => function ($query) {
+                $query->where('status', 'active');
+            }])
+            ->where('produk_id', $produk->id)
+            ->get()
+            ->map(function ($paket) {
+                return [
+                    'id' => $paket->id,
+                    'judul_paket' => $paket->judul_paket,
+                    'informasi' => $paket->informasi,
+                    'layanans' => $paket->layanans->map(function ($layanan) {
+                        // Apply same thumbnail logic as individual services
+                        preg_match('/(\d+)/', $layanan->nama_layanan, $matches);
+                        $quantity = isset($matches[1]) ? (int)$matches[1] : null;
+
+                        $thumbnail = null;
+                        if ($quantity !== null) {
+                            $thumbnail = ItemThumbnail::findThumbnailForQuantity($layanan->produk_id, $quantity);
+                        }
+
+                        if (!$thumbnail) {
+                            $thumbnail = ItemThumbnail::where('produk_id', $layanan->produk_id)
+                                ->default()
+                                ->first();
+                        }
+
+                        return array_merge($layanan->toArray(), [
+                            'thumbnail' => $thumbnail?->image_url
+                        ]);
+                    })
+                ];
+            });
+
         // Get active vouchers for public display
         $activeVouchers = Voucher::where('is_public', true)
             ->where('status', 'active')
@@ -206,6 +241,7 @@ class OrderController extends Controller
             'dynamicMethods' => $dynamicMethods,
             'saldoMethod' => $saldoMethod,
             'activeVouchers' => $activeVouchers,
+            'paketLayanans' => $paketLayanans,
             'faqs' => $faqs,
         ]);
     }
