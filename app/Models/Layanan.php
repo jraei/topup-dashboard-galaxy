@@ -47,6 +47,11 @@ class Layanan extends Model
             ->withTimestamps();
     }
 
+    public function paketLayanan(): BelongsTo
+    {
+        return $this->belongsTo(PaketLayanan::class);
+    }
+
     public function priceRules()
     {
         return $this->hasOneThrough(

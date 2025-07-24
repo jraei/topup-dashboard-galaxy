@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import CosmicCard from "./CosmicCard.vue";
 import ServiceCard from "./ServiceCard.vue";
-import { ShoppingBag, BadgePercent } from "lucide-vue-next";
+import { ShoppingBag, BadgePercent, Package } from "lucide-vue-next";
 
 const props = defineProps({
     services: {
@@ -14,6 +14,10 @@ const props = defineProps({
         default: () => [],
     },
     flashsaleEvents: {
+        type: Array,
+        default: () => [],
+    },
+    paketLayanans: {
         type: Array,
         default: () => [],
     },
@@ -66,11 +70,65 @@ const flashsaleServiceGroups = computed(() => {
 
     return groups;
 });
+
+// Group services by packages
+const packageServiceGroups = computed(() => {
+    const groups = [];
+
+    if (!props.paketLayanans || props.paketLayanans.length === 0) {
+        return groups;
+    }
+
+    props.paketLayanans.forEach((paket) => {
+        if (paket.layanans && paket.layanans.length > 0) {
+            groups.push({
+                package: paket,
+                services: paket.layanans,
+            });
+        }
+    });
+
+    return groups;
+});
 </script>
 
 <template>
     <CosmicCard title="Pilih Layanan" :stepNumber="2">
         <div class="space-y-6">
+            <!-- Service Packages -->
+            <div
+                v-for="group in packageServiceGroups"
+                :key="group.package.id"
+                class="space-y-3"
+            >
+                <div class="flex items-center space-x-2">
+                    <Package
+                        class="w-5 h-5 text-accent animate-pulse"
+                    />
+                    <h4 class="text-white">{{ group.package.judul_paket }}</h4>
+                    <span class="px-2 py-1 text-xs rounded bg-accent/20 text-accent">
+                        {{ group.services.length }} services
+                    </span>
+                </div>
+
+                <div v-if="group.package.informasi" class="text-sm text-gray-400">
+                    {{ group.package.informasi }}
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+                    <ServiceCard
+                        v-for="service in group.services"
+                        :key="service.id"
+                        :service="service"
+                        :isSelected="
+                            selectedService && selectedService.id === service.id
+                        "
+                        :isPackage="true"
+                        @select="selectService"
+                    />
+                </div>
+            </div>
+
             <!-- Flashsale Services -->
             <div
                 v-for="group in flashsaleServiceGroups"
@@ -122,7 +180,8 @@ const flashsaleServiceGroups = computed(() => {
             <div
                 v-if="
                     regularServices.length === 0 &&
-                    flashsaleServiceGroups.length === 0
+                    flashsaleServiceGroups.length === 0 &&
+                    packageServiceGroups.length === 0
                 "
                 class="p-4 text-center text-primary-text/80"
             >

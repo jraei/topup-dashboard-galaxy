@@ -308,6 +308,7 @@ const initPriceAnimations = () => {
                         :services="layanans"
                         :flashsale-items="flashsaleItems"
                         :flashsale-events="flashsaleEvents"
+                        :paket-layanans="produk.paket_layanans"
                         @select-service="handleServiceSelection"
                     />
                     <div

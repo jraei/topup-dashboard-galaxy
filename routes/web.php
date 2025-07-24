@@ -213,6 +213,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // Pembayaran Management (Payments)
     Route::resource('pembayarans', PembayaranController::class)->except(['create', 'edit', 'update', 'store']);
+    
+    // PaketLayanan routes
+    Route::resource('paket-layanans', \App\Http\Controllers\Admin\PaketLayananController::class);
+    Route::get('paket-layanans/services/available', [\App\Http\Controllers\Admin\PaketLayananController::class, 'getAvailableServices'])->name('paket-layanans.available-services');
+    Route::get('paket-layanans/{id}/services', [\App\Http\Controllers\Admin\PaketLayananController::class, 'getPackageServices'])->name('paket-layanans.package-services');
 });
 
 require __DIR__ . '/auth.php';

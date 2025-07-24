@@ -96,6 +96,11 @@ class Produk extends Model
     }
 
 
+    public function paketLayanans(): HasMany
+    {
+        return $this->hasMany(PaketLayanan::class);
+    }
+
     /**
      * Get the appropriate thumbnail for a given quantity.
      */
