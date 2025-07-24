@@ -7,6 +7,7 @@ use App\Models\WebConfig;
 use App\Http\Controllers\ApiDocs;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\IndexController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\PayMethodController;
 use App\Http\Controllers\Admin\PembelianController;
 use App\Http\Controllers\Admin\PembayaranController;
+use App\Http\Controllers\Admin\PaketLayananController;
 use App\Http\Controllers\Admin\ProfitProdukController;
 use App\Http\Controllers\Admin\FlashsaleItemController;
 use App\Http\Controllers\Admin\ItemThumbnailController;
@@ -37,7 +39,6 @@ use App\Http\Controllers\Admin\FlashsaleEventController;
 use App\Http\Controllers\Admin\PaymentProviderController;
 use App\Http\Controllers\Admin\ProdukInputFieldController;
 use App\Http\Controllers\Admin\ProdukInputOptionController;
-use App\Http\Controllers\ApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -213,11 +214,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // Pembayaran Management (Payments)
     Route::resource('pembayarans', PembayaranController::class)->except(['create', 'edit', 'update', 'store']);
-    
+
     // PaketLayanan routes
-    Route::resource('paket-layanans', \App\Http\Controllers\Admin\PaketLayananController::class);
-    Route::get('paket-layanans/services/available', [\App\Http\Controllers\Admin\PaketLayananController::class, 'getAvailableServices'])->name('paket-layanans.available-services');
-    Route::get('paket-layanans/{id}/services', [\App\Http\Controllers\Admin\PaketLayananController::class, 'getPackageServices'])->name('paket-layanans.package-services');
+    Route::resource('paket-layanans', PaketLayananController::class);
+    Route::get('paket-layanans/services/available', [PaketLayananController::class, 'getAvailableServices'])->name('paket-layanans.available-services');
+    Route::get('paket-layanans/{id}/services', [PaketLayananController::class, 'getPackageServices'])->name('paket-layanans.package-services');
 });
 
 require __DIR__ . '/auth.php';

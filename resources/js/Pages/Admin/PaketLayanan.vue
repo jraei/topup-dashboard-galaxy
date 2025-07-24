@@ -52,7 +52,7 @@ const columns = [
         key: "layanans_count",
         label: "Services Count",
         format: (value) => {
-            return `<span class="px-2 py-1 rounded-xl text-xs bg-primary/20 text-primary">${value} services</span>`;
+            return `<span class="px-2 py-1 text-xs rounded-xl bg-primary/20 text-primary">${value} services</span>`;
         },
     },
     {
@@ -82,11 +82,19 @@ const selectAll = ref(false);
 // Computed for filtered services
 const filteredServices = computed(() => {
     if (!serviceSearchQuery.value) return availableServices.value;
-    
-    return availableServices.value.filter(service => 
-        service.nama_layanan.toLowerCase().includes(serviceSearchQuery.value.toLowerCase()) ||
-        service.kode_layanan.toLowerCase().includes(serviceSearchQuery.value.toLowerCase()) ||
-        (service.produk && service.produk.nama.toLowerCase().includes(serviceSearchQuery.value.toLowerCase()))
+
+    return availableServices.value.filter(
+        (service) =>
+            service.nama_layanan
+                .toLowerCase()
+                .includes(serviceSearchQuery.value.toLowerCase()) ||
+            service.kode_layanan
+                .toLowerCase()
+                .includes(serviceSearchQuery.value.toLowerCase()) ||
+            (service.produk &&
+                service.produk.nama
+                    .toLowerCase()
+                    .includes(serviceSearchQuery.value.toLowerCase()))
     );
 });
 
@@ -152,14 +160,14 @@ const openEditForm = async (paketLayanan) => {
         produk_id: paketLayanan.produk_id,
         informasi: paketLayanan.informasi,
     };
-    
+
     // Load available services for editing (including currently assigned ones)
     await loadAvailableServices(paketLayanan.id);
-    
+
     // Load currently assigned services
     const currentServices = await loadPackageServices(paketLayanan.id);
-    selectedServices.value = currentServices.map(service => service.id);
-    
+    selectedServices.value = currentServices.map((service) => service.id);
+
     showForm.value = true;
 };
 
@@ -215,12 +223,15 @@ const savePaketLayanan = () => {
 // Service management functions
 const loadAvailableServices = async (excludePackageId = null) => {
     try {
-        const response = await axios.get(route("paket-layanans.available-services"), {
-            params: {
-                product_id: currentPaketLayanan.value.produk_id,
-                exclude_package_id: excludePackageId,
-            },
-        });
+        const response = await axios.get(
+            route("paket-layanans.available-services"),
+            {
+                params: {
+                    product_id: currentPaketLayanan.value.produk_id,
+                    exclude_package_id: excludePackageId,
+                },
+            }
+        );
         availableServices.value = response.data.services;
     } catch (error) {
         console.error("Error loading available services:", error);
@@ -230,7 +241,9 @@ const loadAvailableServices = async (excludePackageId = null) => {
 
 const loadPackageServices = async (packageId) => {
     try {
-        const response = await axios.get(route("paket-layanans.package-services", packageId));
+        const response = await axios.get(
+            route("paket-layanans.package-services", packageId)
+        );
         packageServices.value = response.data.services;
         return response.data.services;
     } catch (error) {
@@ -252,15 +265,20 @@ const toggleService = (serviceId) => {
 
 const toggleSelectAll = () => {
     if (selectAll.value) {
-        selectedServices.value = filteredServices.value.map(service => service.id);
+        selectedServices.value = filteredServices.value.map(
+            (service) => service.id
+        );
     } else {
         selectedServices.value = [];
     }
 };
 
 const updateSelectAllState = () => {
-    selectAll.value = filteredServices.value.length > 0 && 
-        filteredServices.value.every(service => selectedServices.value.includes(service.id));
+    selectAll.value =
+        filteredServices.value.length > 0 &&
+        filteredServices.value.every((service) =>
+            selectedServices.value.includes(service.id)
+        );
 };
 
 // Watch for product changes to reload services
@@ -269,7 +287,9 @@ watch(
     (newValue) => {
         if (newValue && showForm.value) {
             selectedServices.value = [];
-            loadAvailableServices(formMode.value === 'edit' ? currentPaketLayanan.value.id : null);
+            loadAvailableServices(
+                formMode.value === "edit" ? currentPaketLayanan.value.id : null
+            );
         }
     }
 );
@@ -393,23 +413,34 @@ watch(filteredServices, () => {
                 <h3 class="mb-4 text-xl font-bold text-white">
                     Services in "{{ selectedPaketLayanan?.judul_paket }}"
                 </h3>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div
+                    class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                >
                     <div
                         v-for="service in packageServices"
                         :key="service.id"
-                        class="p-4 border rounded-lg border-gray-700 bg-dark-sidebar"
+                        class="p-4 border border-gray-700 rounded-lg bg-dark-sidebar"
                     >
                         <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-medium text-white">{{ service.nama_layanan }}</h4>
-                            <span class="px-2 py-1 text-xs rounded bg-primary/20 text-primary">
+                            <h4 class="font-medium text-white">
+                                {{ service.nama_layanan }}
+                            </h4>
+                            <span
+                                class="px-2 py-1 text-xs rounded bg-primary/20 text-primary"
+                            >
                                 {{ service.kode_layanan }}
                             </span>
                         </div>
                         <p class="text-sm text-gray-300">
-                            Product: {{ service.produk?.nama || 'N/A' }}
+                            Product: {{ service.produk?.nama || "N/A" }}
                         </p>
                         <p class="text-sm text-secondary">
-                            Price: Rp {{ service.harga_jual?.toLocaleString() || service.harga_beli?.toLocaleString() || 'N/A' }}
+                            Price: Rp
+                            {{
+                                service.harga_jual?.toLocaleString() ||
+                                service.harga_beli?.toLocaleString() ||
+                                "N/A"
+                            }}
                         </p>
                     </div>
                 </div>
@@ -455,12 +486,17 @@ watch(filteredServices, () => {
                     </button>
                 </div>
 
-                <form @submit.prevent="savePaketLayanan" class="overflow-visible">
+                <form
+                    @submit.prevent="savePaketLayanan"
+                    class="overflow-visible"
+                >
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <!-- Left Column - Package Info -->
                         <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-white">Package Information</h4>
-                            
+                            <h4 class="text-lg font-medium text-white">
+                                Package Information
+                            </h4>
+
                             <!-- Package Title -->
                             <div>
                                 <label
@@ -524,7 +560,9 @@ watch(filteredServices, () => {
                         <!-- Right Column - Service Selection -->
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <h4 class="text-lg font-medium text-white">Select Services</h4>
+                                <h4 class="text-lg font-medium text-white">
+                                    Select Services
+                                </h4>
                                 <span class="text-sm text-gray-400">
                                     {{ selectedServices.length }} selected
                                 </span>
@@ -547,48 +585,78 @@ watch(filteredServices, () => {
                                     v-model="selectAll"
                                     type="checkbox"
                                     @change="toggleSelectAll"
-                                    class="w-4 h-4 rounded text-primary bg-dark-sidebar border-gray-700 focus:ring-primary focus:ring-2"
+                                    class="w-4 h-4 border-gray-700 rounded text-primary bg-dark-sidebar focus:ring-primary focus:ring-2"
                                 />
-                                <label for="selectAll" class="text-sm text-gray-300">
-                                    Select All ({{ filteredServices.length }} services)
+                                <label
+                                    for="selectAll"
+                                    class="text-sm text-gray-300"
+                                >
+                                    Select All ({{ filteredServices.length }}
+                                    services)
                                 </label>
                             </div>
 
                             <!-- Services List -->
-                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                            <div class="space-y-2 overflow-y-auto max-h-96">
                                 <div
                                     v-for="service in filteredServices"
                                     :key="service.id"
-                                    class="flex items-center p-3 border rounded-lg border-gray-700 bg-dark-sidebar hover:bg-dark-lighter"
+                                    class="flex items-center p-3 border border-gray-700 rounded-lg bg-dark-sidebar hover:bg-dark-lighter"
                                 >
                                     <input
                                         :id="`service-${service.id}`"
                                         :value="service.id"
-                                        :checked="selectedServices.includes(service.id)"
+                                        :checked="
+                                            selectedServices.includes(
+                                                service.id
+                                            )
+                                        "
                                         type="checkbox"
                                         @change="toggleService(service.id)"
-                                        class="w-4 h-4 mr-3 rounded text-primary bg-dark-card border-gray-700 focus:ring-primary focus:ring-2"
+                                        class="w-4 h-4 mr-3 border-gray-700 rounded text-primary bg-dark-card focus:ring-primary focus:ring-2"
                                     />
                                     <label
                                         :for="`service-${service.id}`"
                                         class="flex-1 cursor-pointer"
                                     >
-                                        <div class="flex items-center justify-between">
+                                        <div
+                                            class="flex items-center justify-between"
+                                        >
                                             <div>
-                                                <p class="font-medium text-white">{{ service.nama_layanan }}</p>
-                                                <p class="text-sm text-gray-400">
-                                                    {{ service.kode_layanan }} - {{ service.produk?.nama || 'No Product' }}
+                                                <p
+                                                    class="font-medium text-white"
+                                                >
+                                                    {{ service.nama_layanan }}
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-400"
+                                                >
+                                                    {{ service.kode_layanan }} -
+                                                    {{
+                                                        service.produk?.nama ||
+                                                        "No Product"
+                                                    }}
                                                 </p>
                                             </div>
-                                            <span class="text-sm text-secondary">
-                                                Rp {{ service.harga_jual?.toLocaleString() || service.harga_beli?.toLocaleString() || 'N/A' }}
+                                            <span
+                                                class="text-sm text-secondary"
+                                            >
+                                                Rp
+                                                {{
+                                                    service.harga_jual?.toLocaleString() ||
+                                                    service.harga_beli?.toLocaleString() ||
+                                                    "N/A"
+                                                }}
                                             </span>
                                         </div>
                                     </label>
                                 </div>
                             </div>
 
-                            <div v-if="filteredServices.length === 0" class="p-4 text-center text-gray-400">
+                            <div
+                                v-if="filteredServices.length === 0"
+                                class="p-4 text-center text-gray-400"
+                            >
                                 No services available
                             </div>
                         </div>
@@ -629,7 +697,9 @@ watch(filteredServices, () => {
                 @click.stop
             >
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">Package Details</h3>
+                    <h3 class="text-xl font-bold text-white">
+                        Package Details
+                    </h3>
                     <button
                         @click="closeViewModal"
                         class="text-gray-400 hover:text-white"
@@ -651,34 +721,56 @@ watch(filteredServices, () => {
                     </button>
                 </div>
 
-                <div v-if="selectedPaketLayanan && !selectedPaketLayanan.loading" class="space-y-4">
+                <div
+                    v-if="selectedPaketLayanan && !selectedPaketLayanan.loading"
+                    class="space-y-4"
+                >
                     <div>
-                        <h4 class="text-lg font-semibold text-white">{{ selectedPaketLayanan.judul_paket }}</h4>
+                        <h4 class="text-lg font-semibold text-white">
+                            {{ selectedPaketLayanan.judul_paket }}
+                        </h4>
                         <p class="text-gray-400">
-                            Product: {{ selectedPaketLayanan.produk?.nama || 'Not assigned' }}
+                            Product:
+                            {{
+                                selectedPaketLayanan.produk?.nama ||
+                                "Not assigned"
+                            }}
                         </p>
                     </div>
 
                     <div v-if="selectedPaketLayanan.informasi">
                         <h5 class="font-medium text-white">Description:</h5>
-                        <p class="text-gray-300">{{ selectedPaketLayanan.informasi }}</p>
+                        <p class="text-gray-300">
+                            {{ selectedPaketLayanan.informasi }}
+                        </p>
                     </div>
 
                     <div v-if="packageServices.length > 0">
-                        <h5 class="font-medium text-white">Services ({{ packageServices.length }}):</h5>
+                        <h5 class="font-medium text-white">
+                            Services ({{ packageServices.length }}):
+                        </h5>
                         <div class="mt-2 space-y-2">
                             <div
                                 v-for="service in packageServices"
                                 :key="service.id"
-                                class="p-3 border rounded-lg border-gray-700 bg-dark-sidebar"
+                                class="p-3 border border-gray-700 rounded-lg bg-dark-sidebar"
                             >
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="font-medium text-white">{{ service.nama_layanan }}</p>
-                                        <p class="text-sm text-gray-400">{{ service.kode_layanan }}</p>
+                                        <p class="font-medium text-white">
+                                            {{ service.nama_layanan }}
+                                        </p>
+                                        <p class="text-sm text-gray-400">
+                                            {{ service.kode_layanan }}
+                                        </p>
                                     </div>
                                     <span class="text-sm text-secondary">
-                                        Rp {{ service.harga_jual?.toLocaleString() || service.harga_beli?.toLocaleString() || 'N/A' }}
+                                        Rp
+                                        {{
+                                            service.harga_jual?.toLocaleString() ||
+                                            service.harga_beli?.toLocaleString() ||
+                                            "N/A"
+                                        }}
                                     </span>
                                 </div>
                             </div>
@@ -687,7 +779,9 @@ watch(filteredServices, () => {
                 </div>
 
                 <div v-else class="flex items-center justify-center py-8">
-                    <div class="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                    <div
+                        class="w-8 h-8 border-4 rounded-full animate-spin border-primary border-t-transparent"
+                    ></div>
                 </div>
             </div>
         </div>

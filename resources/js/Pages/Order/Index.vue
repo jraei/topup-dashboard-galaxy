@@ -276,6 +276,8 @@ const initPriceAnimations = () => {
         }
     });
 };
+
+console.log(props.produk);
 </script>
 
 <template>

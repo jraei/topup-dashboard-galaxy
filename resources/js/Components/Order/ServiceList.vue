@@ -90,6 +90,8 @@ const packageServiceGroups = computed(() => {
 
     return groups;
 });
+
+console.log(packageServiceGroups.value);
 </script>
 
 <template>
@@ -102,16 +104,19 @@ const packageServiceGroups = computed(() => {
                 class="space-y-3"
             >
                 <div class="flex items-center space-x-2">
-                    <Package
-                        class="w-5 h-5 text-accent animate-pulse"
-                    />
+                    <Package class="w-5 h-5 text-accent animate-pulse" />
                     <h4 class="text-white">{{ group.package.judul_paket }}</h4>
-                    <span class="px-2 py-1 text-xs rounded bg-accent/20 text-accent">
+                    <span
+                        class="px-2 py-1 text-xs rounded bg-accent/20 text-accent"
+                    >
                         {{ group.services.length }} services
                     </span>
                 </div>
 
-                <div v-if="group.package.informasi" class="text-sm text-gray-400">
+                <div
+                    v-if="group.package.informasi"
+                    class="text-sm text-gray-400"
+                >
                     {{ group.package.informasi }}
                 </div>
 

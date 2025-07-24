@@ -34,12 +34,12 @@ class PaketLayananController extends Controller
 
         // Apply filters
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('judul_paket', 'like', "%{$search}%")
-                  ->orWhere('informasi', 'like', "%{$search}%")
-                  ->orWhereHas('produk', function ($subQ) use ($search) {
-                      $subQ->where('nama', 'like', "%{$search}%");
-                  });
+                    ->orWhere('informasi', 'like', "%{$search}%")
+                    ->orWhereHas('produk', function ($subQ) use ($search) {
+                        $subQ->where('nama', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -144,7 +144,7 @@ class PaketLayananController extends Controller
         DB::beginTransaction();
         try {
             $paketLayanan = PaketLayanan::findOrFail($id);
-            
+
             // Update the package
             $paketLayanan->update([
                 'judul_paket' => $validated['judul_paket'],
@@ -185,7 +185,7 @@ class PaketLayananController extends Controller
         DB::beginTransaction();
         try {
             $paketLayanan = PaketLayanan::findOrFail($id);
-            
+
             // Remove service associations
             Layanan::where('paket_layanan_id', $paketLayanan->id)
                 ->update(['paket_layanan_id' => null]);
@@ -220,7 +220,7 @@ class PaketLayananController extends Controller
 
         $query = Layanan::where('status', 'active')
             ->with(['produk'])
-            ->where(function($q) use ($excludePackageId) {
+            ->where(function ($q) use ($excludePackageId) {
                 $q->whereNull('paket_layanan_id');
                 if ($excludePackageId) {
                     $q->orWhere('paket_layanan_id', $excludePackageId);
