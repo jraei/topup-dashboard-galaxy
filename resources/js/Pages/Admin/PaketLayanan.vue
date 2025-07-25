@@ -298,6 +298,17 @@ watch(
 watch(filteredServices, () => {
     updateSelectAllState();
 });
+
+const formatCurrency = (value) => {
+    // format and round the value
+    value = Math.round(value);
+
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(value);
+};
 </script>
 
 <template>
@@ -437,8 +448,8 @@ watch(filteredServices, () => {
                         <p class="text-sm text-secondary">
                             Price: Rp
                             {{
-                                service.harga_jual?.toLocaleString() ||
-                                service.harga_beli?.toLocaleString() ||
+                                formatCurrency(service.harga_jual) ||
+                                formatCurrency(service.harga_beli) ||
                                 "N/A"
                             }}
                         </p>
@@ -641,10 +652,13 @@ watch(filteredServices, () => {
                                             <span
                                                 class="text-sm text-secondary"
                                             >
-                                                Rp
                                                 {{
-                                                    service.harga_jual?.toLocaleString() ||
-                                                    service.harga_beli?.toLocaleString() ||
+                                                    formatCurrency(
+                                                        service.harga_jual
+                                                    ) ||
+                                                    formatCurrency(
+                                                        service.harga_beli
+                                                    ) ||
                                                     "N/A"
                                                 }}
                                             </span>

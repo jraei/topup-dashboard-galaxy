@@ -42,6 +42,7 @@ class OrderController extends Controller
         // Normal services (excluding flashsale items)
         $services = $produk->layanan()
             ->whereNotIn('id', $excludedLayananIds)
+            ->where('paket_layanan_id', null)
             ->where('status', 'active')
             ->orderBy('harga_beli_idr', 'asc')
             ->get()
@@ -149,8 +150,8 @@ class OrderController extends Controller
 
         // Get active service packages for this product
         $paketLayanans = PaketLayanan::with(['layanans' => function ($query) {
-                $query->where('status', 'active');
-            }])
+            $query->where('status', 'active');
+        }])
             ->where('produk_id', $produk->id)
             ->get()
             ->map(function ($paket) {

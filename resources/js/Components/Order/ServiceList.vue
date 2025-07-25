@@ -3,6 +3,8 @@ import { ref, computed } from "vue";
 import CosmicCard from "./CosmicCard.vue";
 import ServiceCard from "./ServiceCard.vue";
 import { ShoppingBag, BadgePercent, Package } from "lucide-vue-next";
+import Modal from "@/Components/Modal.vue";
+import { Info } from "lucide-vue-next";
 
 const props = defineProps({
     services: {
@@ -91,7 +93,7 @@ const packageServiceGroups = computed(() => {
     return groups;
 });
 
-console.log(packageServiceGroups.value);
+const openHelpModal = ref(false);
 </script>
 
 <template>
@@ -103,22 +105,48 @@ console.log(packageServiceGroups.value);
                 :key="group.package.id"
                 class="space-y-3"
             >
-                <div class="flex items-center space-x-2">
-                    <Package class="w-5 h-5 text-accent animate-pulse" />
-                    <h4 class="text-white">{{ group.package.judul_paket }}</h4>
-                    <span
-                        class="px-2 py-1 text-xs rounded bg-accent/20 text-accent"
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <Package class="w-5 h-5 text-secondary" />
+                        <h4 class="text-white">
+                            {{ group.package.judul_paket }}
+                        </h4>
+                    </div>
+                    <!-- <span
+                        class="px-3 py-1 text-xs rounded-full bg-primary/50 text-primary-text/80"
                     >
                         {{ group.services.length }} services
-                    </span>
+                    </span> -->
+                    <Info
+                        class="inline-block w-6 h-6 cursor-pointer text-primary"
+                        @click="openHelpModal = true"
+                    />
                 </div>
 
-                <div
-                    v-if="group.package.informasi"
-                    class="text-sm text-gray-400"
+                <Modal
+                    :show="openHelpModal"
+                    @close="openHelpModal = false"
+                    max-width="2xl"
                 >
-                    {{ group.package.informasi }}
-                </div>
+                    <div
+                        class="p-6 border shadow-xl rounded-2xl bg-content_background/30 border-secondary/20 backdrop-blur"
+                    >
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-white">
+                                Panduan
+                            </h2>
+                            <button
+                                @click="openHelpModal = false"
+                                class="text-gray-400 hover:text-white"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        <p class="text-gray-400">
+                            {{ group.package.informasi }}
+                        </p>
+                    </div>
+                </Modal>
 
                 <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
                     <ServiceCard

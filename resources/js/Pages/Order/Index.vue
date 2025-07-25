@@ -30,6 +30,7 @@ const props = defineProps({
     dynamicMethods: Array,
     activeVouchers: Array,
     faqs: Array,
+    paketLayanans: Array,
 });
 
 const selectedService = ref(null);
@@ -276,8 +277,6 @@ const initPriceAnimations = () => {
         }
     });
 };
-
-console.log(props.produk);
 </script>
 
 <template>
@@ -310,7 +309,7 @@ console.log(props.produk);
                         :services="layanans"
                         :flashsale-items="flashsaleItems"
                         :flashsale-events="flashsaleEvents"
-                        :paket-layanans="produk.paket_layanans"
+                        :paket-layanans="paketLayanans"
                         @select-service="handleServiceSelection"
                     />
                     <div

@@ -270,6 +270,17 @@ const toggleDropdown = (dropdown) => {
                                 <span>Services</span>
                             </Link>
                             <Link
+                                :href="route('paket-layanans.index')"
+                                :class="[
+                                    'flex items-center rounded-lg p-2 text-sm font-medium transition-all duration-200',
+                                    route().current('paket-layanans.index')
+                                        ? 'text-primary'
+                                        : 'text-gray-300 hover:text-white',
+                                ]"
+                            >
+                                <span>Package</span>
+                            </Link>
+                            <Link
                                 :href="route('profit-produks.index')"
                                 :class="[
                                     'flex items-center rounded-lg p-2 text-sm font-medium transition-all duration-200',
