@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('profit_paket_layanans', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_roles_id')->nullable()->constrained('user_roles')->nullOnDelete();
+            $table->foreignId('paket_layanan_id')->nullable()->constrained('paket_layanans')->nullOnDelete();
+            $table->enum('type', ['percent', 'multiplier'])->default('percent');
+            $table->decimal('value', 10, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ProfitPaketLayananController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ProdukController;
 use App\Http\Controllers\Admin\TripayController;
@@ -193,6 +194,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('profit-produks', ProfitProdukController::class);
     Route::post('profit-produks/bulk-store', [ProfitProdukController::class, 'bulkStore'])->name('profit-produks.bulk-store');
     Route::post('profit-produks/preview', [ProfitProdukController::class, 'preview'])->name('profit-produks.preview');
+    
+    // Profit Paket Layanan routes
+    Route::resource('profit-paket-layanans', ProfitPaketLayananController::class);
+    Route::post('profit-paket-layanans/bulk-store', [ProfitPaketLayananController::class, 'bulkStore'])->name('profit-paket-layanans.bulk-store');
+    Route::post('profit-paket-layanans/bulk-update', [ProfitPaketLayananController::class, 'bulkUpdate'])->name('profit-paket-layanans.bulk-update');
+    Route::post('profit-paket-layanans/preview', [ProfitPaketLayananController::class, 'preview'])->name('profit-paket-layanans.preview');
 
     Route::get('/payment-providers', [PaymentProviderController::class, 'index'])->name('admin.payment-providers');
     Route::patch('/payment-providers/{id}', [PaymentProviderController::class, 'update'])->name('payment-providers.update');

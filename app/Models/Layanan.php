@@ -66,6 +66,7 @@ class Layanan extends Model
 
     /**
      * Get the regular price for this service with enhanced caching
+     * Priority: Package profit rules > Product profit rules > Base price
      * 
      * @param int|null $userRoleId The user role ID to consider for profit calculation
      * @return float The calculated price
@@ -81,16 +82,37 @@ class Layanan extends Model
 
         // Use cached query when possible to reduce DB calls
         static $profitRulesCache = [];
-        $cacheKey = "{$this->produk_id}_{$userRoleId}";
+        static $packageProfitRulesCache = [];
 
-        if (!isset($profitRulesCache[$cacheKey])) {
+        // First, check if this service belongs to a package and has package-specific profit rules
+        if ($this->paket_layanan_id) {
+            $packageCacheKey = "{$this->paket_layanan_id}_{$userRoleId}";
+
+            if (!isset($packageProfitRulesCache[$packageCacheKey])) {
+                $packageProfitRulesCache[$packageCacheKey] = \App\Models\ProfitPaketLayanan::where('paket_layanan_id', $this->paket_layanan_id)
+                    ->where('user_roles_id', $userRoleId)
+                    ->first();
+            }
+
+            $packageProfitRule = $packageProfitRulesCache[$packageCacheKey];
+
+            // If package profit rule exists, use it
+            if ($packageProfitRule) {
+                return $packageProfitRule->calculatePrice($basePrice);
+            }
+        }
+
+        // Fallback to product-specific profit rules
+        $productCacheKey = "{$this->produk_id}_{$userRoleId}";
+
+        if (!isset($profitRulesCache[$productCacheKey])) {
             // Try to find a product-specific profit rule
-            $profitRulesCache[$cacheKey] = ProfitProduk::where('produk_id', $this->produk_id)
+            $profitRulesCache[$productCacheKey] = ProfitProduk::where('produk_id', $this->produk_id)
                 ->where('user_roles_id', $userRoleId)
                 ->first();
         }
 
-        $profitRule = $profitRulesCache[$cacheKey];
+        $profitRule = $profitRulesCache[$productCacheKey];
 
         // If no specific rule found, return base price
         if (!$profitRule) {
