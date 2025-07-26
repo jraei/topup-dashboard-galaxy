@@ -109,10 +109,7 @@ if (!isLowPowerDevice && window.performance) {
             />
 
             <!-- Session Popup -->
-            <SessionPopup 
-                :popup-image="popupImage" 
-                :popup-html="popupHtml"
-            />
+            <SessionPopup :popup-image="popupImage" :popup-html="popupHtml" />
         </div>
     </GuestLayout>
 </template>
