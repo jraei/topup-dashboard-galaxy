@@ -7,6 +7,7 @@ import StarfieldLayer from "@/Components/User/Banner/StarfieldLayer.vue";
 import FlashsaleSection from "@/Components/User/Flashsale/FlashsaleSection.vue";
 import TrendingProducts from "@/Components/User/Product/TrendingProducts.vue";
 import ProductCatalogSection from "@/Components/User/Product/ProductCatalogSection.vue";
+import SessionPopup from "@/Components/SessionPopup.vue";
 
 const props = defineProps({
     banners: {
@@ -36,6 +37,14 @@ const props = defineProps({
     catalogProducts: {
         type: Array,
         default: () => [],
+    },
+    popupImage: {
+        type: String,
+        default: null,
+    },
+    popupHtml: {
+        type: String,
+        default: null,
     },
 });
 
@@ -97,6 +106,12 @@ if (!isLowPowerDevice && window.performance) {
                 v-if="categories && categories.length > 0"
                 :categories="categories"
                 :products="catalogProducts"
+            />
+
+            <!-- Session Popup -->
+            <SessionPopup 
+                :popup-image="popupImage" 
+                :popup-html="popupHtml"
             />
         </div>
     </GuestLayout>

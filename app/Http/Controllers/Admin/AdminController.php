@@ -684,9 +684,15 @@ class AdminController extends Controller
 
         $providers = Provider::select('id', 'provider_name', 'api_username', 'api_key', 'base_url', 'api_private_key', 'balance', 'status')->get();
 
+        $popupSettings = [
+            'pop_up_image' => WebConfig::get('pop_up_image'),
+            'pop_up_html' => WebConfig::get('pop_up_html'),
+        ];
+
         return Inertia::render('Admin/WebConfigs', [
             'generalSettings' => $generalSettings,
             'appearanceSettings' => $appearanceSettings,
+            'popupSettings' => $popupSettings,
             'providers' => $providers,
         ]);
     }
@@ -869,6 +875,45 @@ class AdminController extends Controller
             'action' => 'Logo Deleted',
             'text' => ucfirst(str_replace('_', ' ', $field)) . ' berhasil dihapus!'
         ]);
+    }
+
+    /**
+     * Update popup settings
+     */
+    public function updatePopupSettings(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pop_up_image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120', // 5MB max
+            'pop_up_html' => 'nullable|string|max:10000',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator->errors());
+        }
+
+        try {
+            // Handle image upload
+            if ($request->hasFile('pop_up_image')) {
+                // Delete old image if exists
+                $oldImage = WebConfig::get('pop_up_image');
+                if ($oldImage && Storage::exists('public/' . $oldImage)) {
+                    Storage::delete('public/' . $oldImage);
+                }
+
+                // Store new image
+                $imagePath = $request->file('pop_up_image')->store('popups', 'public');
+                WebConfig::set('pop_up_image', $imagePath, 'Pop-up modal image', 'file');
+            }
+
+            // Update HTML content
+            if ($request->has('pop_up_html')) {
+                WebConfig::set('pop_up_html', $request->pop_up_html, 'Pop-up modal HTML content', 'html');
+            }
+
+            return to_route('admin.settings')->with('status', ['type' => 'success', 'action' => 'Success', 'text' => 'Pop-up settings updated successfully!']);
+        } catch (\Exception $e) {
+            return to_route('admin.settings')->with('status', ['type' => 'error', 'action' => 'Failed', 'text' => 'Failed to update popup settings: ' . $e->getMessage()]);
+        }
     }
 
     public function categories()

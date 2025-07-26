@@ -128,6 +128,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::patch('/settings/general', [AdminController::class, 'updateGeneralSettings'])->name('admin.settings.general');
     Route::patch('/settings/appearance', [AdminController::class, 'updateAppearance'])->name('admin.settings.appearance');
     Route::patch('/settings/api', [AdminController::class, 'updateApiConnections'])->name('admin.settings.api');
+    Route::patch('/settings/popup', [AdminController::class, 'updatePopupSettings'])->name('admin.settings.popup');
     Route::delete('/settings/logo/{field}', [AdminController::class, 'deleteLogo'])->name('admin.settings.logo.delete');
 
     // banner management

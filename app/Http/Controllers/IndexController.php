@@ -8,6 +8,7 @@ use App\Models\Banner;
 use App\Models\Produk;
 use App\Models\Kategori;
 use App\Models\Pembelian;
+use App\Models\WebConfig;
 use Illuminate\Http\Request;
 use App\Models\ItemThumbnail;
 use App\Models\FlashsaleEvent;
@@ -110,6 +111,8 @@ class IndexController extends Controller
             'popularProducts' => $popularProducts,
             'categories' => $categories,
             'catalogProducts' => $catalogProducts,
+            'popupImage' => WebConfig::get('pop_up_image'),
+            'popupHtml' => WebConfig::get('pop_up_html'),
         ]);
     }
 

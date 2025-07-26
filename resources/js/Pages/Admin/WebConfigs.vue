@@ -11,6 +11,7 @@ const props = defineProps({
     generalSettings: Object,
     appearanceSettings: Object,
     providers: Array,
+    popupSettings: Object,
     errors: Object,
 });
 
@@ -23,6 +24,7 @@ const tabs = [
     { id: "appearance", name: "Appearance", icon: "palette" },
     { id: "api", name: "API Connections", icon: "link" },
     { id: "security", name: "Security", icon: "shield" },
+    { id: "popup", name: "Pop Up", icon: "popup" },
 ];
 
 const setActiveTab = (tabId) => {
@@ -103,6 +105,14 @@ const securityForm = useForm({
     password_expiry_days: 90,
 });
 
+// Popup form
+const popupForm = useForm({
+    pop_up_image: null,
+    pop_up_html: props.popupSettings?.pop_up_html || "",
+});
+
+const popupImagePreview = ref(props.popupSettings?.pop_up_image || null);
+
 // Character counters for SEO fields
 const metaTitleCount = computed(() => generalForm.meta_title.length);
 const metaDescriptionCount = computed(
@@ -135,6 +145,14 @@ const submitSecuritySettings = () => {
     showToast("Success", "Security settings updated successfully", "success");
 };
 
+const submitPopupSettings = () => {
+    popupForm._method = "patch";
+    
+    router.post(route("admin.settings.popup"), popupForm, {
+        preserveScroll: true,
+    });
+};
+
 const imagePreviews = ref({
     logo_header: props.appearanceSettings?.logo_header ?? null,
     logo_footer: props.appearanceSettings?.logo_footer ?? null,
@@ -161,6 +179,27 @@ const handleLogoUpload = (event, field) => {
     if (file) {
         appearanceForm[field] = file;
         imagePreviews.value[field] = URL.createObjectURL(file);
+    }
+};
+
+const handlePopupImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast("Error", "Please upload a valid image file (JPEG, PNG, WebP)", "error");
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast("Error", "Image file must be less than 5MB", "error");
+            return;
+        }
+        
+        popupForm.pop_up_image = file;
+        popupImagePreview.value = URL.createObjectURL(file);
     }
 };
 
@@ -1682,6 +1721,91 @@ const deleteLogo = (field) => {
                                         >Saving...</span
                                     >
                                     <span v-else>Save Security Settings</span>
+                                </PrimaryButton>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Pop Up Settings Tab -->
+                <div
+                    v-if="activeTab === 'popup'"
+                    class="space-y-8 transition-all duration-300 animate-fade-in"
+                >
+                    <div
+                        class="p-6 border border-gray-700 rounded-lg shadow-lg bg-gray-800/70 backdrop-blur-sm"
+                    >
+                        <h3 class="mb-4 text-lg font-medium text-white">
+                            Session Pop-up Settings
+                        </h3>
+                        <p class="mb-6 text-gray-400">
+                            Configure the pop-up that appears once per session for new visitors.
+                        </p>
+                        
+                        <form @submit.prevent="submitPopupSettings">
+                            <div class="space-y-6">
+                                <!-- Image Upload -->
+                                <div class="space-y-4">
+                                    <InputLabel value="Pop-up Image" />
+                                    <div class="space-y-3">
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                            @change="handlePopupImageUpload"
+                                            class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary_color file:text-white hover:file:bg-primary_hover file:cursor-pointer border border-gray-600 rounded-lg bg-gray-700/70"
+                                        />
+                                        <p class="text-xs text-gray-500">
+                                            Supported formats: JPEG, PNG, WebP. Max size: 5MB
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Image Preview -->
+                                    <div v-if="popupImagePreview" class="mt-4">
+                                        <p class="mb-2 text-sm text-gray-400">Preview:</p>
+                                        <img 
+                                            :src="popupImagePreview.startsWith('http') ? popupImagePreview : `/storage/${popupImagePreview}`"
+                                            alt="Popup Preview"
+                                            class="w-full max-w-md h-32 object-cover rounded-lg border border-gray-600"
+                                        />
+                                    </div>
+                                    
+                                    <InputError :message="popupForm.errors.pop_up_image" class="mt-1" />
+                                </div>
+
+                                <!-- HTML Content -->
+                                <div class="space-y-2">
+                                    <InputLabel for="pop_up_html" value="Pop-up Content (HTML)" />
+                                    <textarea
+                                        id="pop_up_html"
+                                        v-model="popupForm.pop_up_html"
+                                        rows="8"
+                                        class="block w-full mt-1 text-white border-gray-600 bg-gray-700/70 rounded-lg"
+                                        placeholder="<h2>Welcome to our website!</h2><p>Thank you for visiting us. Check out our latest offers!</p>"
+                                    ></textarea>
+                                    <p class="text-xs text-gray-500">
+                                        You can use HTML tags for formatting. Example: &lt;h2&gt;Title&lt;/h2&gt;&lt;p&gt;Content&lt;/p&gt;
+                                    </p>
+                                    <InputError :message="popupForm.errors.pop_up_html" class="mt-1" />
+                                </div>
+
+                                <!-- HTML Preview -->
+                                <div v-if="popupForm.pop_up_html" class="space-y-2">
+                                    <InputLabel value="Content Preview:" />
+                                    <div 
+                                        class="p-4 border border-gray-600 rounded-lg bg-gray-700/50"
+                                        v-html="popupForm.pop_up_html"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-6">
+                                <PrimaryButton
+                                    type="submit"
+                                    :disabled="popupForm.processing"
+                                    class="transition-colors duration-300 bg-indigo-600 hover:bg-indigo-700"
+                                >
+                                    <span v-if="popupForm.processing">Saving...</span>
+                                    <span v-else>Save Pop-up Settings</span>
                                 </PrimaryButton>
                             </div>
                         </form>
