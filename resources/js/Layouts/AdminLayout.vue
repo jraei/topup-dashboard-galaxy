@@ -7,7 +7,7 @@ import Dropdown from "@/Components/Dropdown.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import Swal from "../Components/Swal.vue";
 
-import { ShieldUser } from "lucide-vue-next";
+import { ShieldUser, BanknoteArrowUp } from "lucide-vue-next";
 
 const showingNavigationDropdown = ref(false);
 const isSidebarCollapsed = ref(false);
@@ -190,7 +190,8 @@ const toggleDropdown = (dropdown) => {
                                 'w-full flex items-center justify-between rounded-lg p-3 text-base font-medium transition-all duration-200',
                                 route().current('categories.index') ||
                                 route().current('products.index') ||
-                                route().current('services.index')
+                                route().current('services.index') ||
+                                route().current('paket-layanans.index')
                                     ? 'bg-primary text-white shadow-glow-primary'
                                     : 'text-gray-300 hover:bg-dark-lighter hover:text-white',
                             ]"
@@ -280,6 +281,48 @@ const toggleDropdown = (dropdown) => {
                             >
                                 <span>Package</span>
                             </Link>
+                        </div>
+                    </div>
+                    <!-- Profit Settings Dropdown -->
+                    <div>
+                        <button
+                            @click="toggleDropdown('profits')"
+                            :class="[
+                                'w-full flex items-center justify-between rounded-lg p-3 text-base font-medium transition-all duration-200',
+                                route().current('profit-produks.index') ||
+                                route().current('profit-paket-layanans.index')
+                                    ? 'bg-primary text-white shadow-glow-primary'
+                                    : 'text-gray-300 hover:bg-dark-lighter hover:text-white',
+                            ]"
+                        >
+                            <div class="flex items-center">
+                                <BanknoteArrowUp />
+                                <span v-if="!isSidebarCollapsed" class="ml-3"
+                                    >Profits</span
+                                >
+                            </div>
+                            <svg
+                                v-if="!isSidebarCollapsed"
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4 ml-2 transition-transform duration-200"
+                                :class="{ 'rotate-180': dropdowns.profits }"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                />
+                            </svg>
+                        </button>
+
+                        <div
+                            v-if="!isSidebarCollapsed && dropdowns.profits"
+                            class="pl-6 mt-1 space-y-1 transition-all duration-200"
+                        >
                             <Link
                                 :href="route('profit-produks.index')"
                                 :class="[
@@ -289,10 +332,24 @@ const toggleDropdown = (dropdown) => {
                                         : 'text-gray-300 hover:text-white',
                                 ]"
                             >
-                                <span>Profit Settings</span>
+                                <span>Profit Products</span>
+                            </Link>
+                            <Link
+                                :href="route('profit-paket-layanans.index')"
+                                :class="[
+                                    'flex items-center rounded-lg p-2 text-sm font-medium transition-all duration-200',
+                                    route().current(
+                                        'profit-paket-layanans.index'
+                                    )
+                                        ? 'text-primary'
+                                        : 'text-gray-300 hover:text-white',
+                                ]"
+                            >
+                                <span>Profit Packages</span>
                             </Link>
                         </div>
                     </div>
+
                     <!-- Produk Input Option Fields Dropdown -->
                     <div>
                         <button

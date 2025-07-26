@@ -44,7 +44,7 @@ const resetForm = () => {
 // Handle select all checkbox
 const handleSelectAll = () => {
     if (selectAll.value) {
-        formData.value.package_ids = props.packages.map(p => p.id);
+        formData.value.package_ids = props.packages.map((p) => p.id);
     } else {
         formData.value.package_ids = [];
     }
@@ -52,7 +52,8 @@ const handleSelectAll = () => {
 
 // Handle individual package selection
 const handlePackageSelection = () => {
-    selectAll.value = formData.value.package_ids.length === props.packages.length;
+    selectAll.value =
+        formData.value.package_ids.length === props.packages.length;
 };
 
 // Close modal
@@ -99,11 +100,11 @@ const submitBulkAssign = async () => {
     } catch (error) {
         console.error("Error in bulk assignment:", error);
         let errorMessage = "Failed to create bulk profit settings";
-        
+
         if (error.response?.data?.message) {
             errorMessage = error.response.data.message;
         }
-        
+
         alert(errorMessage);
     } finally {
         isLoading.value = false;
@@ -152,7 +153,7 @@ const submitBulkAssign = async () => {
                     <label class="block mb-3 text-sm font-medium text-gray-300">
                         Select Service Packages
                     </label>
-                    
+
                     <!-- Select All Checkbox -->
                     <div class="mb-3">
                         <label class="flex items-center">
@@ -160,53 +161,62 @@ const submitBulkAssign = async () => {
                                 type="checkbox"
                                 v-model="selectAll"
                                 @change="handleSelectAll"
-                                class="rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                                class="border-gray-300 rounded shadow-sm text-primary focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                             />
-                            <span class="ml-2 text-sm text-gray-300">Select All Packages</span>
+                            <span class="ml-2 text-sm text-gray-300"
+                                >Select All Packages</span
+                            >
                         </label>
                     </div>
 
                     <!-- Package List -->
-                    <div class="max-h-48 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-dark-sidebar">
+                    <div
+                        class="p-3 overflow-y-auto border border-gray-700 rounded-lg max-h-48 bg-dark-sidebar"
+                    >
                         <div
-                            v-for="package in packages"
-                            :key="package.id"
-                            class="flex items-start space-x-3 py-2"
+                            v-for="pkg in packages"
+                            :key="pkg.id"
+                            class="flex items-start py-2 space-x-3"
                         >
                             <input
                                 type="checkbox"
-                                :id="`package-${package.id}`"
-                                :value="package.id"
+                                :id="`package-${pkg.id}`"
+                                :value="pkg.id"
                                 v-model="formData.package_ids"
                                 @change="handlePackageSelection"
-                                class="mt-1 rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                                class="mt-1 border-gray-300 rounded shadow-sm text-primary focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                             />
                             <label
-                                :for="`package-${package.id}`"
+                                :for="`package-${pkg.id}`"
                                 class="flex-1 cursor-pointer"
                             >
                                 <div class="flex items-center space-x-2">
                                     <img
-                                        v-if="package.produk?.thumbnail"
-                                        :src="`/storage/${package.produk.thumbnail}`"
-                                        :alt="package.judul_paket"
+                                        v-if="pkg.produk?.thumbnail"
+                                        :src="`/storage/${pkg.produk.thumbnail}`"
+                                        :alt="pkg.judul_paket"
                                         class="object-cover w-8 h-8 rounded-sm"
                                     />
                                     <div>
-                                        <p class="text-sm font-medium text-white">
-                                            {{ package.judul_paket }}
+                                        <p
+                                            class="text-sm font-medium text-white"
+                                        >
+                                            {{ pkg.judul_paket }}
                                         </p>
                                         <p class="text-xs text-gray-400">
-                                            {{ package.produk?.nama || 'No Product' }}
+                                            {{
+                                                pkg.produk?.nama || "No Product"
+                                            }}
                                         </p>
                                     </div>
                                 </div>
                             </label>
                         </div>
                     </div>
-                    
+
                     <p class="mt-2 text-xs text-gray-400">
-                        {{ formData.package_ids.length }} of {{ packages.length }} packages selected
+                        {{ formData.package_ids.length }} of
+                        {{ packages.length }} packages selected
                     </p>
                 </div>
 
@@ -236,7 +246,7 @@ const submitBulkAssign = async () => {
                 </div>
 
                 <!-- Profit Settings -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <!-- Type Selection -->
                     <div>
                         <label
@@ -268,9 +278,7 @@ const submitBulkAssign = async () => {
                                 v-if="formData.type === 'percent'"
                                 >(%)</span
                             >
-                            <span
-                                class="text-xs text-gray-400"
-                                v-else
+                            <span class="text-xs text-gray-400" v-else
                                 >(x)</span
                             >
                         </label>
@@ -287,7 +295,9 @@ const submitBulkAssign = async () => {
                 </div>
 
                 <!-- Warning Note -->
-                <div class="p-4 border border-amber-500/30 rounded-lg bg-amber-500/10">
+                <div
+                    class="p-4 border rounded-lg border-amber-500/30 bg-amber-500/10"
+                >
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg
@@ -308,8 +318,9 @@ const submitBulkAssign = async () => {
                                 Note
                             </h3>
                             <p class="mt-1 text-sm text-amber-200">
-                                This will create profit settings for all selected packages. 
-                                Existing settings for the same package+role combination will be skipped.
+                                This will create profit settings for all
+                                selected packages. Existing settings for the
+                                same package+role combination will be skipped.
                             </p>
                         </div>
                     </div>
@@ -326,7 +337,9 @@ const submitBulkAssign = async () => {
                     </button>
                     <button
                         type="submit"
-                        :disabled="isLoading || formData.package_ids.length === 0"
+                        :disabled="
+                            isLoading || formData.package_ids.length === 0
+                        "
                         class="px-4 py-2 text-white rounded-lg bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <span v-if="isLoading">Creating...</span>

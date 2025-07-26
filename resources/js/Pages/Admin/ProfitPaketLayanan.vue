@@ -19,7 +19,9 @@ const props = defineProps({
 });
 
 // Data
-const profitPaketLayanans = computed(() => props.profitPaketLayanans.data || []);
+const profitPaketLayanans = computed(
+    () => props.profitPaketLayanans.data || []
+);
 const services = ref([]);
 
 const { proxy } = getCurrentInstance();
@@ -32,10 +34,13 @@ const columns = [
         label: "Service Package",
         format: (_, item) => {
             const product = item.paket_layanan?.produk;
-            const packageName = item.paket_layanan?.judul_paket || 'Unknown Package';
-            const productName = product?.nama || 'No Product';
-            const thumbnail = product?.thumbnail ? `/storage/${product.thumbnail}` : '/img/placeholder.png';
-            
+            const packageName =
+                item.paket_layanan?.judul_paket || "Unknown Package";
+            const productName = product?.nama || "No Product";
+            const thumbnail = product?.thumbnail
+                ? `/storage/${product.thumbnail}`
+                : "/img/placeholder.png";
+
             return `
                 <div class="flex items-center space-x-2">
                     <img src="${thumbnail}" alt="${packageName}" class="object-cover w-8 h-8 rounded-sm">
@@ -91,15 +96,28 @@ const showBulkModal = ref(false);
 const handleView = async (item) => {
     isLoading.value = true;
     selectedProfitPaketLayanan.value = { ...item, loading: true };
+
+    currentProfitPaketLayanan.value = {
+        id: item.id,
+        paket_layanan_id: item.paket_layanan_id,
+        user_roles_id: item.user_roles_id,
+        type: item.type,
+        value: item.value,
+    };
+
     showViewModal.value = true;
 
     try {
-        const response = await axios.get(route("profit-paket-layanans.show", item.id));
+        const response = await axios.get(
+            route("profit-paket-layanans.show", item.id)
+        );
         selectedProfitPaketLayanan.value = response.data.profitPaketLayanan;
 
         // Load services for this package to preview pricing
         if (selectedProfitPaketLayanan.value.paket_layanan_id) {
-            loadServicesForPackage(selectedProfitPaketLayanan.value.paket_layanan_id);
+            loadServicesForPackage(
+                selectedProfitPaketLayanan.value.paket_layanan_id
+            );
         }
     } catch (error) {
         console.error("Error fetching profit package details:", error);
@@ -171,15 +189,22 @@ const closeViewModal = () => {
 
 const saveProfitPaketLayanan = () => {
     if (formMode.value === "add") {
-        router.post(route("profit-paket-layanans.store"), currentProfitPaketLayanan.value, {
-            preserveScroll: true,
-            onSuccess: () => {
-                closeForm();
-            },
-        });
+        router.post(
+            route("profit-paket-layanans.store"),
+            currentProfitPaketLayanan.value,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    closeForm();
+                },
+            }
+        );
     } else {
         router.put(
-            route("profit-paket-layanans.update", currentProfitPaketLayanan.value.id),
+            route(
+                "profit-paket-layanans.update",
+                currentProfitPaketLayanan.value.id
+            ),
             currentProfitPaketLayanan.value,
             {
                 preserveScroll: true,
@@ -445,18 +470,22 @@ watch(
                             </label>
                             <select
                                 id="paket_layanan_id"
-                                v-model="currentProfitPaketLayanan.paket_layanan_id"
+                                v-model="
+                                    currentProfitPaketLayanan.paket_layanan_id
+                                "
                                 class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
                                 required
                             >
                                 <option value="">Select Package</option>
                                 <option
-                                    v-for="package in packages"
-                                    :key="package.id"
-                                    :value="package.id"
+                                    v-for="pkg in packages"
+                                    :key="pkg.id"
+                                    :value="pkg.id"
                                 >
-                                    {{ package.judul_paket }} 
-                                    <span v-if="package.produk">({{ package.produk.nama }})</span>
+                                    {{ pkg.judul_paket }}
+                                    <span v-if="pkg.produk"
+                                        >({{ pkg.produk.nama }})</span
+                                    >
                                 </option>
                             </select>
                         </div>
@@ -471,7 +500,9 @@ watch(
                             </label>
                             <select
                                 id="user_roles_id"
-                                v-model="currentProfitPaketLayanan.user_roles_id"
+                                v-model="
+                                    currentProfitPaketLayanan.user_roles_id
+                                "
                                 class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
                                 required
                             >
@@ -486,7 +517,9 @@ watch(
                             </select>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                        <div
+                            class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
+                        >
                             <!-- Type Selection -->
                             <div>
                                 <label
@@ -502,7 +535,9 @@ watch(
                                     required
                                 >
                                     <option value="percent">Percentage</option>
-                                    <option value="multiplier">Multiplier</option>
+                                    <option value="multiplier">
+                                        Multiplier
+                                    </option>
                                 </select>
                             </div>
 
@@ -515,12 +550,13 @@ watch(
                                     Value
                                     <span
                                         class="text-xs text-gray-400"
-                                        v-if="currentProfitPaketLayanan.type === 'percent'"
+                                        v-if="
+                                            currentProfitPaketLayanan.type ===
+                                            'percent'
+                                        "
                                         >(%)</span
                                     >
-                                    <span
-                                        class="text-xs text-gray-400"
-                                        v-else
+                                    <span class="text-xs text-gray-400" v-else
                                         >(x)</span
                                     >
                                 </label>
@@ -537,24 +573,59 @@ watch(
                         </div>
 
                         <!-- Price Preview for current package and role -->
-                        <div v-if="services && services.pricing && services.pricing.length > 0" class="mt-4">
+                        <div
+                            v-if="
+                                services &&
+                                services.pricing &&
+                                services.pricing.length > 0
+                            "
+                            class="mt-4"
+                        >
                             <h4 class="mb-2 text-sm font-medium text-gray-300">
                                 Price Preview (Current Settings)
                             </h4>
-                            <div class="p-3 border border-gray-700 rounded-lg bg-dark-sidebar">
+                            <div
+                                class="p-3 border border-gray-700 rounded-lg bg-dark-sidebar"
+                            >
                                 <div
-                                    v-for="service in services.pricing.slice(0, 3)"
+                                    v-for="service in services.pricing.slice(
+                                        0,
+                                        3
+                                    )"
                                     :key="service.id"
-                                    class="flex justify-between items-center py-1 text-sm"
+                                    class="flex items-center justify-between py-1 text-sm"
                                 >
-                                    <span class="text-gray-300">{{ service.name }}</span>
+                                    <span class="text-gray-300">{{
+                                        service.name
+                                    }}</span>
                                     <div class="flex space-x-2">
-                                        <span class="text-gray-400">Base: Rp {{ parseInt(service.base_price).toLocaleString() }}</span>
-                                        <span class="text-primary font-medium">→ Rp {{ parseInt(calculatePrice(service.base_price)).toLocaleString() }}</span>
+                                        <span class="text-gray-400"
+                                            >Base: Rp
+                                            {{
+                                                parseInt(
+                                                    service.base_price
+                                                ).toLocaleString()
+                                            }}</span
+                                        >
+                                        <span class="font-medium text-primary"
+                                            >→ Rp
+                                            {{
+                                                parseInt(
+                                                    calculatePrice(
+                                                        service.base_price
+                                                    )
+                                                ).toLocaleString()
+                                            }}</span
+                                        >
                                     </div>
                                 </div>
-                                <div v-if="services.pricing.length > 3" class="text-xs text-gray-400 mt-1">
-                                    ... and {{ services.pricing.length - 3 }} more services
+                                <div
+                                    v-if="services.pricing.length > 3"
+                                    class="mt-1 text-xs text-gray-400"
+                                >
+                                    ... and
+                                    {{ services.pricing.length - 3 }} more
+                                    services
                                 </div>
                             </div>
                         </div>
@@ -618,52 +689,113 @@ watch(
                     </button>
                 </div>
 
-                <div v-if="isLoading" class="text-center py-8">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p class="text-gray-400 mt-2">Loading details...</p>
+                <div v-if="isLoading" class="py-8 text-center">
+                    <div
+                        class="inline-block w-8 h-8 border-b-2 rounded-full animate-spin border-primary"
+                    ></div>
+                    <p class="mt-2 text-gray-400">Loading details...</p>
                 </div>
 
                 <div v-else-if="selectedProfitPaketLayanan" class="space-y-6">
                     <!-- Basic Info -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div class="space-y-4">
                             <div>
-                                <h4 class="text-sm font-medium text-gray-300 mb-1">Service Package</h4>
-                                <p class="text-white">{{ selectedProfitPaketLayanan.paket_layanan?.judul_paket }}</p>
-                                <p class="text-gray-400 text-sm">{{ selectedProfitPaketLayanan.paket_layanan?.produk?.nama }}</p>
+                                <h4
+                                    class="mb-1 text-sm font-medium text-gray-300"
+                                >
+                                    Service Package
+                                </h4>
+                                <p class="text-white">
+                                    {{
+                                        selectedProfitPaketLayanan.paket_layanan
+                                            ?.judul_paket
+                                    }}
+                                </p>
+                                <p class="text-sm text-gray-400">
+                                    {{
+                                        selectedProfitPaketLayanan.paket_layanan
+                                            ?.produk?.nama
+                                    }}
+                                </p>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-300 mb-1">User Role</h4>
-                                <p class="text-white">{{ selectedProfitPaketLayanan.user_role?.display_name }}</p>
+                                <h4
+                                    class="mb-1 text-sm font-medium text-gray-300"
+                                >
+                                    User Role
+                                </h4>
+                                <p class="text-white">
+                                    {{
+                                        selectedProfitPaketLayanan.user_role
+                                            ?.display_name
+                                    }}
+                                </p>
                             </div>
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <h4 class="text-sm font-medium text-gray-300 mb-1">Profit Type</h4>
-                                <span :class="[
-                                    'px-3 py-1 rounded-full text-sm font-medium',
-                                    selectedProfitPaketLayanan.type === 'percent' 
-                                        ? 'bg-blue-500/20 text-blue-400' 
-                                        : 'bg-purple-500/20 text-purple-400'
-                                ]">
-                                    {{ selectedProfitPaketLayanan.type === 'percent' ? 'Percentage' : 'Multiplier' }}
+                                <h4
+                                    class="mb-1 text-sm font-medium text-gray-300"
+                                >
+                                    Profit Type
+                                </h4>
+                                <span
+                                    :class="[
+                                        'px-3 py-1 rounded-full text-sm font-medium',
+                                        selectedProfitPaketLayanan.type ===
+                                        'percent'
+                                            ? 'bg-blue-500/20 text-blue-400'
+                                            : 'bg-purple-500/20 text-purple-400',
+                                    ]"
+                                >
+                                    {{
+                                        selectedProfitPaketLayanan.type ===
+                                        "percent"
+                                            ? "Percentage"
+                                            : "Multiplier"
+                                    }}
                                 </span>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-300 mb-1">Value</h4>
-                                <p class="text-white text-lg font-medium">
-                                    {{ selectedProfitPaketLayanan.value }}{{ selectedProfitPaketLayanan.type === 'percent' ? '%' : 'x' }}
+                                <h4
+                                    class="mb-1 text-sm font-medium text-gray-300"
+                                >
+                                    Value
+                                </h4>
+                                <p class="text-lg font-medium text-white">
+                                    {{ selectedProfitPaketLayanan.value
+                                    }}{{
+                                        selectedProfitPaketLayanan.type ===
+                                        "percent"
+                                            ? "%"
+                                            : "x"
+                                    }}
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Service Price Preview -->
-                    <div v-if="services && services.pricing && services.pricing.length > 0">
-                        <h4 class="text-lg font-medium text-white mb-4">Service Price Preview</h4>
-                        <div class="border border-gray-700 rounded-lg overflow-hidden">
-                            <div class="bg-dark-lighter px-4 py-2 border-b border-gray-700">
-                                <div class="grid grid-cols-4 gap-4 text-sm font-medium text-gray-300">
+                    <div
+                        v-if="
+                            services &&
+                            services.pricing &&
+                            services.pricing.length > 0
+                        "
+                    >
+                        <h4 class="mb-4 text-lg font-medium text-white">
+                            Service Price Preview
+                        </h4>
+                        <div
+                            class="overflow-hidden border border-gray-700 rounded-lg"
+                        >
+                            <div
+                                class="px-4 py-2 border-b border-gray-700 bg-dark-lighter"
+                            >
+                                <div
+                                    class="grid grid-cols-4 gap-4 text-sm font-medium text-gray-300"
+                                >
                                     <span>Service</span>
                                     <span>Base Price</span>
                                     <span>Final Price</span>
@@ -678,17 +810,39 @@ watch(
                                 >
                                     <div class="grid grid-cols-4 gap-4 text-sm">
                                         <div>
-                                            <p class="text-white font-medium">{{ service.name }}</p>
-                                            <p class="text-gray-400 text-xs">{{ service.code }}</p>
+                                            <p class="font-medium text-white">
+                                                {{ service.name }}
+                                            </p>
+                                            <p class="text-xs text-gray-400">
+                                                {{ service.code }}
+                                            </p>
                                         </div>
                                         <div class="text-gray-300">
-                                            Rp {{ parseInt(service.base_price).toLocaleString() }}
+                                            Rp
+                                            {{
+                                                parseInt(
+                                                    service.base_price
+                                                ).toLocaleString()
+                                            }}
                                         </div>
-                                        <div class="text-primary font-medium">
-                                            Rp {{ parseInt(calculatePrice(service.base_price)).toLocaleString() }}
+                                        <div class="font-medium text-primary">
+                                            Rp
+                                            {{
+                                                parseInt(
+                                                    calculatePrice(
+                                                        service.base_price
+                                                    )
+                                                ).toLocaleString()
+                                            }}
                                         </div>
                                         <div class="text-secondary">
-                                            +{{ parseInt(calculatePrice(service.base_price) - service.base_price).toLocaleString() }}
+                                            +{{
+                                                parseInt(
+                                                    calculatePrice(
+                                                        service.base_price
+                                                    ) - service.base_price
+                                                ).toLocaleString()
+                                            }}
                                         </div>
                                     </div>
                                 </div>

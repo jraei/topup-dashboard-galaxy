@@ -31,7 +31,7 @@ const fetchPreview = debounce(async () => {
     error.value = null;
 
     try {
-        const response = await axios.get(
+        const response = await axios.post(
             route("profit-produks.preview", {
                 produk_id: selectedProductId.value,
             })

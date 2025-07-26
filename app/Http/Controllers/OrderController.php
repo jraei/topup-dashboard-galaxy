@@ -18,6 +18,7 @@ use App\Models\FlashsaleEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\MoogoldController;
+use App\Http\Controllers\Admin\DuitkuController;
 use App\Http\Controllers\Admin\TripayController;
 use App\Http\Controllers\Admin\DigiflazzController;
 use App\Http\Controllers\Admin\CheckUsernameController;
@@ -747,20 +748,40 @@ class OrderController extends Controller
                     'payment_link' => $paymentData['checkout_url'],
                     'expired_time' => $paymentData['expired_time'],
                 ]);
+            } else if ($paymentMethodDynamic->payment_provider === 'Duitku') {
+                $duitku = new DuitkuController();
+                $response = $duitku->create($order_id, $paymentInfo['methodCode'], $totalPrice, ['id' => Auth::user()->id], route('order.invoice', $order_id));
+
+                $data = json_decode($response);
+
+                if ($data && $data->statusCode == 00) {
+                    $pembayaran->update([
+                        'payment_reference' => $data->reference,
+                        'qr_url' => $data->qrString ?? null,
+                        'pay_code' => $data->vaNumber ?? null,
+                        'payment_link' => $data->paymentUrl,
+                    ]);
+                } else {
+                    logger()->error("Failed to create Duitku payment: " . $response);
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Gagal membuat pembayaran, silahkan hubungi admin",
+                    ]);
+                }
             }
 
             // Kirim notifikasi whatsapp ke user
             $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat, harap selesaikan pembayaran*
 
-*Produk* : ' . $itemDesc . '
-*Order ID* : ' . $order_id . '
-*Target* : ' . $target . '
-*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-*Status* : Menunggu Pembayaran
-*Link Pembayaran* : ' . route('order.invoice', $order_id) . '
+            *Produk* : ' . $itemDesc . '
+            *Order ID* : ' . $order_id . '
+            *Target* : ' . $target . '
+            *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+            *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+            *Status* : Menunggu Pembayaran
+            *Link Pembayaran* : ' . route('order.invoice', $order_id) . '
 
-*Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+            *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 
             $result = json_decode($res);
             if ($result->statusCode == 200) {
@@ -772,14 +793,14 @@ class OrderController extends Controller
             // Kirim notifikasi whatsapp ke user
             $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat*
 
-*Produk* : ' . $itemDesc . '
-*Order ID* : ' . $order_id . '
-*Target* : ' . $target . '
-*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-*Status* : Berhasil dibayar
+            *Produk* : ' . $itemDesc . '
+            *Order ID* : ' . $order_id . '
+            *Target* : ' . $target . '
+            *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+            *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+            *Status* : Berhasil dibayar
 
-*Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+            *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 
 
             $result = json_decode($res);
@@ -793,8 +814,6 @@ class OrderController extends Controller
         // Update stok flashsale dan voucher
         if ($flashsaleItem) $this->reduceFlashsaleStock($request->flashsale_item_id, $quantity);
         if ($voucher) $this->reduceVoucherStock($request->voucher_code);
-
-
 
         return response()->json([
             'status' => 'success',

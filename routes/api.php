@@ -5,8 +5,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\CalculatorController;
-use App\Http\Controllers\Admin\CheckUsernameController;
 use App\Http\Controllers\Admin\DigiflazzController;
+use App\Http\Controllers\Admin\CheckUsernameController;
+use App\Http\Controllers\Admin\DuitkuCallbackController;
 use App\Http\Controllers\Admin\TripayCallbackController;
 
 /*
@@ -52,4 +53,5 @@ Route::get('/search/products', function (Request $request) {
 // payment gateway callback handle
 Route::prefix('callback')->group(function () {
     Route::post('/tripay', [TripayCallbackController::class, 'handle']);
+    Route::post('/duitku', [DuitkuCallbackController::class, 'handle']);
 });

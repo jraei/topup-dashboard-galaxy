@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 import CosmicParticles from "@/Components/User/Flashsale/CosmicParticles.vue";
 import { useToast } from "@/Composables/useToast";
@@ -11,6 +11,8 @@ import {
     Copy,
     Check,
 } from "lucide-vue-next";
+
+import QRCode from "qrcode";
 
 const props = defineProps({
     order: Object,
@@ -135,7 +137,23 @@ const redirectToPayment = () => {
     }
 };
 
+const qrImage = ref(null);
+
+const generateQRImage = async () => {
+    if (!props.payment?.qr_url) return;
+
+    const isUrl = props.payment.qr_url.startsWith("http");
+
+    if (isUrl) {
+        qrImage.value = props.payment.qr_url;
+    } else {
+        // Convert QR string to data:image/png;base64
+        qrImage.value = await QRCode.toDataURL(props.payment.qr_url);
+    }
+};
+
 onMounted(() => {
+    generateQRImage();
     updateCountdown();
     countdownInterval.value = setInterval(updateCountdown, 1000);
 });
@@ -145,6 +163,8 @@ onUnmounted(() => {
         clearInterval(countdownInterval.value);
     }
 });
+
+watch(() => props.payment?.qr_url, generateQRImage);
 </script>
 
 <template>
@@ -681,7 +701,8 @@ onUnmounted(() => {
                             class="flex flex-col items-center"
                         >
                             <img
-                                :src="payment.qr_url"
+                                v-if="qrImage"
+                                :src="qrImage"
                                 alt="QR Code"
                                 class="object-contain w-48 h-48 p-4 bg-white rounded-lg"
                                 loading="lazy"

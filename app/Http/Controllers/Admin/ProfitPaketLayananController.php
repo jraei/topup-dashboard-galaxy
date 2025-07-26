@@ -32,7 +32,7 @@ class ProfitPaketLayananController extends Controller
         }
 
         // Start query
-        $query = ProfitPaketLayanan::with(['paketLayanan', 'user_role']);
+        $query = ProfitPaketLayanan::with(['paketLayanan', 'user_role', 'paketLayanan.produk']);
 
         // Apply filters
         if ($search) {
