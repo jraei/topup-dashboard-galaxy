@@ -1,17 +1,17 @@
 module.exports = {
     "primary": {
-        "DEFAULT": "#9b87f5",
-        "hover": "#a897f6",
-        "text": "#ffffff"
+        "DEFAULT": "#6366F1",
+        "hover": "#818CF8",
+        "text": "#F9FAFB"
     },
     "secondary": {
-        "DEFAULT": "#33C3F0",
-        "hover": "#5ed4f5",
-        "text": "#ffffff"
+        "DEFAULT": "#8B5CF6",
+        "hover": "#A78BFA",
+        "text": "#E5E7EB"
     },
-    "header_background": "#000000",
-    "footer_background": "#000000",
-    "content_background": "#000000",
+    "header_background": "#111827",
+    "footer_background": "#111827",
+    "content_background": "#1F2937",
     "dark": {
         "DEFAULT": "#070c16",
         "lighter": "#111927",
