@@ -223,27 +223,42 @@ const confirmOrder = async () => {
                             </h4>
                             <div class="px-3 py-2 rounded-lg bg-dark-lighter">
                                 <div class="grid grid-cols-2 gap-2">
-                                    <div class="text-xs text-gray-400">
-                                        Account ID:
-                                    </div>
-                                    <div
-                                        class="text-xs font-semibold text-white"
-                                    >
-                                        {{ orderData?.user_id }}
-                                    </div>
+                                    <!-- Dynamic Input Fields (for manual products) -->
+                                    <template v-if="orderData?.dynamic_inputs && Object.keys(orderData.dynamic_inputs).length > 0">
+                                        <template v-for="(value, key) in orderData.dynamic_inputs" :key="key">
+                                            <div class="text-xs text-gray-400">
+                                                {{ key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}:
+                                            </div>
+                                            <div class="text-xs font-semibold text-white">
+                                                {{ value }}
+                                            </div>
+                                        </template>
+                                    </template>
 
-                                    <div
-                                        v-if="orderData.server_id"
-                                        class="text-xs text-gray-400"
-                                    >
-                                        Server ID:
-                                    </div>
-                                    <div
-                                        v-if="orderData.server_id"
-                                        class="text-xs font-semibold text-white"
-                                    >
-                                        {{ orderData.server_id }}
-                                    </div>
+                                    <!-- Default Fields (for automatic products) -->
+                                    <template v-else>
+                                        <div class="text-xs text-gray-400">
+                                            Account ID:
+                                        </div>
+                                        <div
+                                            class="text-xs font-semibold text-white"
+                                        >
+                                            {{ orderData?.user_id }}
+                                        </div>
+
+                                        <div
+                                            v-if="orderData.server_id"
+                                            class="text-xs text-gray-400"
+                                        >
+                                            Server ID:
+                                        </div>
+                                        <div
+                                            v-if="orderData.server_id"
+                                            class="text-xs font-semibold text-white"
+                                        >
+                                            {{ orderData.server_id }}
+                                        </div>
+                                    </template>
 
                                     <div class="text-xs text-gray-400">
                                         Account Name:

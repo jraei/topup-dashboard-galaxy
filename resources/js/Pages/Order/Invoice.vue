@@ -433,33 +433,48 @@ watch(() => props.payment?.qr_url, generateQRImage);
                                 </div>
 
                                 <div class="space-y-1">
-                                    <div v-if="order.nickname" class="flex">
-                                        <span class="w-24 text-sm text-gray-400"
-                                            >Nickname</span
-                                        >
-                                        <span
-                                            class="text-sm font-medium text-white"
-                                            >: {{ order.nickname }}</span
-                                        >
-                                    </div>
-                                    <div class="flex">
-                                        <span class="w-24 text-sm text-gray-400"
-                                            >ID</span
-                                        >
-                                        <span
-                                            class="text-sm font-medium text-white"
-                                            >: {{ order.input_id }}</span
-                                        >
-                                    </div>
-                                    <div v-if="order.input_zone" class="flex">
-                                        <span class="w-24 text-sm text-gray-400"
-                                            >Server</span
-                                        >
-                                        <span
-                                            class="text-sm font-medium text-white"
-                                            >: {{ order.input_zone }}</span
-                                        >
-                                    </div>
+                                    <!-- Dynamic Input Fields (for manual products) -->
+                                    <template v-if="order.payload && Object.keys(order.payload).length > 0">
+                                        <div v-for="(value, key) in order.payload" :key="key" class="flex">
+                                            <span class="w-24 text-sm text-gray-400">
+                                                {{ key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                                            </span>
+                                            <span class="text-sm font-medium text-white">
+                                                : {{ value }}
+                                            </span>
+                                        </div>
+                                    </template>
+
+                                    <!-- Default Fields (for automatic products) -->
+                                    <template v-else>
+                                        <div v-if="order.nickname" class="flex">
+                                            <span class="w-24 text-sm text-gray-400"
+                                                >Nickname</span
+                                            >
+                                            <span
+                                                class="text-sm font-medium text-white"
+                                                >: {{ order.nickname }}</span
+                                            >
+                                        </div>
+                                        <div class="flex">
+                                            <span class="w-24 text-sm text-gray-400"
+                                                >ID</span
+                                            >
+                                            <span
+                                                class="text-sm font-medium text-white"
+                                                >: {{ order.input_id }}</span
+                                            >
+                                        </div>
+                                        <div v-if="order.input_zone" class="flex">
+                                            <span class="w-24 text-sm text-gray-400"
+                                                >Server</span
+                                            >
+                                            <span
+                                                class="text-sm font-medium text-white"
+                                                >: {{ order.input_zone }}</span
+                                            >
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
