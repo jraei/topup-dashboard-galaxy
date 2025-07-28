@@ -74,11 +74,10 @@ class LayananController extends Controller
     {
         $rules = [
             'nama_layanan' => 'required|string|max:255',
-            'kode_layanan' => 'required|string|max:100|unique:layanans,kode_layanan',
+            'kode_layanan' => 'nullable|string|max:100|unique:layanans,kode_layanan',
             'produk_id' => 'required|exists:produks,id',
             'provider_id' => 'required|exists:providers,id',
             'harga_beli' => 'required|numeric|min:0',
-
             'catatan' => 'nullable|string|max:500',
             'status' => 'required|in:active,inactive',
         ];
@@ -124,7 +123,7 @@ class LayananController extends Controller
 
         $rules = [
             'nama_layanan' => 'required|string|max:255',
-            'kode_layanan' => 'required|string|max:100|unique:layanans,kode_layanan,' . $id,
+            'kode_layanan' => 'nullable|string|max:100|unique:layanans,kode_layanan,' . $id,
             'produk_id' => 'required|exists:produks,id',
             'provider_id' => 'required|exists:providers,id',
             'harga_beli' => 'required|numeric|min:0',

@@ -38,6 +38,8 @@ const validateOrder = async () => {
             props.orderData
         );
 
+        
+
         if (response.data.status === "success") {
             // masukkan data username ke orderData jika username ada
             if (response.data.orderSummary.nickname) {
@@ -83,6 +85,9 @@ const confirmOrder = async () => {
             route("order.process"),
             props.orderData
         );
+
+        console.log("Order processing response:", response.data);
+        
 
         if (response.data.status === "success") {
             toast.success("Order processed successfully!");

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use Exception;
 use App\Models\Deposit;
 use App\Models\Voucher;
+use App\Models\Provider;
 use App\Models\PayMethod;
 use App\Models\Pembelian;
 use App\Models\WebConfig;
@@ -220,9 +221,11 @@ class TripayCallbackController extends Controller
                         $price = $dataPembayaran->total_price;
                         $payMethod = PayMethod::where('kode', $dataPembayaran->payment_method)->first()->nama;
                         $judulWeb = WebConfig::where('key', 'judul_web')->first()->value;
+                        $whatsappProvider = Provider::where('provider_name', 'whatsappNotif')->first();
 
-                        $whatsappNotif = new WhatsappNotifController();
-                        $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
+                        if($whatsappProvider->status == 'active'){
+                            $whatsappNotif = new WhatsappNotifController();
+                            $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
 
 *Produk* : ' . $produk . '
 *Order ID* : ' . $order_id . '
@@ -232,17 +235,14 @@ class TripayCallbackController extends Controller
 *Status* : ' . $status . '
 
 *Terimakasih kak ' . $user . ' telah membeli di ' . $judulWeb ?? env('APP_NAME') . '😇*');
-
-
-                        $result = json_decode($res);
-                        if ($result->statusCode == 200) {
-                            logger()->info("Success to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
-                        } else {
-                            logger()->error("Failed to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                            $result = json_decode($res);
+                            if ($result->statusCode == 200) {
+                                logger()->info("Success to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                            } else {
+                                logger()->error("Failed to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                            }
                         }
                     }
-
-
 
                     return response()->json([
                         'status' => 'success',

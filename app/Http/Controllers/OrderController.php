@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\DuitkuController;
 use App\Http\Controllers\Admin\TripayController;
 use App\Http\Controllers\Admin\DigiflazzController;
 use App\Http\Controllers\Admin\CheckUsernameController;
+use App\Models\Provider;
 
 class OrderController extends Controller
 {
@@ -702,8 +703,8 @@ class OrderController extends Controller
             'discount' => $voucherDiscount,
             'total_price' => $totalPrice,
             'profit' => $totalPrice - $hargaBeli,
-            'status' => $request->payment_method['type'] === 'Saldo Akun' ? 
-                ($isManualService ? 'pending' : ($allCompleted ? 'processing' : 'failed')) : 'pending',
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ?
+                ($isManualService ? 'processing' : ($allCompleted ? 'processing' : 'failed')) : 'pending',
             'reference_id' => implode(',', $referenceIds),
             'phone' => $request->phone,
             'email' => $request->email,
@@ -722,6 +723,8 @@ class OrderController extends Controller
         $phone = str_replace('+', '', $request->phone);
         $judulWeb = WebConfig::where('key', 'judul_web')->first()->value ?? env('APP_NAME');
         $username = $user->username ?? 'Guest';
+        $whatsappProvider = Provider::where('provider_name', 'whatsappNotif')->first();
+
 
         if ($request->payment_method['type'] !== 'Saldo Akun') {
 
@@ -776,46 +779,56 @@ class OrderController extends Controller
                 }
             }
 
+
             // Kirim notifikasi whatsapp ke user
-            $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat, harap selesaikan pembayaran*
+            if ($whatsappProvider->status == 'active') {
+                $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat, harap selesaikan pembayaran*
 
-            *Produk* : ' . $itemDesc . '
-            *Order ID* : ' . $order_id . '
-            *Target* : ' . $target . '
-            *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-            *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-            *Status* : Menunggu Pembayaran
-            *Link Pembayaran* : ' . route('order.invoice', $order_id) . '
+                *Produk* : ' . $itemDesc . '
+                *Order ID* : ' . $order_id . '
+                *Target* : ' . $target . '
+                *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+                *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+                *Status* : Menunggu Pembayaran
+                *Link Pembayaran* : ' . route('order.invoice', $order_id) . '
 
-            *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+                *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 
-            $result = json_decode($res);
-            if ($result->statusCode == 200) {
-                logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+                $result = json_decode($res);
+                if ($result->statusCode == 200) {
+                    logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+                } else {
+                    logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+                }
             } else {
-                logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI 3RD PARTY PAYMENT]: " . $result->message);
+                logger()->warning("Whatsapp notification provider is not active, skipping notification.");
             }
         } else {
-            // Kirim notifikasi whatsapp ke user
-            $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat*
+            if ($whatsappProvider->status == 'active') {
+                // Kirim notifikasi whatsapp ke user
+                $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat*
 
-            *Produk* : ' . $itemDesc . '
-            *Order ID* : ' . $order_id . '
-            *Target* : ' . $target . '
-            *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-            *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-            *Status* : Berhasil dibayar
+                *Produk* : ' . $itemDesc . '
+                *Order ID* : ' . $order_id . '
+                *Target* : ' . $target . '
+                *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+                *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+                *Status* : Berhasil dibayar
 
-            *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+                *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 
 
-            $result = json_decode($res);
-            if ($result->statusCode == 200) {
-                logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+                $result = json_decode($res);
+                if ($result->statusCode == 200) {
+                    logger()->info("Success to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+                } else {
+                    logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+                }
             } else {
-                logger()->error("Failed to send whatsapp notif [CREATE NEW TRANSAKSI SALDO PAYMENT]: " . $result->message);
+                logger()->warning("Whatsapp notification provider is not active, skipping notification.");
             }
         }
+
 
         // Update stok flashsale dan voucher
         if ($flashsaleItem) $this->reduceFlashsaleStock($request->flashsale_item_id, $quantity);

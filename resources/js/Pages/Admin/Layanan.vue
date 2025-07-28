@@ -691,8 +691,7 @@ const calculatedPriceIDR = computed(() => {
                                     v-model="currentData.kode_layanan"
                                     type="text"
                                     class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    placeholder="Service Code"
-                                    required
+                                    placeholder="Kosongkan jika layanan manual"
                                 />
                             </div>
                             <div>

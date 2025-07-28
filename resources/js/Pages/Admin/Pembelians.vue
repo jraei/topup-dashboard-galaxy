@@ -26,12 +26,12 @@ const columns = [
         key: "order_type",
         label: "Type",
         format: (value, item) => {
-            const isManual = value === 'manual';
-            const bgClass = isManual 
-                ? 'bg-purple-500/20 text-purple-400' 
-                : 'bg-blue-500/20 text-blue-400';
-            const icon = isManual ? '⚙️' : '🔄';
-            const text = isManual ? 'Manual' : 'Auto';
+            const isManual = value === "manual";
+            const bgClass = isManual
+                ? "bg-purple-500/20 text-purple-400"
+                : "bg-blue-500/20 text-blue-400";
+            const icon = isManual ? "⚙️" : "🔄";
+            const text = isManual ? "Manual" : "Auto";
             return `<span class="${bgClass} px-2 py-1 rounded-xl text-xs">${icon} ${text}</span>`;
         },
     },
@@ -337,7 +337,10 @@ const closeViewModal = () => {
 
                         <!-- Process button (only for pending manual purchases) -->
                         <button
-                            v-if="item.status === 'pending' && item.order_type === 'manual'"
+                            v-if="
+                                item.status === 'pending' &&
+                                item.order_type === 'manual'
+                            "
                             @click="handleProcess(item)"
                             class="px-3 py-1 text-xs text-white transition-colors rounded-md bg-primary/80 hover:bg-primary"
                             :disabled="processingPurchase"
@@ -366,7 +369,7 @@ const closeViewModal = () => {
         </div>
 
         <!-- View Purchase Modal -->
-        <Modal :show="showViewModal" @close="closeViewModal" max-width="5xl">
+        <Modal :show="showViewModal" @close="closeViewModal" max-width="2xl">
             <div
                 class="p-3 sm:p-4 md:p-6 border border-gray-700 rounded-lg bg-dark-card max-h-[80vh] overflow-y-auto"
             >
@@ -511,7 +514,7 @@ const closeViewModal = () => {
                                 <div>
                                     <p class="text-sm text-gray-400">User ID</p>
                                     <p class="font-medium text-white">
-                                        {{ selectedPurchase.input_id }}
+                                        {{ selectedPurchase.input_id || "N/A" }}
                                     </p>
                                 </div>
                                 <div>
@@ -524,7 +527,7 @@ const closeViewModal = () => {
                                         }}
                                     </p>
                                 </div>
-                                
+
                                 <!-- Contact info -->
                                 <div v-if="selectedPurchase.phone">
                                     <p class="text-sm text-gray-400">Phone</p>
@@ -595,23 +598,26 @@ const closeViewModal = () => {
 
                     <!-- Dynamic Fields for Manual Services -->
                     <div
-                        v-if="selectedPurchase.order_type === 'manual' && selectedPurchase.payload"
+                        v-if="
+                            selectedPurchase.order_type === 'manual' &&
+                            selectedPurchase.payload
+                        "
                         class="p-4 border border-gray-700 rounded-lg bg-dark-lighter"
                     >
                         <h4 class="mb-3 text-lg font-medium text-purple-400">
                             Manual Service Details
                         </h4>
                         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div 
-                                v-for="(value, key) in selectedPurchase.payload" 
+                            <div
+                                v-for="(value, key) in selectedPurchase.payload"
                                 :key="key"
                                 class="space-y-1"
                             >
                                 <p class="text-sm text-gray-400 capitalize">
-                                    {{ key.replace(/_/g, ' ') }}
+                                    {{ key.replace(/_/g, " ") }}
                                 </p>
                                 <p class="font-medium text-white break-words">
-                                    {{ value || 'N/A' }}
+                                    {{ value || "N/A" }}
                                 </p>
                             </div>
                         </div>
@@ -683,7 +689,10 @@ const closeViewModal = () => {
                     >
                         <!-- Process button (only for pending manual purchases) -->
                         <button
-                            v-if="selectedPurchase.status === 'pending' && selectedPurchase.order_type === 'manual'"
+                            v-if="
+                                selectedPurchase.status === 'pending' &&
+                                selectedPurchase.order_type === 'manual'
+                            "
                             @click="handleProcess(selectedPurchase)"
                             :disabled="processingPurchase"
                             class="w-full px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg sm:w-auto bg-primary hover:bg-primary-hover hover:shadow-glow-primary"

@@ -328,9 +328,9 @@ watch(
             </div>
         </div>
 
-        <form @submit.prevent class="space-y-4">
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 space-x-4">
+        <form @submit.prevent class="space-y-4 ">
+            <div class="space-y-4 ">
+                <div class="grid grid-cols-2 gap-3">
                     <DynamicInput
                         v-for="field in inputFields"
                         :key="field.id"
