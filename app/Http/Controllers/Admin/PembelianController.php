@@ -103,9 +103,14 @@ class PembelianController extends Controller
             return response()->json(['error' => 'Only pending purchases can be processed'], 422);
         }
 
-        // Update to success status
-        $pembelian->status = 'completed';
-        $pembelian->save();
+        // Additional validation for manual orders
+        if ($pembelian->order_type === 'manual') {
+            // For manual orders, we just mark them as completed
+            $pembelian->status = 'completed';
+            $pembelian->save();
+        } else {
+            return response()->json(['error' => 'Only manual orders can be processed through admin panel'], 422);
+        }
 
         return response()->json([
             'message' => 'Purchase processed successfully',

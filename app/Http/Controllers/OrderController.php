@@ -486,6 +486,7 @@ class OrderController extends Controller
         $layanan = Layanan::with('produk.provider')->findOrFail($request->layanan_id);
         $produk = $layanan->produk;
         $providerName = strtolower($produk->provider->provider_name);
+        $isManualService = strtolower($produk->provider->provider_name) === 'manual';
         $paymentMethodDynamic = PayMethod::where('id', $request->payment_method['channel'])->first();
 
         // 2️⃣ Ambil input dinamis
@@ -561,8 +562,11 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // Proses berbeda berdasarkan provider
-            if ($providerName == 'moogold') {
+            // Check if this is a manual service
+            if ($isManualService) {
+                // For manual services, just mark as pending - no API call needed
+                $allCompleted = false; // Manual services start as pending
+            } elseif ($providerName == 'moogold') {
                 // Moogold bisa handle quantity dalam 1 request
                 $moogold = new MoogoldController();
                 $apiResult = $moogold->createTransaction([
@@ -662,7 +666,7 @@ class OrderController extends Controller
                 ], 400);
             }
 
-            // potong saldo
+            // potong saldo (for both manual and automatic services)
             $user->decrement('saldo', $finalPrice);
         }
 
@@ -687,7 +691,7 @@ class OrderController extends Controller
         // Insert pembelian utama (1x untuk semua quantity)
         $pembelian = Pembelian::create([
             'order_id' => $order_id,
-            'order_type' => 'game',
+            'order_type' => $isManualService ? 'manual' : 'game',
             'user_id' => Auth::id(),
             'layanan_id' => $layanan->id,
             'nickname' => $request->nickname,
@@ -698,12 +702,14 @@ class OrderController extends Controller
             'discount' => $voucherDiscount,
             'total_price' => $totalPrice,
             'profit' => $totalPrice - $hargaBeli,
-            'status' => $request->payment_method['type'] === 'Saldo Akun' ? ($allCompleted ? 'processing' : 'failed') : 'pending',
+            'status' => $request->payment_method['type'] === 'Saldo Akun' ? 
+                ($isManualService ? 'pending' : ($allCompleted ? 'processing' : 'failed')) : 'pending',
             'reference_id' => implode(',', $referenceIds),
             'phone' => $request->phone,
             'email' => $request->email,
             'voucher_id' => $voucher ? $voucher['id'] : null,
             'flashsale_item_id' => $flashsaleItem ? $flashsaleItem->id : null,
+            'payload' => $isManualService ? $dynamicFields : null,
             'callback_data' => array_merge($dynamicFields, [
                 'sub_orders' => $providerName == 'digiflazz' ? $successOrders : null,
                 'failed_orders' => $failedOrders

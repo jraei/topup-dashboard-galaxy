@@ -17,6 +17,7 @@ class Pembelian extends Model
 
     protected $casts = [
         'callback_data' => 'json',
+        'payload' => 'json',
     ];
 
     public function user(): BelongsTo
