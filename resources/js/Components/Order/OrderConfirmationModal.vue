@@ -31,7 +31,6 @@ watch(
 
 const validateOrder = async () => {
     try {
-        console.log("Validating order:", props.orderData);
 
         const response = await axios.post(
             route("order.confirm"),

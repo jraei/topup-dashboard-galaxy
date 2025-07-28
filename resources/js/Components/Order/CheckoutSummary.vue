@@ -302,7 +302,6 @@ const formatPrice = (price) => {
 };
 
 const handleOrderProcess = () => {
-    console.log(props.selectedService);
 
     if (!isOrderReady.value) {
         // Check what's missing and show appropriate message

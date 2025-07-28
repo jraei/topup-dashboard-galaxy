@@ -133,6 +133,7 @@ const loadAccount = (account) => {
     if (account.contact) {
         emit("update:contact-data", account.contact);
     }
+    
 
     // Emit account data update
     emit("update:account-data", accountData.value);
