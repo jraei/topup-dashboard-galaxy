@@ -81,11 +81,18 @@ const packageServiceGroups = computed(() => {
         return groups;
     }
 
-    props.paketLayanans.forEach((paket) => {
-        if (paket.layanans && paket.layanans.length > 0) {
+    // Sort packages by display_order
+    const sortedPackages = [...props.paketLayanans].sort((a, b) => 
+        (a.display_order || 0) - (b.display_order || 0)
+    );
+
+    sortedPackages.forEach((paket) => {
+        if ((paket.layanans && paket.layanans.length > 0) || 
+            (paket.fusionServices && paket.fusionServices.length > 0)) {
             groups.push({
                 package: paket,
-                services: paket.layanans,
+                services: paket.layanans || [],
+                fusionServices: paket.fusionServices || [],
             });
         }
     });
@@ -157,6 +164,24 @@ const openHelpModal = ref(false);
                             selectedService && selectedService.id === service.id
                         "
                         :isPackage="true"
+                        @select="selectService"
+                    />
+                    <!-- Fusion Services -->
+                    <ServiceCard
+                        v-for="fusion in group.fusionServices"
+                        :key="`fusion-${fusion.id}`"
+                        :service="{
+                            id: `fusion-${fusion.id}`,
+                            nama_layanan: fusion.nama_fusion,
+                            deskripsi: fusion.deskripsi,
+                            harga_jual: fusion.calculated_price,
+                            isFusion: true,
+                            fusionData: fusion
+                        }"
+                        :isSelected="
+                            selectedService && selectedService.id === `fusion-${fusion.id}`
+                        "
+                        :isFusion="true"
                         @select="selectService"
                     />
                 </div>

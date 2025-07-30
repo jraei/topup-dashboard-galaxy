@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PaketLayanan extends Model
@@ -13,13 +12,13 @@ class PaketLayanan extends Model
 
     protected $guarded = [];
 
-    public function produk(): BelongsTo
-    {
-        return $this->belongsTo(Produk::class);
-    }
-
     public function layanans(): HasMany
     {
         return $this->hasMany(Layanan::class);
+    }
+
+    public function fusionServices(): HasMany
+    {
+        return $this->hasMany(FusionService::class);
     }
 }

@@ -227,6 +227,16 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('paket-layanans', PaketLayananController::class);
     Route::get('paket-layanans/services/available', [PaketLayananController::class, 'getAvailableServices'])->name('paket-layanans.available-services');
     Route::get('paket-layanans/{id}/services', [PaketLayananController::class, 'getPackageServices'])->name('paket-layanans.package-services');
+    
+    // Fusion services routes
+    Route::post('paket-layanans/{packageId}/fusion-services', [PaketLayananController::class, 'storeFusionService'])
+        ->name('paket-layanans.fusion-services.store');
+    Route::put('paket-layanans/{packageId}/fusion-services/{fusionId}', [PaketLayananController::class, 'updateFusionService'])
+        ->name('paket-layanans.fusion-services.update');
+    Route::delete('paket-layanans/{packageId}/fusion-services/{fusionId}', [PaketLayananController::class, 'destroyFusionService'])
+        ->name('paket-layanans.fusion-services.destroy');
+    Route::get('paket-layanans/{packageId}/fusion-services', [PaketLayananController::class, 'getFusionServices'])
+        ->name('paket-layanans.fusion-services.index');
 });
 
 require __DIR__ . '/auth.php';

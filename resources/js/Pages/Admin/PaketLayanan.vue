@@ -34,25 +34,23 @@ const columns = [
         },
     },
     {
-        key: "produk_name",
-        label: "Product",
-        format: (_, item) => {
-            if (!item.produk) {
-                return `<span class="text-gray-400">Not Assigned</span>`;
-            }
+        key: "layanans_count",
+        label: "Services Count",
+        format: (value, item) => {
+            const fusionCount = item.fusion_services_count || 0;
             return `
-                <div class="flex items-center space-x-2">
-                    <img src="/storage/${item.produk?.thumbnail}" alt="${item.produk?.nama}" class="object-cover w-8 h-8 rounded-sm">
-                    <span>${item.produk?.nama}</span>
+                <div class="space-y-1">
+                    <span class="px-2 py-1 text-xs rounded-xl bg-primary/20 text-primary">${value} services</span>
+                    ${fusionCount > 0 ? `<span class="px-2 py-1 text-xs rounded-xl bg-secondary/20 text-secondary">${fusionCount} fusions</span>` : ''}
                 </div>
             `;
         },
     },
     {
-        key: "layanans_count",
-        label: "Services Count",
+        key: "display_order",
+        label: "Order",
         format: (value) => {
-            return `<span class="px-2 py-1 text-xs rounded-xl bg-primary/20 text-primary">${value} services</span>`;
+            return `<span class="px-2 py-1 text-xs rounded bg-dark-lighter text-white">#${value}</span>`;
         },
     },
     {
@@ -141,8 +139,8 @@ const openAddForm = () => {
     formMode.value = "add";
     currentPaketLayanan.value = {
         judul_paket: "",
-        produk_id: "",
         informasi: "",
+        display_order: 0,
     };
     selectedServices.value = [];
     loadAvailableServices();
@@ -157,8 +155,8 @@ const openEditForm = async (paketLayanan) => {
     currentPaketLayanan.value = {
         id: paketLayanan.id,
         judul_paket: paketLayanan.judul_paket,
-        produk_id: paketLayanan.produk_id,
         informasi: paketLayanan.informasi,
+        display_order: paketLayanan.display_order || 0,
     };
 
     // Load available services for editing (including currently assigned ones)
@@ -227,7 +225,6 @@ const loadAvailableServices = async (excludePackageId = null) => {
             route("paket-layanans.available-services"),
             {
                 params: {
-                    product_id: currentPaketLayanan.value.produk_id,
                     exclude_package_id: excludePackageId,
                 },
             }
@@ -281,18 +278,6 @@ const updateSelectAllState = () => {
         );
 };
 
-// Watch for product changes to reload services
-watch(
-    () => currentPaketLayanan.value?.produk_id,
-    (newValue) => {
-        if (newValue && showForm.value) {
-            selectedServices.value = [];
-            loadAvailableServices(
-                formMode.value === "edit" ? currentPaketLayanan.value.id : null
-            );
-        }
-    }
-);
 
 // Watch filtered services to update select all state
 watch(filteredServices, () => {
@@ -526,28 +511,25 @@ const formatCurrency = (value) => {
                                 />
                             </div>
 
-                            <!-- Product Assignment -->
+                            <!-- Display Order -->
                             <div>
                                 <label
-                                    for="produk_id"
+                                    for="display_order"
                                     class="block mb-1 text-sm font-medium text-gray-300"
                                 >
-                                    Assign to Product (Optional)
+                                    Display Order
                                 </label>
-                                <select
-                                    id="produk_id"
-                                    v-model="currentPaketLayanan.produk_id"
+                                <input
+                                    id="display_order"
+                                    v-model.number="currentPaketLayanan.display_order"
+                                    type="number"
+                                    min="0"
                                     class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option value="">Select Product</option>
-                                    <option
-                                        v-for="product in products"
-                                        :key="product.id"
-                                        :value="product.id"
-                                    >
-                                        {{ product.nama }}
-                                    </option>
-                                </select>
+                                    placeholder="0"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Lower numbers appear first. Default is 0.
+                                </p>
                             </div>
 
                             <!-- Description -->

@@ -150,17 +150,30 @@ class OrderController extends Controller
                 })->values();
             });
 
-        // Get active service packages for this product
-        $paketLayanans = PaketLayanan::with(['layanans' => function ($query) {
-            $query->where('status', 'active');
-        }])
-            ->where('produk_id', $produk->id)
+        // Get active service packages for this product - allow cross-product packages
+        $paketLayanans = PaketLayanan::whereHas('layanans', function ($q) use ($produk) {
+                $q->where('produk_id', $produk->id)
+                  ->where('status', 'active');
+            })
+            ->with([
+                'layanans' => function ($query) use ($produk) {
+                    $query->where('status', 'active')
+                        ->where('produk_id', $produk->id)
+                        ->orderBy('harga_beli_idr', 'asc');
+                },
+                'fusionServices' => function ($query) {
+                    $query->where('status', 'active')
+                        ->orderBy('display_order', 'asc');
+                }
+            ])
+            ->orderBy('display_order', 'asc')
             ->get()
             ->map(function ($paket) {
                 return [
                     'id' => $paket->id,
                     'judul_paket' => $paket->judul_paket,
                     'informasi' => $paket->informasi,
+                    'display_order' => $paket->display_order,
                     'layanans' => $paket->layanans->map(function ($layanan) {
                         // Apply same thumbnail logic as individual services
                         preg_match('/(\d+)/', $layanan->nama_layanan, $matches);
@@ -180,6 +193,18 @@ class OrderController extends Controller
                         return array_merge($layanan->toArray(), [
                             'thumbnail' => $thumbnail?->image_url
                         ]);
+                    }),
+                    'fusionServices' => $paket->fusionServices->map(function ($fusion) {
+                        return [
+                            'id' => $fusion->id,
+                            'nama_fusion' => $fusion->nama_fusion,
+                            'deskripsi' => $fusion->deskripsi,
+                            'layanan_ids' => $fusion->layanan_ids,
+                            'custom_price' => $fusion->custom_price,
+                            'display_order' => $fusion->display_order,
+                            'calculated_price' => $fusion->calculateTotalPrice(),
+                            'services' => $fusion->services(),
+                        ];
                     })
                 ];
             });
