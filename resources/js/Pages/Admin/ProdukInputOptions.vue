@@ -44,7 +44,7 @@ const selectedFieldId = ref(props.filters.field_id || "");
 const fieldHeader = computed(() => {
     if (props.currentField) {
         const productName = props.currentField.produk
-            ? props.currentField.produk.nama
+            ? props.currentField.produk?.nama
             : "Unknown Product";
         return `${props.currentField.label} (${productName})`;
     }
@@ -252,7 +252,7 @@ const updateValueFromLabel = () => {
                         :key="field.id"
                         :value="field.id"
                     >
-                        {{ field.label }} ({{ field.produk.nama }})
+                        {{ field.label }} ({{ field.produk?.nama }})
                     </option>
                 </select>
             </div>
@@ -445,7 +445,7 @@ const updateValueFromLabel = () => {
                                     :key="field.id"
                                     :value="field.id"
                                 >
-                                    {{ field.label }} ({{ field.produk.nama }})
+                                    {{ field.label }} ({{ field.produk?.nama }})
                                 </option>
                             </select>
                         </div>
