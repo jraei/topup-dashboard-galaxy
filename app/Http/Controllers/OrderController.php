@@ -152,9 +152,9 @@ class OrderController extends Controller
 
         // Get active service packages for this product - allow cross-product packages
         $paketLayanans = PaketLayanan::whereHas('layanans', function ($q) use ($produk) {
-                $q->where('produk_id', $produk->id)
-                  ->where('status', 'active');
-            })
+            $q->where('produk_id', $produk->id)
+                ->where('status', 'active');
+        })
             ->with([
                 'layanans' => function ($query) use ($produk) {
                     $query->where('status', 'active')

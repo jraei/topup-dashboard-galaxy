@@ -314,7 +314,7 @@ class PaketLayananController extends Controller
     {
         $fusionService = FusionService::where('paket_layanan_id', $packageId)
             ->findOrFail($fusionId);
-        
+
         $fusionService->delete();
 
         return response()->json([
