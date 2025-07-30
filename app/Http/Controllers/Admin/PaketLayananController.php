@@ -248,79 +248,62 @@ class PaketLayananController extends Controller
     /**
      * Store a new fusion service
      */
-    public function storeFusionService(Request $request, $packageId)
+    public function storeFusionService(Request $request)
     {
         $validated = $request->validate([
+            'paket_layanan_id' => 'required|exists:paket_layanans,id',
             'nama_fusion' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
             'layanan_ids' => 'required|array|min:2',
             'layanan_ids.*' => 'exists:layanans,id',
             'custom_price' => 'nullable|numeric|min:0',
-            'display_order' => 'nullable|integer|min:0',
         ]);
-
-        $paketLayanan = PaketLayanan::findOrFail($packageId);
 
         $fusionService = FusionService::create([
             'nama_fusion' => $validated['nama_fusion'],
-            'deskripsi' => $validated['deskripsi'],
-            'paket_layanan_id' => $paketLayanan->id,
+            'keterangan' => $validated['keterangan'],
+            'paket_layanan_id' => $validated['paket_layanan_id'],
             'layanan_ids' => $validated['layanan_ids'],
             'custom_price' => $validated['custom_price'],
-            'display_order' => $validated['display_order'] ?? 0,
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'fusion_service' => $fusionService,
-        ]);
+        return redirect()->back()->with('success', 'Fusion service created successfully!');
     }
 
     /**
      * Update a fusion service
      */
-    public function updateFusionService(Request $request, $packageId, $fusionId)
+    public function updateFusionService(Request $request, $id)
     {
         $validated = $request->validate([
             'nama_fusion' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
             'layanan_ids' => 'required|array|min:2',
             'layanan_ids.*' => 'exists:layanans,id',
             'custom_price' => 'nullable|numeric|min:0',
-            'display_order' => 'nullable|integer|min:0',
         ]);
 
-        $fusionService = FusionService::where('paket_layanan_id', $packageId)
-            ->findOrFail($fusionId);
+        $fusionService = FusionService::findOrFail($id);
 
         $fusionService->update([
             'nama_fusion' => $validated['nama_fusion'],
-            'deskripsi' => $validated['deskripsi'],
+            'keterangan' => $validated['keterangan'],
             'layanan_ids' => $validated['layanan_ids'],
             'custom_price' => $validated['custom_price'],
-            'display_order' => $validated['display_order'] ?? 0,
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'fusion_service' => $fusionService,
-        ]);
+        return redirect()->back()->with('success', 'Fusion service updated successfully!');
     }
 
     /**
      * Delete a fusion service
      */
-    public function destroyFusionService($packageId, $fusionId)
+    public function destroyFusionService($id)
     {
-        $fusionService = FusionService::where('paket_layanan_id', $packageId)
-            ->findOrFail($fusionId);
-        
+        $fusionService = FusionService::findOrFail($id);
         $fusionService->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Fusion service deleted successfully',
-        ]);
+        return redirect()->back()->with('success', 'Fusion service deleted successfully!');
     }
 
     /**
@@ -329,24 +312,22 @@ class PaketLayananController extends Controller
     public function getFusionServices($packageId)
     {
         $fusionServices = FusionService::where('paket_layanan_id', $packageId)
-            ->orderBy('display_order')
             ->get()
             ->map(function ($fusion) {
                 $services = $fusion->services();
                 return [
                     'id' => $fusion->id,
                     'nama_fusion' => $fusion->nama_fusion,
-                    'deskripsi' => $fusion->deskripsi,
+                    'keterangan' => $fusion->keterangan,
                     'layanan_ids' => $fusion->layanan_ids,
                     'custom_price' => $fusion->custom_price,
-                    'display_order' => $fusion->display_order,
                     'services' => $services,
                     'calculated_price' => $fusion->calculateTotalPrice(),
                 ];
             });
 
         return response()->json([
-            'fusion_services' => $fusionServices,
+            'fusionServices' => $fusionServices,
         ]);
     }
 }

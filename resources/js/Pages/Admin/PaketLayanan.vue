@@ -23,6 +23,13 @@ const paketLayanans = computed(() => props.paketLayanans.data || []);
 const availableServices = ref([]);
 const packageServices = ref([]);
 
+// Fusion Service states
+const showFusionForm = ref(false);
+const fusionFormMode = ref("add"); // 'add' or 'edit'
+const currentFusion = ref(null);
+const fusionServices = ref([]);
+const selectedFusionServices = ref([]);
+
 // Column definitions for the table
 const columns = [
     { key: "id", label: "ID" },
@@ -242,6 +249,8 @@ const loadPackageServices = async (packageId) => {
             route("paket-layanans.package-services", packageId)
         );
         packageServices.value = response.data.services;
+        // Also load fusion services
+        await loadFusionServices(packageId);
         return response.data.services;
     } catch (error) {
         console.error("Error loading package services:", error);
@@ -276,6 +285,104 @@ const updateSelectAllState = () => {
         filteredServices.value.every((service) =>
             selectedServices.value.includes(service.id)
         );
+};
+
+// Fusion Service functions
+const loadFusionServices = async (packageId) => {
+    try {
+        const response = await axios.get(
+            route("paket-layanans.fusion-services", packageId)
+        );
+        fusionServices.value = response.data.fusionServices;
+        return response.data.fusionServices;
+    } catch (error) {
+        console.error("Error loading fusion services:", error);
+        fusionServices.value = [];
+        return [];
+    }
+};
+
+const openAddFusionForm = (packageId) => {
+    fusionFormMode.value = "add";
+    currentFusion.value = {
+        paket_layanan_id: packageId,
+        nama_fusion: "",
+        keterangan: "",
+        custom_price: null,
+    };
+    selectedFusionServices.value = [];
+    loadAvailableServices();
+    showFusionForm.value = true;
+};
+
+const openEditFusionForm = async (fusion) => {
+    fusionFormMode.value = "edit";
+    currentFusion.value = { ...fusion };
+    selectedFusionServices.value = fusion.layanan_ids || [];
+    await loadAvailableServices();
+    showFusionForm.value = true;
+};
+
+const closeFusionForm = () => {
+    showFusionForm.value = false;
+    selectedFusionServices.value = [];
+    currentFusion.value = null;
+};
+
+const saveFusionService = () => {
+    if (selectedFusionServices.value.length < 2) {
+        proxy.$showSwalConfirm({
+            title: "Error",
+            text: "Please select at least 2 services to create a fusion",
+            icon: "error",
+        });
+        return;
+    }
+
+    const data = {
+        ...currentFusion.value,
+        layanan_ids: selectedFusionServices.value,
+    };
+
+    if (fusionFormMode.value === "add") {
+        router.post(route("fusion-services.store"), data, {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeFusionForm();
+                loadFusionServices(currentFusion.value.paket_layanan_id);
+            },
+        });
+    } else {
+        router.put(route("fusion-services.update", currentFusion.value.id), data, {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeFusionForm();
+                loadFusionServices(currentFusion.value.paket_layanan_id);
+            },
+        });
+    }
+};
+
+const deleteFusionService = (fusion) => {
+    proxy.$showSwalConfirm({
+        onConfirm: () => {
+            router.delete(route("fusion-services.destroy", fusion.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    loadFusionServices(fusion.paket_layanan_id);
+                },
+            });
+        },
+    });
+};
+
+const toggleFusionService = (serviceId) => {
+    const index = selectedFusionServices.value.indexOf(serviceId);
+    if (index > -1) {
+        selectedFusionServices.value.splice(index, 1);
+    } else {
+        selectedFusionServices.value.push(serviceId);
+    }
 };
 
 
@@ -402,42 +509,108 @@ const formatCurrency = (value) => {
 
         <!-- Package Services Section -->
         <div
-            v-if="packageServices.length > 0"
+            v-if="packageServices.length > 0 || fusionServices.length > 0"
             class="mt-8 border rounded-lg shadow-lg border-primary/40 bg-dark-card"
         >
             <div class="p-6">
-                <h3 class="mb-4 text-xl font-bold text-white">
-                    Services in "{{ selectedPaketLayanan?.judul_paket }}"
-                </h3>
-                <div
-                    class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                >
-                    <div
-                        v-for="service in packageServices"
-                        :key="service.id"
-                        class="p-4 border border-gray-700 rounded-lg bg-dark-sidebar"
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white">
+                        Services in "{{ selectedPaketLayanan?.judul_paket }}"
+                    </h3>
+                    <button
+                        @click="openAddFusionForm(selectedPaketLayanan?.id)"
+                        class="flex items-center px-3 py-2 space-x-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover"
                     >
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-medium text-white">
-                                {{ service.nama_layanan }}
-                            </h4>
-                            <span
-                                class="px-2 py-1 text-xs rounded bg-primary/20 text-primary"
-                            >
-                                {{ service.kode_layanan }}
-                            </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>Add Fusion Service</span>
+                    </button>
+                </div>
+
+                <!-- Regular Services -->
+                <div v-if="packageServices.length > 0" class="mb-6">
+                    <h4 class="mb-3 text-lg font-medium text-white">Regular Services</h4>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div
+                            v-for="service in packageServices"
+                            :key="service.id"
+                            class="p-4 border border-gray-700 rounded-lg bg-dark-sidebar"
+                        >
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-white">
+                                    {{ service.nama_layanan }}
+                                </h4>
+                                <span
+                                    class="px-2 py-1 text-xs rounded bg-primary/20 text-primary"
+                                >
+                                    {{ service.kode_layanan }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-300">
+                                Product: {{ service.produk?.nama || "N/A" }}
+                            </p>
+                            <p class="text-sm text-secondary">
+                                Price: 
+                                {{
+                                    formatCurrency(service.harga_jual) ||
+                                    formatCurrency(service.harga_beli) ||
+                                    "N/A"
+                                }}
+                            </p>
                         </div>
-                        <p class="text-sm text-gray-300">
-                            Product: {{ service.produk?.nama || "N/A" }}
-                        </p>
-                        <p class="text-sm text-secondary">
-                            Price: Rp
-                            {{
-                                formatCurrency(service.harga_jual) ||
-                                formatCurrency(service.harga_beli) ||
-                                "N/A"
-                            }}
-                        </p>
+                    </div>
+                </div>
+
+                <!-- Fusion Services -->
+                <div v-if="fusionServices.length > 0">
+                    <h4 class="mb-3 text-lg font-medium text-white">Fusion Services</h4>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div
+                            v-for="fusion in fusionServices"
+                            :key="fusion.id"
+                            class="p-4 border border-gray-700 rounded-lg bg-dark-sidebar"
+                        >
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-white">
+                                    {{ fusion.nama_fusion }}
+                                </h4>
+                                <span
+                                    class="px-2 py-1 text-xs rounded bg-secondary/20 text-secondary"
+                                >
+                                    FUSION
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-2">
+                                {{ fusion.keterangan }}
+                            </p>
+                            <p class="text-sm text-secondary mb-3">
+                                Services: {{ fusion.layanan_ids?.length || 0 }}
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-white">
+                                    {{ formatCurrency(fusion.custom_price || 0) }}
+                                </span>
+                                <div class="flex space-x-2">
+                                    <button
+                                        @click="openEditFusionForm(fusion)"
+                                        class="p-1 text-gray-400 transition-colors hover:text-primary"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        @click="deleteFusionService(fusion)"
+                                        class="p-1 text-gray-400 transition-colors hover:text-red-400"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -779,6 +952,176 @@ const formatCurrency = (value) => {
                         class="w-8 h-8 border-4 rounded-full animate-spin border-primary border-t-transparent"
                     ></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Fusion Service Form Modal -->
+        <div
+            v-if="showFusionForm"
+            class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
+            @click.self="closeFusionForm"
+        >
+            <div
+                class="relative w-full max-w-4xl mx-4 p-6 border border-gray-700 rounded-lg shadow-lg bg-dark-card max-h-[90vh] overflow-y-auto"
+                @click.stop
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white">
+                        {{ fusionFormMode === "add" ? "Add New Fusion Service" : "Edit Fusion Service" }}
+                    </h3>
+                    <button
+                        @click="closeFusionForm"
+                        class="text-gray-400 hover:text-white"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form @submit.prevent="saveFusionService" class="overflow-visible">
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <!-- Left Column - Fusion Info -->
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-medium text-white">Fusion Information</h4>
+
+                            <!-- Fusion Name -->
+                            <div>
+                                <label for="nama_fusion" class="block mb-1 text-sm font-medium text-gray-300">
+                                    Fusion Name
+                                </label>
+                                <input
+                                    id="nama_fusion"
+                                    v-model="currentFusion.nama_fusion"
+                                    type="text"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-secondary focus:border-transparent"
+                                    required
+                                    placeholder="Enter fusion name"
+                                />
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label for="keterangan" class="block mb-1 text-sm font-medium text-gray-300">
+                                    Description
+                                </label>
+                                <textarea
+                                    id="keterangan"
+                                    v-model="currentFusion.keterangan"
+                                    rows="3"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-secondary focus:border-transparent"
+                                    placeholder="Enter fusion description"
+                                ></textarea>
+                            </div>
+
+                            <!-- Custom Price -->
+                            <div>
+                                <label for="custom_price" class="block mb-1 text-sm font-medium text-gray-300">
+                                    Custom Price (Optional)
+                                </label>
+                                <input
+                                    id="custom_price"
+                                    v-model.number="currentFusion.custom_price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-secondary focus:border-transparent"
+                                    placeholder="Leave empty to use sum of service prices"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">
+                                    If not set, price will be calculated from selected services
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Service Selection -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-medium text-white">
+                                    Select Services for Fusion
+                                </h4>
+                                <span class="text-sm text-gray-400">
+                                    {{ selectedFusionServices.length }} selected
+                                </span>
+                            </div>
+
+                            <!-- Search -->
+                            <div>
+                                <input
+                                    v-model="serviceSearchQuery"
+                                    type="text"
+                                    class="w-full px-3 py-2 text-white border border-gray-700 rounded-lg bg-dark-sidebar focus:ring-2 focus:ring-secondary focus:border-transparent"
+                                    placeholder="Search services..."
+                                />
+                            </div>
+
+                            <!-- Services List -->
+                            <div class="space-y-2 overflow-y-auto max-h-96">
+                                <div
+                                    v-for="service in filteredServices"
+                                    :key="service.id"
+                                    class="flex items-center p-3 border border-gray-700 rounded-lg bg-dark-sidebar hover:bg-dark-lighter"
+                                >
+                                    <input
+                                        :id="`fusion-service-${service.id}`"
+                                        :value="service.id"
+                                        :checked="selectedFusionServices.includes(service.id)"
+                                        type="checkbox"
+                                        @change="toggleFusionService(service.id)"
+                                        class="w-4 h-4 mr-3 border-gray-700 rounded text-secondary bg-dark-card focus:ring-secondary focus:ring-2"
+                                    />
+                                    <label
+                                        :for="`fusion-service-${service.id}`"
+                                        class="flex-1 cursor-pointer"
+                                    >
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium text-white">
+                                                    {{ service.nama_layanan }}
+                                                </p>
+                                                <p class="text-sm text-gray-400">
+                                                    {{ service.kode_layanan }} -
+                                                    {{ service.produk?.nama || "No Product" }}
+                                                </p>
+                                            </div>
+                                            <span class="text-sm text-secondary">
+                                                {{
+                                                    formatCurrency(service.harga_jual) ||
+                                                    formatCurrency(service.harga_beli) ||
+                                                    "N/A"
+                                                }}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="filteredServices.length === 0"
+                                class="p-4 text-center text-gray-400"
+                            >
+                                No services available
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end mt-6 space-x-3">
+                        <button
+                            type="button"
+                            @click="closeFusionForm"
+                            class="px-4 py-2 text-gray-300 transition-colors border border-gray-700 rounded-lg hover:bg-dark-lighter"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-lg bg-secondary hover:bg-secondary-hover"
+                        >
+                            {{ fusionFormMode === "add" ? "Create Fusion" : "Update Fusion" }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </AdminLayout>
