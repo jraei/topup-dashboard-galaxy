@@ -18,6 +18,7 @@ class Pembelian extends Model
     protected $casts = [
         'callback_data' => 'json',
         'payload' => 'json',
+        'fusion_transaction_data' => 'json',
     ];
 
     public function user(): BelongsTo
@@ -33,6 +34,19 @@ class Pembelian extends Model
     public function pembayaran(): HasOne
     {
         return $this->hasOne(Pembayaran::class, 'order_id', 'order_id');
+    }
+
+    public function fusionService(): BelongsTo
+    {
+        return $this->belongsTo(FusionService::class);
+    }
+
+    /**
+     * Check if this is a fusion service order
+     */
+    public function isFusionOrder(): bool
+    {
+        return !is_null($this->fusion_service_id);
     }
 
     public static function generateReferenceId()

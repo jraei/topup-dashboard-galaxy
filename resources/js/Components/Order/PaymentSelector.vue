@@ -27,6 +27,14 @@ const page = usePage();
 
 const price = computed(() => {
     if (!props.selectedService) return 0;
+    
+    // Handle fusion services
+    if (props.selectedService.isFusion && props.selectedService.fusionData) {
+        const value = props.selectedService.fusionData.calculated_price * props.quantity;
+        return Math.ceil(value);
+    }
+    
+    // Handle regular services
     const value = props.selectedService.harga_jual * props.quantity;
     return Math.ceil(value);
 });

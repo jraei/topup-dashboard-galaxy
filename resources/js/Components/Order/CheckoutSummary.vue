@@ -216,6 +216,13 @@ const { toast } = useToast();
 
 const basePrice = computed(() => {
     if (!props.selectedService) return 0;
+    
+    // Handle fusion services
+    if (props.selectedService.isFusion && props.selectedService.fusionData) {
+        return Math.ceil(props.selectedService.fusionData.calculated_price);
+    }
+    
+    // Handle regular services
     let value =
         props.selectedService.harga_flashsale ??
         props.selectedService.harga_jual;
@@ -322,7 +329,6 @@ const handleOrderProcess = () => {
 
     // Prepare order data for confirmation
     const data = {
-        layanan_id: props.selectedService.id,
         quantity: props.quantity,
         payment_method: props.selectedPayment,
         email: props.contact.email,
@@ -330,8 +336,14 @@ const handleOrderProcess = () => {
         voucher_code: props.voucher?.code || null,
     };
 
-    if (props.selectedService.flashSaleItem) {
-        data.flashsale_item_id = props.selectedService.flashSaleItem.id;
+    // Handle fusion services vs regular services
+    if (props.selectedService.isFusion) {
+        data.fusion_service_id = props.selectedService.fusionData.id;
+    } else {
+        data.layanan_id = props.selectedService.id;
+        if (props.selectedService.flashSaleItem) {
+            data.flashsale_item_id = props.selectedService.flashSaleItem.id;
+        }
     }
 
     // Emit event for account validation and modal opening

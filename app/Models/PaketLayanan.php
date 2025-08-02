@@ -13,6 +13,10 @@ class PaketLayanan extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'display_order' => 'integer',
+    ];
+
     public function layanans(): HasMany
     {
         return $this->hasMany(Layanan::class);
@@ -23,8 +27,23 @@ class PaketLayanan extends Model
         return $this->hasMany(FusionService::class);
     }
 
-    public function produk(): BelongsTo
+    /**
+     * Get all products associated with services in this package
+     */
+    public function products()
     {
-        return $this->belongsTo(Produk::class);
+        return $this->layanans()
+            ->with('produk')
+            ->get()
+            ->pluck('produk')
+            ->unique('id');
+    }
+
+    /**
+     * Check if package contains services from multiple products
+     */
+    public function isCrossProduct(): bool
+    {
+        return $this->products()->count() > 1;
     }
 }

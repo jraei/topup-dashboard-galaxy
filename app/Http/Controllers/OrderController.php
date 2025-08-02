@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\TripayController;
 use App\Http\Controllers\Admin\DigiflazzController;
 use App\Http\Controllers\Admin\CheckUsernameController;
 use App\Models\Provider;
+use App\Models\FusionService;
 
 class OrderController extends Controller
 {
@@ -305,9 +306,10 @@ class OrderController extends Controller
      */
     public function confirmOrder(Request $request)
     {
-        // Validate the core fields
+        // Validate the core fields - support both regular services and fusion services
         $validator = Validator::make($request->all(), [
-            'layanan_id' => 'required|exists:layanans,id',
+            'layanan_id' => 'required_without:fusion_service_id|exists:layanans,id',
+            'fusion_service_id' => 'required_without:layanan_id|exists:fusion_services,id',
             'quantity' => 'required|integer|min:1',
             'payment_method' => 'required',
             'email' => 'nullable|email',
@@ -323,8 +325,48 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $layanan = \App\Models\Layanan::with('produk')->findOrFail($request->layanan_id);
-        $produk = $layanan->produk;
+        // Handle both regular services and fusion services
+        $layanan = null;
+        $fusionService = null;
+        $produk = null;
+        $priceBreakdown = [];
+
+        if ($request->layanan_id) {
+            $layanan = \App\Models\Layanan::with('produk')->findOrFail($request->layanan_id);
+            $produk = $layanan->produk;
+        } elseif ($request->fusion_service_id) {
+            $fusionService = FusionService::with('paketLayanan')->findOrFail($request->fusion_service_id);
+            
+            // Validate fusion service
+            $validationErrors = $fusionService->validateServices();
+            if (!empty($validationErrors)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Fusion service validation failed',
+                    'errors' => $validationErrors,
+                ], 422);
+            }
+
+            // Check compatibility of input requirements
+            if (!$fusionService->hasCompatibleInputs()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Services in this fusion have incompatible input requirements',
+                ], 422);
+            }
+
+            $priceBreakdown = $fusionService->getPriceBreakdown();
+            
+            // Use the first service's product for input field validation
+            $firstService = $fusionService->services()->first();
+            if (!$firstService) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No services found in fusion',
+                ], 422);
+            }
+            $produk = $firstService->produk;
+        }
 
         // Extract input ID and zone from dynamically named fields
         $inputId = null;
@@ -370,9 +412,16 @@ class OrderController extends Controller
             $flashsaleItem = $flashsaleData['data'];
         }
 
-        // calculate base price
-        $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
-        $price = $basePrice * $request->quantity;
+        // Calculate base price for regular services or fusion services
+        if ($fusionService) {
+            // For fusion services, use calculated price
+            $basePrice = $fusionService->calculateFinalPrice(auth()->user()?->user_role_id ?? null, true);
+            $price = $basePrice * $request->quantity;
+        } else {
+            // For regular services
+            $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
+            $price = $basePrice * $request->quantity;
+        }
 
 
         // Process voucher if provided
@@ -441,7 +490,16 @@ class OrderController extends Controller
         $finalPrice = $paymentInfo['finalPrice'];
 
         // Check profit safeguard
-        $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
+        $hargaBeli = 0;
+        if ($fusionService) {
+            // For fusion services, calculate combined purchase cost
+            $services = $fusionService->services();
+            foreach ($services as $service) {
+                $hargaBeli += ($service->harga_beli_idr ?? 0) * $request->quantity;
+            }
+        } else {
+            $hargaBeli = $layanan->harga_beli_idr * $request->quantity;
+        }
 
         // if ($finalPrice <= $hargaBeli) {
         //     return response()->json([
@@ -451,27 +509,40 @@ class OrderController extends Controller
         // }
 
         // Return response with updated structure to include dynamic fields
+        $orderSummary = [
+            'nickname' => $username,
+            'validasi_id' => $produk->validasi_id,
+            'validation_error' => $validationError,
+            'account_id' => $inputId,
+            'server_id' => $inputZone,
+            'dynamic_fields' => $dynamicFields,
+            'quantity' => $request->quantity,
+            'basePrice' => $price,
+            'discount' => $voucherDiscount,
+            'payment_method' => $paymentInfo['methodName'],
+            'payment_fee' => $paymentInfo['fee'],
+            'final_price' => $finalPrice,
+            'contact' => [
+                'email' => $request->email,
+                'phone' => $request->phone
+            ]
+        ];
+
+        if ($fusionService) {
+            $orderSummary['layanan'] = $fusionService->nama_fusion;
+            $orderSummary['is_fusion'] = true;
+            $orderSummary['fusion_service_id'] = $fusionService->id;
+            $orderSummary['price_breakdown'] = $priceBreakdown;
+            $orderSummary['fusion_description'] = $fusionService->deskripsi;
+        } else {
+            $orderSummary['layanan'] = $layanan->nama_layanan;
+            $orderSummary['is_fusion'] = false;
+            $orderSummary['layanan_id'] = $layanan->id;
+        }
+
         return response()->json([
             'status' => 'success',
-            'orderSummary' => [
-                'nickname' => $username,
-                'validasi_id' => $produk->validasi_id,
-                'validation_error' => $validationError,
-                'account_id' => $inputId,
-                'server_id' => $inputZone,
-                'dynamic_fields' => $dynamicFields,
-                'layanan' => $layanan->nama_layanan,
-                'quantity' => $request->quantity,
-                'basePrice' => $price,
-                'discount' => $voucherDiscount,
-                'payment_method' => $paymentInfo['methodName'],
-                'payment_fee' => $paymentInfo['fee'],
-                'final_price' => $finalPrice,
-                'contact' => [
-                    'email' => $request->email,
-                    'phone' => $request->phone
-                ]
-            ]
+            'orderSummary' => $orderSummary
         ]);
     }
 
@@ -489,7 +560,8 @@ class OrderController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'layanan_id' => 'required|exists:layanans,id',
+            'layanan_id' => 'required_without:fusion_service_id|exists:layanans,id',
+            'fusion_service_id' => 'required_without:layanan_id|exists:fusion_services,id',
             'quantity' => 'required|integer|min:1',
             'payment_method' => 'required',
             'email' => 'nullable|email',
@@ -508,8 +580,35 @@ class OrderController extends Controller
         $user = Auth::user();
         $quantity = $request->quantity;
 
-        $layanan = Layanan::with('produk.provider')->findOrFail($request->layanan_id);
-        $produk = $layanan->produk;
+        // Handle both regular services and fusion services
+        $layanan = null;
+        $fusionService = null;
+        $produk = null;
+        $isFusionOrder = false;
+        $fusionTransactionData = [];
+
+        if ($request->layanan_id) {
+            $layanan = Layanan::with('produk.provider')->findOrFail($request->layanan_id);
+            $produk = $layanan->produk;
+        } elseif ($request->fusion_service_id) {
+            $fusionService = FusionService::with('paketLayanan')->findOrFail($request->fusion_service_id);
+            $isFusionOrder = true;
+            
+            // Re-validate fusion service
+            $validationErrors = $fusionService->validateServices();
+            if (!empty($validationErrors)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Fusion service validation failed',
+                    'errors' => $validationErrors,
+                ], 422);
+            }
+
+            // Use the first service's product for base setup
+            $firstService = $fusionService->services()->first();
+            $produk = $firstService->produk;
+        }
+
         $providerName = strtolower($produk->provider->provider_name);
         $isManualService = strtolower($produk->provider->provider_name) === 'manual';
         $paymentMethodDynamic = PayMethod::where('id', $request->payment_method['channel'])->first();
