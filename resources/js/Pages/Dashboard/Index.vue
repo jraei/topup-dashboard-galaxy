@@ -351,7 +351,11 @@ const formatStatus = (status) => {
                                     </td>
                                     <td class="p-3">{{ trx.order_id }}</td>
                                     <td class="p-3">
-                                        {{ trx.layanan.nama_layanan }}
+                                        {{
+                                            trx.fusion_service
+                                                ? trx.fusion_service.nama_fusion
+                                                : trx.layanan.nama_layanan
+                                        }}
                                     </td>
                                     <td class="p-3">
                                         {{ formatCurrency(trx.price) }}

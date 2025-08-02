@@ -43,14 +43,22 @@ const isSearchFocused = ref(false);
 
                 <!-- Right: Language Selector -->
                 <div class="flex items-center">
-                    <button
-                        class="flex items-center p-2 transition-all rounded-full"
+                    <div
+                        class="inline-flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded-full"
                     >
-                        <span class="text-lg text-primary">🇮🇩</span>
-                        <span class="ml-1 text-xs font-medium text-gray-200"
-                            >IDR</span
+                        <!-- Bendera Indonesia -->
+                        <div
+                            class="w-5 h-5 rounded-full overflow-hidden border border-white"
                         >
-                    </button>
+                            <div class="h-1/2 bg-red-600"></div>
+                            <div class="h-1/2 bg-white"></div>
+                        </div>
+
+                        <!-- Teks -->
+                        <span class="text-sm font-semibold tracking-wide"
+                            >ID / IDR</span
+                        >
+                    </div>
                 </div>
             </div>
         </div>

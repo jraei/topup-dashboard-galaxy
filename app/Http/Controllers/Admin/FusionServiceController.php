@@ -37,10 +37,10 @@ class FusionServiceController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_fusion', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%")
-                  ->orWhereHas('paketLayanan', function ($subQ) use ($search) {
-                      $subQ->where('judul_paket', 'like', "%{$search}%");
-                  });
+                    ->orWhere('deskripsi', 'like', "%{$search}%")
+                    ->orWhereHas('paketLayanan', function ($subQ) use ($search) {
+                        $subQ->where('judul_paket', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -64,7 +64,7 @@ class FusionServiceController extends Controller
             $fusion->calculated_price = $fusion->calculateTotalPrice();
             $fusion->final_price = $fusion->calculateFinalPrice();
             $fusion->service_count = $fusion->service_details->count();
-            
+
             return $fusion;
         });
 
@@ -139,7 +139,7 @@ class FusionServiceController extends Controller
             ->filter(function ($fusion) use ($validated) {
                 $existingIds = collect($fusion->layanan_ids)->sort()->values();
                 $newIds = collect($validated['layanan_ids'])->sort()->values();
-                return $existingIds->equals($newIds);
+                return $existingIds->toArray() == $newIds->toArray();
             })
             ->first();
 
@@ -166,7 +166,7 @@ class FusionServiceController extends Controller
     public function show($id)
     {
         $fusionService = FusionService::with(['paketLayanan'])->findOrFail($id);
-        
+
         // Get service details
         $services = $fusionService->services();
         $priceBreakdown = $fusionService->getPriceBreakdown();
@@ -219,7 +219,7 @@ class FusionServiceController extends Controller
             ->filter(function ($fusion) use ($validated) {
                 $existingIds = collect($fusion->layanan_ids)->sort()->values();
                 $newIds = collect($validated['layanan_ids'])->sort()->values();
-                return $existingIds->equals($newIds);
+                return $existingIds->toArray() == $newIds->toArray();
             })
             ->first();
 
@@ -336,12 +336,12 @@ class FusionServiceController extends Controller
         if ($services->isNotEmpty()) {
             $firstService = $services->first();
             $firstInputs = $firstService->produk->inputFields->pluck('name')->sort()->values();
-            
+
             $compatibility['input_requirements'] = $firstInputs->toArray();
 
             foreach ($services as $service) {
                 $serviceInputs = $service->produk->inputFields->pluck('name')->sort()->values();
-                if (!$firstInputs->equals($serviceInputs)) {
+                if ($firstInputs->toArray() != $serviceInputs->toArray()) {
                     $compatibility['compatible'] = false;
                     $compatibility['issues'][] = "Service '{$service->nama_layanan}' has different input requirements";
                 }

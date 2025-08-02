@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('paket_layanans', function (Blueprint $table) {
-            $table->dropForeign(['produk_id']);
-            $table->dropColumn('produk_id');
-        });
+        // Schema::table('paket_layanans', function (Blueprint $table) {
+        //     $table->dropForeign(['produk_id']);
+        //     $table->dropColumn('produk_id');
+        // });
     }
 
     /**

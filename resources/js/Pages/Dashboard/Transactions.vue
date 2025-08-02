@@ -55,11 +55,15 @@ const columns = [
     {
         key: "layanan",
         label: "Layanan",
-        format: (val) => {
-            if (!val) return "Unknown";
-            return val.length > 50
-                ? val.nama_layanan.substring(0, 47) + "..."
-                : val.nama_layanan;
+        format: (val, item) => {
+            const namaLayanan =
+                val?.nama_layanan ??
+                item.fusion_service?.nama_fusion ??
+                "Unknown";
+
+            return namaLayanan.length > 50
+                ? namaLayanan.substring(0, 47) + "..."
+                : namaLayanan;
         },
     },
     {

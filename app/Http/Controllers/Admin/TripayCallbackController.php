@@ -223,7 +223,7 @@ class TripayCallbackController extends Controller
                         $judulWeb = WebConfig::where('key', 'judul_web')->first()->value;
                         $whatsappProvider = Provider::where('provider_name', 'whatsappNotif')->first();
 
-                        if($whatsappProvider->status == 'active'){
+                        if ($whatsappProvider->status == 'active') {
                             $whatsappNotif = new WhatsappNotifController();
                             $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
 

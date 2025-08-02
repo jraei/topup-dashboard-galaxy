@@ -23,13 +23,12 @@ class DashboardController extends Controller
         $yesterday = now()->subDays(1);
 
         // Ambil data pembelian 1 hari terakhir
-        $pembelian = Pembelian::with('layanan')
+        $pembelian = Pembelian::with(['layanan.produk', 'fusionService'])
             ->where('user_id', $user->id)
             ->where('created_at', '>=', $yesterday)
             ->latest()
             ->limit(10)
             ->get();
-
 
         // Hitung total pembelian 1hari terakhir
         $totalPembelian = Pembelian::where('user_id', $user->id)
@@ -226,7 +225,7 @@ class DashboardController extends Controller
 
         // Try to get from cache with 5 min TTL
         $transactions = Cache::remember($cacheKey, 300, function () use ($request, $user, $perPage) {
-            return Pembelian::with(['layanan', 'layanan.produk'])
+            return Pembelian::with(['layanan', 'layanan.produk', 'fusionService'])
                 ->where('user_id', $user->id)
                 ->when($request->input('status'), function ($query, $status) {
                     if ($status !== 'all') {
@@ -252,6 +251,10 @@ class DashboardController extends Controller
                     $query->latest();
                 })
                 ->paginate($perPage)
+                ->through(function ($item) {
+                    $item->nama_layanan = $item->layanan->nama_layanan ?? $item->fusionService->nama_fusion ?? 'Unknown';
+                    return $item;
+                })
                 ->withQueryString();
         });
 

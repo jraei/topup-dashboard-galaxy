@@ -19,6 +19,7 @@ const props = defineProps({
     payment: Object,
     product: Object,
     user: Object,
+    layanans: Array,
 });
 
 const isCopied = ref(false);
@@ -416,39 +417,70 @@ watch(() => props.payment?.qr_url, generateQRImage);
                             >
                                 <img
                                     :src="'/storage/' + product?.thumbnail"
-                                    :alt="product?.nama"
+                                    :alt="
+                                        layanans?.[0]?.nama_layanan ||
+                                        'Product Thumbnail'
+                                    "
                                     class="object-cover w-full h-full"
                                 />
                             </div>
 
                             <!-- Account Details -->
                             <div class="flex-1">
-                                <div class="mb-2">
-                                    <p class="text-sm text-gray-400">
-                                        {{ product?.nama }}
-                                    </p>
-                                    <p class="text-xs text-gray-500">
-                                        {{ order?.layanan?.nama_layanan }}
-                                    </p>
-                                </div>
+                                <p class="text-sm text-gray-400">
+                                    {{ product?.nama }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    <!-- Kalau order.layanan ada (non-fusion), tampilkan -->
+                                    <!-- looping array layanans dan pisakan dengan koma -->
+                                    <span
+                                        v-if="order.fusion_service"
+                                        class="text-sm font-medium text-white"
+                                    >
+                                        {{ order.fusion_service.nama_fusion }}
+                                    </span>
+                                </p>
 
-                                <div class="space-y-1">
-                                    <!-- Dynamic Input Fields (for manual products) -->
-                                    <template v-if="order.payload && Object.keys(order.payload).length > 0">
-                                        <div v-for="(value, key) in order.payload" :key="key" class="flex">
-                                            <span class="w-24 text-sm text-gray-400">
-                                                {{ key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                                <div class="space-y-1 mt-2">
+                                    <!-- Dynamic Input Fields (manual product) -->
+                                    <template
+                                        v-if="
+                                            order.payload &&
+                                            Object.keys(order.payload).length >
+                                                0
+                                        "
+                                    >
+                                        <div
+                                            v-for="(
+                                                value, key
+                                            ) in order.payload"
+                                            :key="key"
+                                            class="flex"
+                                        >
+                                            <span
+                                                class="w-24 text-sm text-gray-400"
+                                            >
+                                                {{
+                                                    key
+                                                        .replace(/_/g, " ")
+                                                        .replace(/\b\w/g, (l) =>
+                                                            l.toUpperCase()
+                                                        )
+                                                }}
                                             </span>
-                                            <span class="text-sm font-medium text-white">
+                                            <span
+                                                class="text-sm font-medium text-white"
+                                            >
                                                 : {{ value }}
                                             </span>
                                         </div>
                                     </template>
 
-                                    <!-- Default Fields (for automatic products) -->
+                                    <!-- Default Fields (auto product) -->
                                     <template v-else>
                                         <div v-if="order.nickname" class="flex">
-                                            <span class="w-24 text-sm text-gray-400"
+                                            <span
+                                                class="w-24 text-sm text-gray-400"
                                                 >Nickname</span
                                             >
                                             <span
@@ -457,7 +489,8 @@ watch(() => props.payment?.qr_url, generateQRImage);
                                             >
                                         </div>
                                         <div class="flex">
-                                            <span class="w-24 text-sm text-gray-400"
+                                            <span
+                                                class="w-24 text-sm text-gray-400"
                                                 >ID</span
                                             >
                                             <span
@@ -465,8 +498,12 @@ watch(() => props.payment?.qr_url, generateQRImage);
                                                 >: {{ order.input_id }}</span
                                             >
                                         </div>
-                                        <div v-if="order.input_zone" class="flex">
-                                            <span class="w-24 text-sm text-gray-400"
+                                        <div
+                                            v-if="order.input_zone"
+                                            class="flex"
+                                        >
+                                            <span
+                                                class="w-24 text-sm text-gray-400"
                                                 >Server</span
                                             >
                                             <span

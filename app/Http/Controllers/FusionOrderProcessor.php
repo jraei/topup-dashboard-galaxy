@@ -25,10 +25,10 @@ class FusionOrderProcessor
         foreach ($services as $service) {
             $serviceOrderId = $orderId . '-S' . $service->id;
             $provider = strtolower($service->produk->provider->provider_name);
-            
+
             try {
                 $result = $this->processServiceOrder($service, $orderData, $serviceOrderId, $provider);
-                
+
                 if ($result['success']) {
                     $successfulTransactions[] = [
                         'service_id' => $service->id,
@@ -50,15 +50,15 @@ class FusionOrderProcessor
                         'failed_at' => now()->toISOString(),
                     ];
                 }
-                
+
                 $totalProcessed++;
-                
+
                 // Small delay between API calls to prevent rate limiting
                 usleep(100000); // 100ms delay
-                
+
             } catch (\Exception $e) {
                 Log::error("Fusion service processing error for service {$service->id}: " . $e->getMessage());
-                
+
                 $failedTransactions[] = [
                     'service_id' => $service->id,
                     'service_name' => $service->nama_layanan,
@@ -95,13 +95,13 @@ class FusionOrderProcessor
         switch ($provider) {
             case 'moogold':
                 return $this->processMoogoldService($service, $orderData, $serviceOrderId);
-                
+
             case 'digiflazz':
                 return $this->processDigiflazzService($service, $target, $serviceOrderId, $quantity);
-                
+
             case 'naelstore':
                 return $this->processNaelstoreService($service, $target, $serviceOrderId, $quantity);
-                
+
             case 'manual':
                 return [
                     'success' => true,
@@ -109,7 +109,7 @@ class FusionOrderProcessor
                     'reference_id' => $serviceOrderId,
                     'message' => 'Manual service - will be processed by admin',
                 ];
-                
+
             default:
                 return [
                     'success' => false,
@@ -140,7 +140,7 @@ class FusionOrderProcessor
 
             $data = $result['data'];
             $status = ($data['response']['status'] == "pending" || $data['response']['status'] == "processing") ? "processing" : "failed";
-            
+
             return [
                 'success' => $status === 'processing',
                 'status' => $status,
@@ -164,12 +164,13 @@ class FusionOrderProcessor
             // Digiflazz needs individual calls for each quantity
             for ($i = 0; $i < $quantity; $i++) {
                 $subOrderId = $serviceOrderId . '-' . ($i + 1);
-                
+
                 $digiflazz = new DigiflazzController();
                 $result = $digiflazz->createTransaction([
                     'kode_layanan' => $service->kode_layanan,
                     'target' => $target,
                     'ref_id' => $subOrderId,
+                    'testing' => true,
                 ]);
 
                 if (!isset($result['status']) || !in_array($result['status'], ["Pending", "Sukses"])) {

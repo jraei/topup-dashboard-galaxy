@@ -82,8 +82,8 @@ if (!isLowPowerDevice && window.performance) {
             >
                 <div class="absolute inset-0 z-0">
                     <StarfieldLayer class="z-5" />
-                    <PlanetsLayer class="z-15" />
-                    <MeteorBackground class="z-20" />
+                    <!-- <PlanetsLayer class="z-15" /> -->
+                    <!-- <MeteorBackground class="z-20" /> -->
                 </div>
 
                 <div class="relative z-30 mx-auto max-w-7xl">

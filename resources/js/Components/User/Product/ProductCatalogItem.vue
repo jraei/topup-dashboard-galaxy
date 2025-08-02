@@ -158,24 +158,24 @@ onMounted(() => {
 
         <!-- Cosmic Elements -->
         <!-- Planet in corner -->
-        <div
+        <!-- <div
             class="absolute transition-opacity -bottom-6 -right-6 w-14 h-14 opacity-60 group-hover:opacity-90"
             :class="{ 'animate-pulse-slow': !prefersReducedMotion }"
         >
             <div
                 class="absolute inset-0 rounded-full shadow-[0_0_8px_2px_rgba(155,135,245,0.5)]"
                 :class="[planetProperties.color]"
-            ></div>
+            ></div> -->
 
-            <!-- Planet Ring (Saturn) -->
-            <!-- <div
+        <!-- Planet Ring (Saturn) -->
+        <!-- <div
                 v-if="planetProperties.hasRing"
                 class="absolute border-2 rounded-full inset-2 -rotate-12"
                 :class="[planetProperties.ringColor]"
             ></div> -->
 
-            <!-- Planet Surface Details -->
-            <div
+        <!-- Planet Surface Details -->
+        <!-- <div
                 v-if="planetProperties.className === 'jupiter'"
                 class="absolute scale-y-50 rounded-full inset-2 bg-orange-300/30 rotate-12"
             ></div>
@@ -183,7 +183,7 @@ onMounted(() => {
                 v-if="planetProperties.className === 'mars'"
                 class="absolute rotate-45 rounded-full inset-3 bg-red-700/40"
             ></div>
-        </div>
+        </div> -->
 
         <!-- Meteors -->
         <!-- <div

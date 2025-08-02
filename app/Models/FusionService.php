@@ -38,6 +38,16 @@ class FusionService extends Model
         return Layanan::whereIn('id', $this->layanan_ids ?? [])->get();
     }
 
+    public function layanans(): HasMany
+    {
+        return $this->hasMany(Layanan::class, 'id', 'layanan_ids');
+    }
+
+    public function getLayanansAttribute()
+    {
+        return Layanan::with('produk')->whereIn('id', $this->layanan_ids ?? [])->get();
+    }
+
     /**
      * Calculate the total price for this fusion based on individual service prices
      */
@@ -135,7 +145,7 @@ class FusionService extends Model
     public function hasCompatibleInputs(): bool
     {
         $services = $this->services()->load('produk.inputFields');
-        
+
         if ($services->isEmpty()) {
             return false;
         }
@@ -147,7 +157,7 @@ class FusionService extends Model
         // Check if all services have same input requirements
         foreach ($services as $service) {
             $serviceInputs = $service->produk->inputFields->pluck('name')->sort()->values();
-            if (!$firstInputs->equals($serviceInputs)) {
+            if ($firstInputs->toArray() != $serviceInputs->toArray()) {
                 return false;
             }
         }

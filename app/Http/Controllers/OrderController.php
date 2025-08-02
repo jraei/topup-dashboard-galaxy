@@ -276,13 +276,11 @@ class OrderController extends Controller
 
     public function invoice($order_id)
     {
-        // Find order by order_id
-        $pembelian = Pembelian::with(['layanan.produk', 'pembayaran', 'user'])
+        $pembelian = Pembelian::with(['layanan', 'pembayaran', 'user', 'fusionService'])
             ->where('order_id', $order_id)
             ->first();
 
         if (!$pembelian) {
-            // kirim error ke view
             return back()->with('status', [
                 'type' => 'error',
                 'action' => 'Not Found',
@@ -290,16 +288,38 @@ class OrderController extends Controller
             ]);
         }
 
-        // Get product information
-        $produk = $pembelian->layanan->produk;
+        $layanans = collect();
+        $produk = null;
+
+        if ($pembelian->fusion_service_id) {
+            // Jika fusion, ambil semua layanan dari fusionService
+            $layananIds = $pembelian->fusionService->layanan_ids ?? '[]';
+
+            $layanans = Layanan::with('produk')
+                ->whereIn('id', $layananIds)
+                ->get();
+
+            // Ambil produk dari layanan pertama (asumsi semua layanan fusion berasal dari produk yang sama)
+            $produk = optional($layanans->first())->produk;
+        } else {
+            // Jika bukan fusion, ambil layanan tunggal
+            $layanan = $pembelian->layanan;
+            $layanans = collect([$layanan]);
+            $produk = $layanan?->produk;
+        }
 
         return Inertia::render('Order/Invoice', [
             'order' => $pembelian,
             'payment' => $pembelian->pembayaran,
             'product' => $produk,
+            'layanans' => $layanans,
             'user' => auth()->user(),
         ]);
     }
+
+
+
+
 
     /**
      * Process the order confirmation (Phase 1)
@@ -336,7 +356,7 @@ class OrderController extends Controller
             $produk = $layanan->produk;
         } elseif ($request->fusion_service_id) {
             $fusionService = FusionService::with('paketLayanan')->findOrFail($request->fusion_service_id);
-            
+
             // Validate fusion service
             $validationErrors = $fusionService->validateServices();
             if (!empty($validationErrors)) {
@@ -356,7 +376,7 @@ class OrderController extends Controller
             }
 
             $priceBreakdown = $fusionService->getPriceBreakdown();
-            
+
             // Use the first service's product for input field validation
             $firstService = $fusionService->services()->first();
             if (!$firstService) {
@@ -593,7 +613,7 @@ class OrderController extends Controller
         } elseif ($request->fusion_service_id) {
             $fusionService = FusionService::with('paketLayanan')->findOrFail($request->fusion_service_id);
             $isFusionOrder = true;
-            
+
             // Re-validate fusion service
             $validationErrors = $fusionService->validateServices();
             if (!empty($validationErrors)) {
@@ -646,8 +666,18 @@ class OrderController extends Controller
         }
 
         // 4️⃣ Hitung harga
-        $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
-        $price = $basePrice * $quantity;
+        $basePrice = 0;
+        // Calculate base price for regular services or fusion services
+        if ($fusionService) {
+            // For fusion services, use calculated price
+            $basePrice = $fusionService->calculateFinalPrice(auth()->user()?->user_role_id ?? null, true);
+            $price = $basePrice * $quantity;
+        } else {
+            // For regular services
+            $basePrice = $flashsaleItem ? $flashsaleItem->harga_flashsale : $layanan->harga_jual;
+            $price = $basePrice * $quantity;
+        }
+
         $voucherDiscount = 0;
         $voucher = null;
         if ($request->voucher_code) {
@@ -657,7 +687,18 @@ class OrderController extends Controller
         $totalPrice = ceil($price - $voucherDiscount);
         $paymentInfo = $this->calculatePaymentFees($request->payment_method, $totalPrice);
         $finalPrice = $paymentInfo['finalPrice'];
-        $hargaBeli = $layanan->harga_beli_idr ? $layanan->harga_beli_idr * $quantity : $layanan->harga_beli * $quantity;
+
+        // Check profit safeguard
+        $hargaBeli = 0;
+        if ($fusionService) {
+            // For fusion services, calculate combined purchase cost
+            $services = $fusionService->services();
+            foreach ($services as $service) {
+                $hargaBeli += ($service->harga_beli_idr ?? 0) * $request->quantity;
+            }
+        } else {
+            $hargaBeli = $layanan->harga_beli_idr ? $layanan->harga_beli_idr * $quantity : $layanan->harga_beli * $quantity;
+        }
 
         // if ($totalPrice <= $hargaBeli) {
         //     return response()->json([
@@ -678,7 +719,7 @@ class OrderController extends Controller
 
 
         // 6️⃣ Proses Saldo Akun
-        if ($request->payment_method['type'] === 'Saldo Akun') {
+        if ($request->payment_method['type'] === 'Saldo Akun' && !$isFusionOrder) {
             if ($user->saldo < $finalPrice) {
                 return response()->json([
                     'status' => 'error',
@@ -812,12 +853,15 @@ class OrderController extends Controller
             'expired_time' => $paymentData['expired_time'] ?? null,
         ]);
 
+
+
         // Insert pembelian utama (1x untuk semua quantity)
         $pembelian = Pembelian::create([
             'order_id' => $order_id,
             'order_type' => $isManualService ? 'manual' : 'game',
             'user_id' => Auth::id(),
-            'layanan_id' => $layanan->id,
+            'layanan_id' => $layanan?->id,
+            'fusion_service_id' => $fusionService?->id ?? null,
             'nickname' => $request->nickname,
             'input_id' => $inputId,
             'input_zone' => $inputZone,
@@ -840,9 +884,34 @@ class OrderController extends Controller
             ])
         ]);
 
+        // After creating the pembelian record, add:
+        if ($isFusionOrder && $request->payment_method['type'] == 'Saldo Akun') {
+            $processor = new \App\Http\Controllers\FusionOrderProcessor();
+            $fusionResult = $processor->processFusionOrder($fusionService, [
+                'input_id' => $inputId,
+                'input_zone' => $inputZone,
+                'quantity' => $quantity
+            ], $order_id);
+
+            $pembelian->update([
+                'fusion_transaction_data' => $fusionResult,
+                'status' => $fusionResult['total_successful'] > 0 ? 'processing' : 'failed'
+            ]);
+        }
+
+
         // 7️⃣ Payment Gateway (jika bukan Saldo Akun)
         $waNotif = new WhatsappNotifController();
-        $itemDesc = $produk->nama . ' - ' . $layanan->nama_layanan;
+        if ($layanan) {
+            $itemDesc = $produk->nama . ' - ' . $layanan->nama_layanan;
+        } elseif ($fusionService) {
+            $layananNames = $fusionService->nama_fusion;
+            $itemDesc = $produk->nama . ' - ' . $layananNames;
+        } else {
+            $itemDesc = $produk->nama; // fallback terendah
+        }
+        // $itemDesc = $produk->nama;
+
         $phone = str_replace('+', '', $request->phone);
         $judulWeb = WebConfig::where('key', 'judul_web')->first()->value ?? env('APP_NAME');
         $username = $user->username ?? 'Guest';
@@ -907,15 +976,15 @@ class OrderController extends Controller
             if ($whatsappProvider->status == 'active') {
                 $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat, harap selesaikan pembayaran*
 
-                *Produk* : ' . $itemDesc . '
-                *Order ID* : ' . $order_id . '
-                *Target* : ' . $target . '
-                *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-                *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-                *Status* : Menunggu Pembayaran
-                *Link Pembayaran* : ' . route('order.invoice', $order_id) . '
+*Produk* : ' . $itemDesc . '
+*Order ID* : ' . $order_id . '
+*Target* : ' . $target . '
+*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+*Status* : Menunggu Pembayaran
+*Link Pembayaran* : ' . route('order.invoice', $order_id) . '
 
-                *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
+*Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 
                 $result = json_decode($res);
                 if ($result->statusCode == 200) {
@@ -931,12 +1000,12 @@ class OrderController extends Controller
                 // Kirim notifikasi whatsapp ke user
                 $res = $waNotif->sendMessage($phone, '*⚡Transaksi berhasil dibuat*
 
-                *Produk* : ' . $itemDesc . '
-                *Order ID* : ' . $order_id . '
-                *Target* : ' . $target . '
-                *Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
-                *Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
-                *Status* : Berhasil dibayar
+*Produk* : ' . $itemDesc . '
+*Order ID* : ' . $order_id . '
+*Target* : ' . $target . '
+*Total* : Rp ' . number_format($finalPrice, 0, ',', '.') . '
+*Metode Pembayaran* : ' . $paymentInfo['methodName'] . '
+*Status* : Berhasil dibayar
 
                 *Terimakasih kak ' . $username . ' telah membeli di ' . $judulWeb . '😇*');
 

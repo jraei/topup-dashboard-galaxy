@@ -30,6 +30,11 @@ class PaketLayanan extends Model
     /**
      * Get all products associated with services in this package
      */
+    public function produk(): BelongsTo
+    {
+        return $this->belongsTo(Produk::class);
+    }
+
     public function products()
     {
         return $this->layanans()

@@ -281,6 +281,17 @@ const toggleDropdown = (dropdown) => {
                             >
                                 <span>Package</span>
                             </Link>
+                            <Link
+                                :href="route('fusion-services.index')"
+                                :class="[
+                                    'flex items-center rounded-lg p-2 text-sm font-medium transition-all duration-200',
+                                    route().current('fusion-services.index')
+                                        ? 'text-primary'
+                                        : 'text-gray-300 hover:text-white',
+                                ]"
+                            >
+                                <span>Fusion</span>
+                            </Link>
                         </div>
                     </div>
                     <!-- Profit Settings Dropdown -->

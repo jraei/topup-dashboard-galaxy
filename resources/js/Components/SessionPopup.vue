@@ -54,7 +54,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Modal :show="showPopup" @close="closePopup" max-width="md">
+    <Modal :show="showPopup" @close="closePopup" max-width="2xl">
         <div class="relative overflow-hidden rounded-xl bg-content_background">
             <!-- Image Section -->
             <div v-if="popupImage" class="relative">

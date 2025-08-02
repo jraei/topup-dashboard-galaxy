@@ -28,7 +28,7 @@ const columns = [
         key: "user",
         label: "Username",
         format: (value, item) => {
-            return value.username;
+            return value?.username || "Guest";
         },
     },
     {
@@ -297,7 +297,7 @@ const closeViewModal = () => {
                             <p
                                 class="text-sm font-medium text-white truncate sm:text-base"
                             >
-                                {{ selectedDeposit.user.username }}
+                                {{ selectedDeposit.user?.username || "N/A" }}
                             </p>
                         </div>
                         <div class="p-2 rounded-lg sm:p-3 bg-dark-lighter">
