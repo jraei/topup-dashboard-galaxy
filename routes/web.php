@@ -202,6 +202,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('profit-paket-layanans/bulk-update', [ProfitPaketLayananController::class, 'bulkUpdate'])->name('profit-paket-layanans.bulk-update');
     Route::post('profit-paket-layanans/preview', [ProfitPaketLayananController::class, 'preview'])->name('profit-paket-layanans.preview');
 
+    // Fusion Services routes
+    Route::resource('fusion-services', App\Http\Controllers\Admin\FusionServiceController::class);
+    Route::post('fusion-services/services', [App\Http\Controllers\Admin\FusionServiceController::class, 'getServicesForPackage'])->name('fusion-services.services');
+    Route::post('fusion-services/validate', [App\Http\Controllers\Admin\FusionServiceController::class, 'validateFusion'])->name('fusion-services.validate');
+    Route::post('fusion-services/pricing', [App\Http\Controllers\Admin\FusionServiceController::class, 'calculatePricing'])->name('fusion-services.pricing');
+    Route::post('fusion-services/bulk-status', [App\Http\Controllers\Admin\FusionServiceController::class, 'bulkUpdateStatus'])->name('fusion-services.bulk-status');
+
     Route::get('/payment-providers', [PaymentProviderController::class, 'index'])->name('admin.payment-providers');
     Route::patch('/payment-providers/{id}', [PaymentProviderController::class, 'update'])->name('payment-providers.update');
     Route::post('/payment-providers/getMethods/{id}', [PayMethodController::class, 'getMethodsByProvider'])->name('payment-providers.get-methods-by-provider');
