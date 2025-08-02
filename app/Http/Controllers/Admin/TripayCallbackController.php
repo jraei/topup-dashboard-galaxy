@@ -20,6 +20,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\MoogoldController;
 use App\Http\Controllers\NaelstoreController;
 use App\Http\Controllers\WhatsappNotifController;
+use App\Http\Controllers\FusionOrderProcessor;
+use App\Models\FusionService;
 
 class TripayCallbackController extends Controller
 {
@@ -66,15 +68,23 @@ class TripayCallbackController extends Controller
 
             $dataPembelian = Pembelian::where('order_id', $order_id)->first();
             $dataPembayaran = Pembayaran::where('order_id', $order_id)->first();
-            $dataLayanan = $dataPembelian->layanan;
             $user = $dataPembelian->user->username ?? 'Guest';
-
-            $dataProduk = $dataLayanan->produk;
             $quantity = $dataPembelian->quantity;
-
             $uid = $dataPembelian->input_id ?? null;
             $zone = $dataPembelian->input_zone ?? null;
-            $kode_layanan = $dataLayanan->kode_layanan;
+
+            // Check if this is a fusion service order
+            if ($dataPembelian->fusion_service_id) {
+                $fusionService = FusionService::find($dataPembelian->fusion_service_id);
+                $dataLayanan = null;
+                $dataProduk = $fusionService->services()->first()?->produk; // Get first service's product for notifications
+                $kode_layanan = null;
+            } else {
+                $dataLayanan = $dataPembelian->layanan;
+                $dataProduk = $dataLayanan->produk;
+                $kode_layanan = $dataLayanan->kode_layanan;
+                $fusionService = null;
+            }
 
 
             if (!$invoice || $invoice->status != 'pending') {
@@ -110,122 +120,147 @@ class TripayCallbackController extends Controller
                 $failedOrders = [];
                 $allCompleted = true;
                 $status = null;
-
-                $provider = $dataLayanan->provider->provider_name;
                 $target = $uid . ($zone ?? '');
 
-                switch ($provider) {
-                    case "digiflazz":
-                        for ($i = 0; $i < $quantity; $i++) {
-                            $subOrderId = $order_id . '-' . ($i + 1);
-                            $digiflazz = new DigiflazzController();
+                // Handle fusion service orders
+                if ($fusionService) {
+                    $processor = new FusionOrderProcessor();
+                    $fusionResult = $processor->processFusionOrder($fusionService, [
+                        'input_id' => $uid,
+                        'input_zone' => $zone,
+                        'quantity' => $quantity
+                    ], $order_id);
 
-                            $apiResult = $digiflazz->createTransaction([
-                                'kode_layanan' => $dataLayanan->kode_layanan,
-                                'target' => $target,
-                                'ref_id' => $subOrderId,
-                            ]);
-
-                            if (isset($apiResult['status']) && !$apiResult['status']) {
-                                return response()->json([
-                                    'status' => false,
-                                    'message' => $apiResult['message']
-                                ], 400);
-                            }
-
-
-                            if (!isset($apiResult['status']) || !in_array($apiResult['status'], ["Pending", "Sukses"])) {
-                                $failedOrders[] = [
-                                    'order_id' => $subOrderId,
-                                    'message' => $apiResult['message'] ?? "DF | Create transaction error"
-                                ];
-                                $allCompleted = false;
-                                continue;
-                            }
-
-                            $referenceId = $order_id;
-                            $successOrders[] = [
-                                'status' => $apiResult['status'],
-                                'reference' => $apiResult['ref_id']
-                            ];
-                            $status = $allCompleted ? "processing" : "failed";
-                        }
-                        break;
-                    case "moogold":
-                        $moogold = new MoogoldController;
-                        $order = $moogold->createTransaction([
-                            'category_id' => $dataProduk->moogold_order_category,
-                            'order_id' => $order_id,
-                            'service_id' => $kode_layanan,
-                            'quantity' => $dataPembelian->quantity,
-                            'user_id' => $uid,
-                            'server' => $zone
-                        ]);
-
-                        if (!$order['data']['status']) {
-                            return response()->json([
-                                'status' => 'error',
-                                'message' => $order['data']['raw']['err_message'] ?? $order['data']['message']
-                            ]);
-                        }
-
-                        $data = $order['data'];
-                        $status = in_array($data['response']['status'], ["pending", "processing"]) ? "processing" : "failed";
-                        $referenceId = $data['order_id'];
-
-                        break;
-                    case "naelstore":
-                        $naelstore = new NaelstoreController();
-
-                        $response = $naelstore->createTransaction([
-                            'layanan_id' => $kode_layanan,
-                            'quantity' => $dataPembelian->quantity,
-                            'target' => $target,
-                        ]);
-
-                        if (!$response['status']) {
-                            return response()->json([
-                                'status' => 'error',
-                                'message' => $response['message']
-                            ]);
-                        }
-
-                        $data = $response['data'];
-                        $status = $data['status'] == true ? "processing" : "failed";
-
-                        $referenceId = $data['order_id'];
-                        break;
-                    default:
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Provider not found',
-                        ]);
-                }
-
-
-                // ✅ Update pembelian hanya jika status ditentukan
-                if ($status) {
-
-                    $references = collect($successOrders)->pluck('reference')->implode(',');
-
+                    $status = $fusionResult['total_successful'] > 0 ? 'processing' : 'failed';
+                    $referenceId = $order_id; // Use order_id as main reference for fusion
+                    
                     $dataPembelian->update([
                         'status' => $status,
-                        'reference_id' => $provider == "digiflazz" ? $references : $referenceId,
+                        'reference_id' => $referenceId,
+                        'fusion_transaction_data' => $fusionResult,
                     ]);
+                } else {
+                    // Handle regular single service orders
+                    $provider = $dataLayanan->provider->provider_name;
 
-                    if ($dataPembelian->status == "processing") {
-                        // send notifikasi whatsapp ke nomor wa customer
+                    switch ($provider) {
+                        case "digiflazz":
+                            for ($i = 0; $i < $quantity; $i++) {
+                                $subOrderId = $order_id . '-' . ($i + 1);
+                                $digiflazz = new DigiflazzController();
 
-                        $phone = str_replace('+', '', $dataPembelian->phone);
+                                $apiResult = $digiflazz->createTransaction([
+                                    'kode_layanan' => $dataLayanan->kode_layanan,
+                                    'target' => $target,
+                                    'ref_id' => $subOrderId,
+                                ]);
+
+                                if (isset($apiResult['status']) && !$apiResult['status']) {
+                                    return response()->json([
+                                        'status' => false,
+                                        'message' => $apiResult['message']
+                                    ], 400);
+                                }
+
+                                if (!isset($apiResult['status']) || !in_array($apiResult['status'], ["Pending", "Sukses"])) {
+                                    $failedOrders[] = [
+                                        'order_id' => $subOrderId,
+                                        'message' => $apiResult['message'] ?? "DF | Create transaction error"
+                                    ];
+                                    $allCompleted = false;
+                                    continue;
+                                }
+
+                                $referenceId = $order_id;
+                                $successOrders[] = [
+                                    'status' => $apiResult['status'],
+                                    'reference' => $apiResult['ref_id']
+                                ];
+                                $status = $allCompleted ? "processing" : "failed";
+                            }
+                            break;
+                        case "moogold":
+                            $moogold = new MoogoldController;
+                            $order = $moogold->createTransaction([
+                                'category_id' => $dataProduk->moogold_order_category,
+                                'order_id' => $order_id,
+                                'service_id' => $kode_layanan,
+                                'quantity' => $dataPembelian->quantity,
+                                'user_id' => $uid,
+                                'server' => $zone
+                            ]);
+
+                            if (!$order['data']['status']) {
+                                return response()->json([
+                                    'status' => 'error',
+                                    'message' => $order['data']['raw']['err_message'] ?? $order['data']['message']
+                                ]);
+                            }
+
+                            $data = $order['data'];
+                            $status = in_array($data['response']['status'], ["pending", "processing"]) ? "processing" : "failed";
+                            $referenceId = $data['order_id'];
+
+                            break;
+                        case "naelstore":
+                            $naelstore = new NaelstoreController();
+
+                            $response = $naelstore->createTransaction([
+                                'layanan_id' => $kode_layanan,
+                                'quantity' => $dataPembelian->quantity,
+                                'target' => $target,
+                            ]);
+
+                            if (!$response['status']) {
+                                return response()->json([
+                                    'status' => 'error',
+                                    'message' => $response['message']
+                                ]);
+                            }
+
+                            $data = $response['data'];
+                            $status = $data['status'] == true ? "processing" : "failed";
+
+                            $referenceId = $data['order_id'];
+                            break;
+                        default:
+                            return response()->json([
+                                'status' => 'error',
+                                'message' => 'Provider not found',
+                            ]);
+                    }
+
+                    // Update pembelian for regular orders
+                    if ($status) {
+                        $references = collect($successOrders)->pluck('reference')->implode(',');
+
+                        $dataPembelian->update([
+                            'status' => $status,
+                            'reference_id' => $provider == "digiflazz" ? $references : $referenceId,
+                        ]);
+                    }
+                }
+
+                // Send WhatsApp notification if processing successful
+                if ($status == "processing") {
+
+                    $phone = str_replace('+', '', $dataPembelian->phone);
+                    
+                    // Build product description based on order type
+                    if ($fusionService) {
+                        $produk = $dataProduk->nama . ' - ' . $fusionService->nama_fusion;
+                    } else {
                         $produk = $dataProduk->nama . ' - ' . $dataLayanan->nama_layanan;
-                        $price = $dataPembayaran->total_price;
-                        $payMethod = PayMethod::where('kode', $dataPembayaran->payment_method)->first()->nama;
-                        $judulWeb = WebConfig::where('key', 'judul_web')->first()->value;
-                        $whatsappProvider = Provider::where('provider_name', 'whatsappNotif')->first();
+                    }
+                    
+                    $price = $dataPembayaran->total_price;
+                    $payMethod = PayMethod::where('kode', $dataPembayaran->payment_method)->first()->nama;
+                    $judulWeb = WebConfig::where('key', 'judul_web')->first()->value;
+                    $whatsappProvider = Provider::where('provider_name', 'whatsappNotif')->first();
 
-                        if ($whatsappProvider->status == 'active') {
-                            $whatsappNotif = new WhatsappNotifController();
-                            $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
+                    if ($whatsappProvider->status == 'active') {
+                        $whatsappNotif = new WhatsappNotifController();
+                        $res = $whatsappNotif->sendMessage($phone, '*⚡Pembayaran diterima, Pesanan sedang diproses*
 
 *Produk* : ' . $produk . '
 *Order ID* : ' . $order_id . '
@@ -235,30 +270,25 @@ class TripayCallbackController extends Controller
 *Status* : ' . $status . '
 
 *Terimakasih kak ' . $user . ' telah membeli di ' . $judulWeb ?? env('APP_NAME') . '😇*');
-                            $result = json_decode($res);
-                            if ($result->statusCode == 200) {
-                                logger()->info("Success to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
-                            } else {
-                                logger()->error("Failed to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
-                            }
+                        $result = json_decode($res);
+                        if ($result->statusCode == 200) {
+                            logger()->info("Success to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
+                        } else {
+                            logger()->error("Failed to send whatsapp notif [CALLBACK TRANSAKSI]: " . $result->message);
                         }
                     }
-
-                    return response()->json([
-                        'status' => 'success',
-                        'message' => 'Status pembelian & pembayaran berhasil diperbarui',
-                        'data' => [
-                            'reference_id' => $referenceId,
-                            'status' => $status,
-                            'success' => $successOrders,
-                            'failed' => $failedOrders
-                        ]
-                    ]);
                 }
 
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Status tidak valid',
+                    'status' => 'success',
+                    'message' => 'Status pembelian & pembayaran berhasil diperbarui',
+                    'data' => [
+                        'reference_id' => $referenceId,
+                        'status' => $status,
+                        'success' => $successOrders,
+                        'failed' => $failedOrders,
+                        'is_fusion' => $fusionService ? true : false
+                    ]
                 ]);
             } else if ($data->status == "EXPIRED" || $data->status == "FAILED") {
 
