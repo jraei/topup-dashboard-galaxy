@@ -158,7 +158,6 @@ class OrderController extends Controller
             ->with([
                 'layanans' => function ($query) use ($produk) {
                     $query->where('status', 'active')
-                        ->where('produk_id', $produk->id)
                         ->orderBy('harga_beli_idr', 'asc');
                 },
                 'fusionServices' => function ($query) {

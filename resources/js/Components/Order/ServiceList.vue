@@ -82,13 +82,15 @@ const packageServiceGroups = computed(() => {
     }
 
     // Sort packages by display_order
-    const sortedPackages = [...props.paketLayanans].sort((a, b) => 
-        (a.display_order || 0) - (b.display_order || 0)
+    const sortedPackages = [...props.paketLayanans].sort(
+        (a, b) => (a.display_order || 0) - (b.display_order || 0)
     );
 
     sortedPackages.forEach((paket) => {
-        if ((paket.layanans && paket.layanans.length > 0) || 
-            (paket.fusionServices && paket.fusionServices.length > 0)) {
+        if (
+            (paket.layanans && paket.layanans.length > 0) ||
+            (paket.fusionServices && paket.fusionServices.length > 0)
+        ) {
             groups.push({
                 package: paket,
                 services: paket.layanans || [],
@@ -106,6 +108,33 @@ const openHelpModal = ref(false);
 <template>
     <CosmicCard title="Pilih Layanan" :stepNumber="2">
         <div class="space-y-6">
+            <!-- Flashsale Services -->
+            <div
+                v-for="group in flashsaleServiceGroups"
+                :key="group.event.id"
+                class="space-y-3"
+            >
+                <div class="flex items-center space-x-2">
+                    <BadgePercent
+                        class="w-5 h-5 text-secondary animate-pulse"
+                    />
+                    <h4 class="text-white">{{ group.event.event_name }}</h4>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+                    <ServiceCard
+                        v-for="service in group.services"
+                        :key="service.id"
+                        :service="service"
+                        :isSelected="
+                            selectedService && selectedService.id === service.id
+                        "
+                        :isFlashsale="true"
+                        @select="selectService"
+                    />
+                </div>
+            </div>
+
             <!-- Service Packages -->
             <div
                 v-for="group in packageServiceGroups"
@@ -176,39 +205,13 @@ const openHelpModal = ref(false);
                             deskripsi: fusion.deskripsi,
                             harga_jual: fusion.calculated_price,
                             isFusion: true,
-                            fusionData: fusion
+                            fusionData: fusion,
                         }"
                         :isSelected="
-                            selectedService && selectedService.id === `fusion-${fusion.id}`
+                            selectedService &&
+                            selectedService.id === `fusion-${fusion.id}`
                         "
                         :isFusion="true"
-                        @select="selectService"
-                    />
-                </div>
-            </div>
-
-            <!-- Flashsale Services -->
-            <div
-                v-for="group in flashsaleServiceGroups"
-                :key="group.event.id"
-                class="space-y-3"
-            >
-                <div class="flex items-center space-x-2">
-                    <BadgePercent
-                        class="w-5 h-5 text-secondary animate-pulse"
-                    />
-                    <h4 class="text-white">{{ group.event.event_name }}</h4>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                    <ServiceCard
-                        v-for="service in group.services"
-                        :key="service.id"
-                        :service="service"
-                        :isSelected="
-                            selectedService && selectedService.id === service.id
-                        "
-                        :isFlashsale="true"
                         @select="selectService"
                     />
                 </div>

@@ -30,7 +30,7 @@ class PaketLayananController extends Controller
         }
 
         // Start query with relationships and services count
-        $query = PaketLayanan::withCount(['layanans', 'fusionServices']);
+        $query = PaketLayanan::with(['produk'])->withCount(['layanans', 'fusionServices']);
 
         // Apply filters
         if ($search) {
@@ -38,6 +38,10 @@ class PaketLayananController extends Controller
                 $q->where('judul_paket', 'like', "%{$search}%")
                     ->orWhere('informasi', 'like', "%{$search}%");
             });
+        }
+
+        if ($productFilter) {
+            $query->where('produk_id', $productFilter);
         }
 
         // Apply sorting with display_order priority
@@ -77,6 +81,7 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'judul_paket' => 'required|string|max:255',
+            'produk_id' => 'nullable|exists:produks,id',
             'informasi' => 'nullable|string',
             'display_order' => 'nullable|integer|min:0',
             'service_ids' => 'required|array|min:1',
@@ -88,6 +93,7 @@ class PaketLayananController extends Controller
             // Create the package
             $paketLayanan = PaketLayanan::create([
                 'judul_paket' => $validated['judul_paket'],
+                'produk_id' => $validated['produk_id'],
                 'informasi' => $validated['informasi'],
                 'display_order' => $validated['display_order'] ?? 0,
             ]);
@@ -118,7 +124,7 @@ class PaketLayananController extends Controller
      */
     public function show($id)
     {
-        $paketLayanan = PaketLayanan::with(['layanans.produk', 'fusionServices'])->find($id);
+        $paketLayanan = PaketLayanan::with(['layanans.produk', 'produk', 'fusionServices'])->find($id);
 
         return response()->json([
             'paketLayanan' => $paketLayanan
@@ -132,6 +138,7 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'judul_paket' => 'required|string|max:255',
+            'produk_id' => 'nullable|exists:produks,id',
             'informasi' => 'nullable|string',
             'display_order' => 'nullable|integer|min:0',
             'service_ids' => 'required|array|min:1',
@@ -145,6 +152,7 @@ class PaketLayananController extends Controller
             // Update the package
             $paketLayanan->update([
                 'judul_paket' => $validated['judul_paket'],
+                'produk_id' => $validated['produk_id'],
                 'informasi' => $validated['informasi'],
                 'display_order' => $validated['display_order'] ?? 0,
             ]);
@@ -222,6 +230,8 @@ class PaketLayananController extends Controller
                     $q->orWhere('paket_layanan_id', $excludePackageId);
                 }
             });
+
+
 
         $services = $query->get();
 
